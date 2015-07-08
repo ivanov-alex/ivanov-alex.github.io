@@ -77,6 +77,6 @@
 <!--
   Represents a guard that will disallow access.
 -->
-<!ELEMENT new-test-element-for-UT EMPTY>
-<!ATTLIST new-test-element-for-UT
+<!ELEMENT new-test EMPTY>
+<!ATTLIST new-test
   %attlist.guard;>
