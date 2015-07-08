@@ -10,7 +10,7 @@
 <!--
   The root element of the configuration file.
 -->
-<!ELEMENT import-control ((allow|disallow)*,subpackage*)>
+<!ELEMENT import-control ((allow|disallow|new-test-element-for-UT)*,subpackage*)>
 
 <!--
   pkg - The root package to be checked. For example "com.puppycrawl".
@@ -77,7 +77,7 @@
 <!--
   Represents a guard that will disallow access.
 -->
-<!ELEMENT new-test EMPTY>
-<!ATTLIST new-test
+<!ELEMENT new-test-element-for-UT EMPTY>
+<!ATTLIST new-test-element-for-UT
   %attlist.guard;>
 
