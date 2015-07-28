@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>ProfilePhase xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../apidocs/com/google/devtools/build/lib/profiler/ProfilePhase.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">// Copyright 2014 Google Inc. All rights reserved.</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment">// Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment">// you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment">// You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment">//    http://www.apache.org/licenses/LICENSE-2.0</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment">// Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment">// distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment">// See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment">// limitations under the License.</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">package</strong> com.google.devtools.build.lib.profiler;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <em class="jxr_javadoccomment"> * Build phase markers. Used as a separators between different build phases.</em>
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">public</strong> enum <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilePhase.html">ProfilePhase</a> {
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>    LAUNCH(<span class="jxr_string">"launch"</span>, <span class="jxr_string">"Launch Blaze"</span>, 0x3F9FCF9F),                <em class="jxr_comment">// 9C9</em>
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>    INIT(<span class="jxr_string">"init"</span>, <span class="jxr_string">"Initialize command"</span>, 0x3F9F9FCF),              <em class="jxr_comment">// 99C</em>
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>    LOAD(<span class="jxr_string">"loading"</span>, <span class="jxr_string">"Load packages"</span>, 0x3FCFFFCF),                <em class="jxr_comment">// CFC</em>
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>    ANALYZE(<span class="jxr_string">"analysis"</span>, <span class="jxr_string">"Analyze dependencies"</span>, 0x3FCFCFFF),     <em class="jxr_comment">// CCF</em>
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>    LICENSE(<span class="jxr_string">"license checking"</span>, <span class="jxr_string">"Analyze licenses"</span>, 0x3FCFFFFF), <em class="jxr_comment">// CFF</em>
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>    PREPARE(<span class="jxr_string">"preparation"</span>, <span class="jxr_string">"Prepare for build"</span>, 0x3FFFFFCF),     <em class="jxr_comment">// FFC</em>
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>    EXECUTE(<span class="jxr_string">"execution"</span>, <span class="jxr_string">"Build artifacts"</span>, 0x3FFFCFCF),         <em class="jxr_comment">// FCC</em>
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>    FINISH(<span class="jxr_string">"finish"</span>, <span class="jxr_string">"Complete build"</span>,0x3FFFCFFF);               <em class="jxr_comment">// FCF</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>    <em class="jxr_javadoccomment">/** Short name for the phase */</em>
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String nick;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>    <em class="jxr_javadoccomment">/** Human readable description for the phase. */</em>
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String description;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>    <em class="jxr_javadoccomment">/** Default color of the task, when rendered in a chart. */</em>
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> color;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>    <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilePhase.html">ProfilePhase</a>(String nick, String description, <strong class="jxr_keyword">int</strong> color) {
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>      <strong class="jxr_keyword">this</strong>.nick = nick;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>      <strong class="jxr_keyword">this</strong>.description = description;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>      <strong class="jxr_keyword">this</strong>.color = color;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>    }
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>
