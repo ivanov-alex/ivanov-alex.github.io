@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.9">
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checkstyle-sonar-plugin/src/main/java/com/github/sevntu/checkstyle/sonar/CheckstyleExtensionPlugin.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checkstyle-sonar-plugin/src/main/java/com/github/sevntu/checkstyle/sonar/CheckstyleExtensionRepository.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/resources-noncompilable/com/github/sevntu/checkstyle/checks/coding/InputRedundantReturnTestNPE.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/BaseCheckTestSupport.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/sizes/LineLengthCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/annotation/RequiredParameterForAnnotationCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/annotation/ForbidAnnotationTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/naming/TypeParameterNameTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/naming/EnumValueNameCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/IllegalCatchCheckTest.java">
+<error line="5" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="6" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="8" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="8" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/TernaryPerExpressionCountCheckTest.java">
+<error line="22" severity="warning" message="&apos;junit.framework.Assert&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="22" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="24" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/AvoidNotShortCircuitOperatorsForBooleanCheckTest.java">
+<error line="23" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="24" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="25" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="26" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="26" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/DiamondOperatorForVariableDefinitionCheckTest.java">
+<error line="22" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="22" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/MultipleVariableDeclarationsCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/NoNullForCollectionReturnCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ForbidThrowAnonymousExceptionsTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ForbidReturnInFinallyBlockCheckTest.java">
+<error line="24" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="24" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ConfusingConditionCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ReturnNullInsteadOfBooleanTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ForbidCCommentsInMethodsTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/RedundantReturnCheckTest.java">
+<error line="4" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STATIC&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="4" severity="warning" message="Wrong order for &apos;com.github.sevntu.checkstyle.checks.coding.RedundantReturnCheck.MSG_KEY&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="5" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="5" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ReturnBooleanFromTernaryTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/NameConventionForJunit4TestClassesCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/AvoidDefaultSerializableInInnerClassesTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/SimpleAccessorNameNotationTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ReturnCountExtendedCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/FinalizeImplementationCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/MapIterationInForEachLoopTest.java">
+<error line="5" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STATIC&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="5" severity="warning" message="Wrong order for &apos;com.github.sevntu.checkstyle.checks.coding.MapIterationInForEachLoopCheck.*&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="6" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="6" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ForbidCertainImportsCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/MultipleStringLiteralsExtendedCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/OverridableMethodInConstructorCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/AvoidModifiersForTypesCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/UnnecessaryParenthesesExtendedCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/EitherLogOrThrowCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/EmptyPublicCtorInClassCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/ForbidInstantiationCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/AvoidConstantAsFirstOperandInConditionCheckTest.java">
+<error line="5" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="6" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/UselessSingleCatchCheckTest.java">
+<error line="8" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STATIC&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="8" severity="warning" message="Wrong order for &apos;com.github.sevntu.checkstyle.checks.coding.UselessSingleCatchCheck.*&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/LogicConditionNeedOptimizationCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/UselessSuperCtorCallCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/AvoidHidingCauseExceptionCheckTest.java">
+<error line="5" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="6" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/coding/CustomDeclarationOrderCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/ChildBlockLengthTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/ForbidWildcardAsReturnTypeCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/PublicReferenceToPrivateTypeCheckTest.java">
+<error line="22" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STATIC&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="22" severity="warning" message="Wrong order for &apos;com.github.sevntu.checkstyle.checks.design.PublicReferenceToPrivateTypeCheck.MSG_KEY&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="23" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="23" severity="warning" message="&apos;com.github.sevntu.checkstyle.BaseCheckTestSupport&apos; should be separated from previous imports." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/CauseParameterInExceptionCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/NoMainMethodInAbstractClassCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/InnerClassCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/AvoidConditionInversionTest.java">
+<error line="7" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STATIC&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="Wrong order for &apos;com.github.sevntu.checkstyle.checks.design.AvoidConditionInversionCheck.MSG_KEY&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/HideUtilityClassConstructorCheckTest.java">
+<error line="5" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="6" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="7" severity="warning" message="Imports without groups should be placed at the end of the import list." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="8" severity="warning" message="&apos;org.junit.Test&apos; should be separated from previous import group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="8" severity="warning" message="Wrong order for &apos;org.junit.Test&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/test/java/com/github/sevntu/checkstyle/checks/design/NestedSwitchCheckTest.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/Utils.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/sizes/LineLengthExtendedCheck.java">
+<error line="32" severity="warning" message="Wrong order for &apos;com.puppycrawl.tools.checkstyle.Utils&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/annotation/RequiredParameterForAnnotationCheck.java">
+<error line="28" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STANDARD_JAVA_PACKAGE&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="28" severity="warning" message="Wrong order for &apos;java.util.Set&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="29" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STANDARD_JAVA_PACKAGE&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/annotation/ForbidAnnotationCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/naming/InterfaceTypeParameterNameCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/naming/EnumValueNameCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ForbidReturnInFinallyBlockCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/LogicConditionNeedOptimizationCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/SimpleAccessorNameNotationCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/NoNullForCollectionReturnCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/AvoidModifiersForTypesCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/RedundantReturnCheck.java">
+<error line="27" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STANDARD_JAVA_PACKAGE&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="27" severity="warning" message="Wrong order for &apos;java.util.ArrayList&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+<error line="28" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STANDARD_JAVA_PACKAGE&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/NameConventionForJunit4TestClassesCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ForbidCCommentsInMethods.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/EmptyPublicCtorInClassCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ReturnBooleanFromTernary.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ForbidInstantiationCheck.java">
+<error line="22" severity="warning" message="Wrong lexicographical order for &apos;java.util.HashSet&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="22" severity="warning" message="Wrong order for &apos;java.util.HashSet&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/DiamondOperatorForVariableDefinitionCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/IllegalCatchExtendedCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ForbidThrowAnonymousExceptionsCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/TernaryPerExpressionCountCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/AvoidDefaultSerializableInInnerClasses.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/CustomDeclarationOrderCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/MultipleVariableDeclarationsExtendedCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ForbidCertainImportsCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/OverridableMethodInConstructorCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/AvoidConstantAsFirstOperandInConditionCheck.java">
+<error line="25" severity="warning" message="Import statement is in the wrong order. Should be in the &apos;STANDARD_JAVA_PACKAGE&apos; group." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="25" severity="warning" message="Wrong order for &apos;java.util.Arrays&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/UnnecessaryParenthesesExtendedCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/MapIterationInForEachLoopCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/FinalizeImplementationCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/UselessSuperCtorCallCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ConfusingConditionCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/AvoidHidingCauseExceptionCheck.java">
+<error line="26" severity="warning" message="Wrong order for &apos;com.puppycrawl.tools.checkstyle.api.Check&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/EitherLogOrThrowCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/AvoidNotShortCircuitOperatorsForBooleanCheck.java">
+<error line="26" severity="warning" message="Wrong order for &apos;com.puppycrawl.tools.checkstyle.api.Check&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ReturnCountExtendedCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/MultipleStringLiteralsExtendedCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/UselessSingleCatchCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/coding/ReturnNullInsteadOfBoolean.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/PublicReferenceToPrivateTypeCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/NestedSwitchCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/AvoidConditionInversionCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/HideUtilityClassConstructorCheck.java">
+<error line="23" severity="warning" message="Wrong order for &apos;com.puppycrawl.tools.checkstyle.api.DetailAST&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/NoMainMethodInAbstractClassCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/ChildBlockLengthCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/ForbidWildcardAsReturnTypeCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/InnerClassCheck.java">
+</file>
+<file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/sevntu-checkstyle/sevntu-checks/src/main/java/com/github/sevntu/checkstyle/checks/design/CauseParameterInExceptionCheck.java">
+</file>
+</checkstyle>

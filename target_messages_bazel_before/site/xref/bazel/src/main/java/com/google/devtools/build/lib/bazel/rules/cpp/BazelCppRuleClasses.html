@@ -1,0 +1,947 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>BazelCppRuleClasses xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../../../apidocs/com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">// Copyright 2014 Google Inc. All rights reserved.</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment">// Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment">// you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment">// You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment">//    http://www.apache.org/licenses/LICENSE-2.0</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment">// Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment">// distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment">// See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment">// limitations under the License.</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">package</strong> com.google.devtools.build.lib.bazel.rules.cpp;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Attribute.attr;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.ImplicitOutputsFunction.fromFunctions;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.ImplicitOutputsFunction.fromTemplates;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.BOOLEAN;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.LABEL;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.LABEL_LIST;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.LABEL_LIST_DICT;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.STRING;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.STRING_LIST;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.TRISTATE;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.ALWAYS_LINK_LIBRARY;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.ALWAYS_LINK_PIC_LIBRARY;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.ARCHIVE;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.ASSEMBLER_WITH_C_PREPROCESSOR;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.CPP_HEADER;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.CPP_SOURCE;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.C_SOURCE;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.OBJECT_FILE;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.PIC_ARCHIVE;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.PIC_OBJECT_FILE;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.SHARED_LIBRARY;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes.VERSIONED_SHARED_LIBRARY;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Predicates;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.BaseRuleClasses;
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.RuleDefinition;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.RuleDefinitionEnvironment;
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.BuildConfiguration;
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.bazel.rules.BazelBaseRuleClasses;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Attribute;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Attribute.ConfigurationTransition;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Attribute.LateBoundLabel;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Attribute.Transition;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.AttributeMap;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.ImplicitOutputsFunction.SafeImplicitOutputsFunction;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RawAttributeMapper;
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Rule;
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RuleClass;
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RuleClass.Builder;
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassType;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.TriState;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Type;
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.rules.cpp.CppConfiguration;
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.rules.cpp.CppFileTypes;
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.rules.cpp.CppRuleClasses;
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.syntax.Label;
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.util.FileTypeSet;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.view.config.crosstool.CrosstoolConfig.LipoMode;
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  <em class="jxr_javadoccomment"> * Rule class definitions for C++ rules.</em>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">BazelCppRuleClasses</a> {
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/ImplicitOutputsFunction.html">SafeImplicitOutputsFunction</a> CC_LIBRARY_DYNAMIC_LIB =
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>        fromTemplates(<span class="jxr_string">"%{dirname}lib%{basename}.so"</span>);
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/ImplicitOutputsFunction.html">SafeImplicitOutputsFunction</a> CC_BINARY_IMPLICIT_OUTPUTS =
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>        fromFunctions(CppRuleClasses.CC_BINARY_STRIPPED, CppRuleClasses.CC_BINARY_DEBUG_PACKAGE);
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../../../com/google/devtools/build/lib/util/FileTypeSet.html">FileTypeSet</a> ALLOWED_SRC_FILES = FileTypeSet.of(
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>        CPP_SOURCE,
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>        C_SOURCE,
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>        CPP_HEADER,
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>        ASSEMBLER_WITH_C_PREPROCESSOR,
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>        ARCHIVE,
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>        PIC_ARCHIVE,
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>        ALWAYS_LINK_LIBRARY,
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>        ALWAYS_LINK_PIC_LIBRARY,
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>        SHARED_LIBRARY,
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>        VERSIONED_SHARED_LIBRARY,
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>        OBJECT_FILE,
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>        PIC_OBJECT_FILE);
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String[] DEPS_ALLOWED_RULES = <strong class="jxr_keyword">new</strong> String[] {
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>        <span class="jxr_string">"cc_library"</span>,
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>    };
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>    <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment">   * Miscellaneous configuration transitions. It would be better not to have this - please don't add</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  <em class="jxr_javadoccomment">   * to it.</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> enum <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CppTransition</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/Attribute.html">Transition</a> {
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_javadoccomment">     * The configuration for LIPO information collection. Requesting this from a configuration that</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <em class="jxr_javadoccomment">     * does not have lipo optimization enabled may result in an exception.</em>
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>     LIPO_COLLECTOR,
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a> <em class="jxr_javadoccomment">     * The corresponding (target) configuration.</em>
+<a class="jxr_linenumber" name="L107" href="#L107">107</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>     TARGET_CONFIG_FOR_LIPO;
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> 
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>     @Override
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> defaultsToSelf() {
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>       <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>     }
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>   }
+<a class="jxr_linenumber" name="L115" href="#L115">115</a> 
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> RuleClass.Configurator&lt;BuildConfiguration, Rule&gt; LIPO_ON_DEMAND =
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>       <strong class="jxr_keyword">new</strong> RuleClass.Configurator&lt;BuildConfiguration, Rule&gt;() {
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     @Override
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> apply(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>       <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> toplevelConfig =
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>           configuration.getConfiguration(CppTransition.TARGET_CONFIG_FOR_LIPO);
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>       <em class="jxr_comment">// If LIPO is enabled, override the default configuration.</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>       <strong class="jxr_keyword">if</strong> (toplevelConfig != <strong class="jxr_keyword">null</strong>
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>           &amp;&amp; toplevelConfig.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).isLipoOptimization()
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>           &amp;&amp; !configuration.isHostConfiguration()
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>           &amp;&amp; !configuration.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).isLipoContextCollector()) {
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         <em class="jxr_comment">// Switch back to data when the cc_binary is not the LIPO context.</em>
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>         <strong class="jxr_keyword">return</strong> (rule.getLabel().equals(
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>             toplevelConfig.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).getLipoContextLabel()))
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>             ? toplevelConfig
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>             : configuration.getTransitions().getConfiguration(ConfigurationTransition.DATA);
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>       }
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>       <strong class="jxr_keyword">return</strong> configuration;
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>     }
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>   };
+<a class="jxr_linenumber" name="L136" href="#L136">136</a> 
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> <em class="jxr_javadoccomment">   * Label of a pseudo-filegroup that contains all crosstool and libcfiles for</em>
+<a class="jxr_linenumber" name="L139" href="#L139">139</a> <em class="jxr_javadoccomment">   * all configurations, as specified on the command-line.</em>
+<a class="jxr_linenumber" name="L140" href="#L140">140</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String CROSSTOOL_LABEL = <span class="jxr_string">"//tools/defaults:crosstool"</span>;
+<a class="jxr_linenumber" name="L142" href="#L142">142</a> 
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LateBoundLabel&lt;BuildConfiguration&gt; CC_TOOLCHAIN =
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>       <strong class="jxr_keyword">new</strong> LateBoundLabel&lt;BuildConfiguration&gt;(CROSSTOOL_LABEL) {
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>         @Override
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>         <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>           <strong class="jxr_keyword">return</strong> configuration.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).getCcToolchainRuleLabel();
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>         }
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>       };
+<a class="jxr_linenumber" name="L150" href="#L150">150</a> 
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LateBoundLabel&lt;BuildConfiguration&gt; DEFAULT_MALLOC =
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>       <strong class="jxr_keyword">new</strong> LateBoundLabel&lt;BuildConfiguration&gt;() {
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>         @Override
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>         <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>           <strong class="jxr_keyword">return</strong> configuration.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).customMalloc();
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>         }
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>       };
+<a class="jxr_linenumber" name="L158" href="#L158">158</a> 
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LateBoundLabel&lt;BuildConfiguration&gt; STL =
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>       <strong class="jxr_keyword">new</strong> LateBoundLabel&lt;BuildConfiguration&gt;() {
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>         @Override
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>         <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>           <strong class="jxr_keyword">return</strong> getStl(rule, configuration);
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>         }
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>       };
+<a class="jxr_linenumber" name="L166" href="#L166">166</a> 
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> <em class="jxr_javadoccomment">   * Implementation for the :lipo_context_collector attribute.</em>
+<a class="jxr_linenumber" name="L169" href="#L169">169</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LateBoundLabel&lt;BuildConfiguration&gt; LIPO_CONTEXT_COLLECTOR =
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>       <strong class="jxr_keyword">new</strong> LateBoundLabel&lt;BuildConfiguration&gt;() {
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>     @Override
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>       <em class="jxr_comment">// This attribute connects a target to the LIPO context target configured with the</em>
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>       <em class="jxr_comment">// lipo input collector configuration.</em>
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>       <a href="../../../../../../../../com/google/devtools/build/lib/rules/cpp/CppConfiguration.html">CppConfiguration</a> cppConfiguration = configuration.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>       <strong class="jxr_keyword">return</strong> !cppConfiguration.isLipoContextCollector()
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>           &amp;&amp; (cppConfiguration.getLipoMode() == LipoMode.BINARY)
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>           ? cppConfiguration.getLipoContextLabel()
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>           : <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>     }
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>   };
+<a class="jxr_linenumber" name="L183" href="#L183">183</a> 
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L185" href="#L185">185</a> <em class="jxr_javadoccomment">   * Returns the STL prerequisite of the rule.</em>
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L187" href="#L187">187</a> <em class="jxr_javadoccomment">   * &lt;p&gt;If rule has an implicit $stl attribute returns STL version set on the</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> <em class="jxr_javadoccomment">   * command line or if not set, the value of the $stl attribute. Returns</em>
+<a class="jxr_linenumber" name="L189" href="#L189">189</a> <em class="jxr_javadoccomment">   * {@code null} otherwise.</em>
+<a class="jxr_linenumber" name="L190" href="#L190">190</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getStl(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> original) {
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>     <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> stl = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>     <strong class="jxr_keyword">if</strong> (rule.getRuleClassObject().hasAttr(<span class="jxr_string">"$stl"</span>, Type.LABEL)) {
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>       <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> stlConfigLabel = original.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).getStl();
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>       <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> stlRuleLabel = RawAttributeMapper.of(rule).get(<span class="jxr_string">"$stl"</span>, Type.LABEL);
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>       <strong class="jxr_keyword">if</strong> (stlConfigLabel == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>         stl = stlRuleLabel;
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!stlConfigLabel.equals(rule.getLabel()) &amp;&amp; stlRuleLabel != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>         <em class="jxr_comment">// prevents self-reference and a cycle through standard STL in the dependency graph</em>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>         stl = stlConfigLabel;
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>       }
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     }
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>     <strong class="jxr_keyword">return</strong> stl;
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>   }
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> 
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L207" href="#L207">207</a> <em class="jxr_javadoccomment">   * Common attributes for all rules that create C++ links. This may</em>
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> <em class="jxr_javadoccomment">   * include non-cc_* rules (e.g. py_binary).</em>
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcLinkingRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>     @Override
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>     @SuppressWarnings(<span class="jxr_string">"unchecked"</span>)
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>           .add(attr(<span class="jxr_string">":cc_toolchain"</span>, LABEL).value(CC_TOOLCHAIN))
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>           .setPreferredDependencyPredicate(Predicates.&lt;String&gt;or(CPP_SOURCE, C_SOURCE, CPP_HEADER))
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>           .build();
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>     }
+<a class="jxr_linenumber" name="L219" href="#L219">219</a> 
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     @Override
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>           .name(<span class="jxr_string">"$cc_linking_rule"</span>)
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>           .build();
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>     }
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>   }
+<a class="jxr_linenumber" name="L228" href="#L228">228</a> 
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">   * Common attributes for C++ rules.</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcBaseRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>     @Override
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_base_rule).ATTRIBUTE(copts) --&gt;</em>
+<a class="jxr_linenumber" name="L237" href="#L237">237</a> <em class="jxr_comment">          Add these options to the C++ compilation command.</em>
+<a class="jxr_linenumber" name="L238" href="#L238">238</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L239" href="#L239">239</a> <em class="jxr_comment">          Subject to &lt;a href="#make_variables"&gt;"Make variable"&lt;/a&gt; substitution and</em>
+<a class="jxr_linenumber" name="L240" href="#L240">240</a> <em class="jxr_comment">          &lt;a href="#sh-tokenization"&gt;Bourne shell tokenization&lt;/a&gt;.</em>
+<a class="jxr_linenumber" name="L241" href="#L241">241</a> <em class="jxr_comment">          &lt;p&gt;Each string in this attribute is added in the given order to &lt;code&gt;COPTS&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L242" href="#L242">242</a> <em class="jxr_comment">          before compiling the binary target.</em>
+<a class="jxr_linenumber" name="L243" href="#L243">243</a> <em class="jxr_comment">          The flags take effect only for compiling this target, not its dependencies,</em>
+<a class="jxr_linenumber" name="L244" href="#L244">244</a> <em class="jxr_comment">          so be careful about header files included elsewhere.&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L245" href="#L245">245</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>           .add(attr(<span class="jxr_string">"copts"</span>, STRING_LIST))
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>           .add(attr(<span class="jxr_string">"$stl"</span>, LABEL).value(env.getLabel(<span class="jxr_string">"//tools/cpp:stl"</span>)))
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>           .add(attr(<span class="jxr_string">":stl"</span>, LABEL).value(STL))
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>           .build();
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>     }
+<a class="jxr_linenumber" name="L251" href="#L251">251</a> 
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>     @Override
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>           .name(<span class="jxr_string">"$cc_base_rule"</span>)
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>           .ancestors(CcLinkingRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>           .build();
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>     }
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>   }
+<a class="jxr_linenumber" name="L261" href="#L261">261</a> 
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> <em class="jxr_javadoccomment">   * Helper rule class.</em>
+<a class="jxr_linenumber" name="L264" href="#L264">264</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcDeclRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>     @Override
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_decl_rule).ATTRIBUTE(abi)[DEPRECATED] --&gt;</em>
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> <em class="jxr_comment">           Platform-specific information string which is used in combination</em>
+<a class="jxr_linenumber" name="L271" href="#L271">271</a> <em class="jxr_comment">            with &lt;code&gt;abi_deps&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_comment">            ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_comment">            Subject to &lt;a href="#make_variables"&gt;"Make" variable&lt;/a&gt; substitution.</em>
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_comment">            &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a> <em class="jxr_comment">              This string typically includes references to one or more "Make" variables of the form</em>
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> <em class="jxr_comment">              &lt;code&gt;"$(VAR)"&lt;/code&gt;. The default value is &lt;code&gt;"$(ABI)"&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L277" href="#L277">277</a> <em class="jxr_comment">            &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a> <em class="jxr_comment">            &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L279" href="#L279">279</a> <em class="jxr_comment">              With &lt;code&gt;abi_deps&lt;/code&gt;, the regular expression &lt;code&gt;patterns&lt;/code&gt; will be</em>
+<a class="jxr_linenumber" name="L280" href="#L280">280</a> <em class="jxr_comment">              matched against this string.</em>
+<a class="jxr_linenumber" name="L281" href="#L281">281</a> <em class="jxr_comment">            &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L282" href="#L282">282</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>           <em class="jxr_comment">// Deprecated in favor of configurable attributes.</em>
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>           .add(attr(<span class="jxr_string">"abi"</span>, STRING).value(<span class="jxr_string">"$(ABI)"</span>))
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_decl_rule).ATTRIBUTE(abi_deps)[DEPRECATED] --&gt;</em>
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> <em class="jxr_comment">          The list of architecture-specific dependencies that are processed to create the target.</em>
+<a class="jxr_linenumber" name="L287" href="#L287">287</a> <em class="jxr_comment">          &lt;i&gt;(Dictionary mapping strings to lists of</em>
+<a class="jxr_linenumber" name="L288" href="#L288">288</a> <em class="jxr_comment">             &lt;a href="build-ref.html#labels"&gt;labels&lt;/a&gt;; optional)&lt;/i&gt;</em>
+<a class="jxr_linenumber" name="L289" href="#L289">289</a> <em class="jxr_comment">          &lt;p&gt;&lt;i&gt;&lt;a href="#configurable-attributes"&gt;Configurable attributes&lt;/a&gt; is a generalization</em>
+<a class="jxr_linenumber" name="L290" href="#L290">290</a> <em class="jxr_comment">            of the same concept that works for most rules and attributes. It mostly deprecates</em>
+<a class="jxr_linenumber" name="L291" href="#L291">291</a> <em class="jxr_comment">            &lt;code&gt;abi_deps&lt;/code&gt;, which we expect to remove it as soon as possible. Use</em>
+<a class="jxr_linenumber" name="L292" href="#L292">292</a> <em class="jxr_comment">            configurable attributes over &lt;code&gt;abi_deps&lt;/code&gt; whenever possible. If the former is</em>
+<a class="jxr_linenumber" name="L293" href="#L293">293</a> <em class="jxr_comment">            insufficient for you, please let us know why.&lt;/i&gt;</em>
+<a class="jxr_linenumber" name="L294" href="#L294">294</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L295" href="#L295">295</a> <em class="jxr_comment">          &lt;p&gt;Each entry in this dictionary follows the form of</em>
+<a class="jxr_linenumber" name="L296" href="#L296">296</a> <em class="jxr_comment">             &lt;code&gt;'pattern' : ['label1', 'label2', ...]&lt;/code&gt;.  If the library's</em>
+<a class="jxr_linenumber" name="L297" href="#L297">297</a> <em class="jxr_comment">             &lt;code&gt;abi&lt;/code&gt; attribute is an unanchored match for the regular</em>
+<a class="jxr_linenumber" name="L298" href="#L298">298</a> <em class="jxr_comment">             expression defined in &lt;code&gt;pattern&lt;/code&gt;, the corresponding</em>
+<a class="jxr_linenumber" name="L299" href="#L299">299</a> <em class="jxr_comment">             labels are used as dependencies as if they had appeared in the</em>
+<a class="jxr_linenumber" name="L300" href="#L300">300</a> <em class="jxr_comment">             &lt;code&gt;deps&lt;/code&gt; list.</em>
+<a class="jxr_linenumber" name="L301" href="#L301">301</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L302" href="#L302">302</a> <em class="jxr_comment">          &lt;p&gt;All pairs with a matching &lt;code&gt;pattern&lt;/code&gt; will have their labels</em>
+<a class="jxr_linenumber" name="L303" href="#L303">303</a> <em class="jxr_comment">             used.  If no matches are found, no dependencies will be used.  The</em>
+<a class="jxr_linenumber" name="L304" href="#L304">304</a> <em class="jxr_comment">             ordering is irrelevant.</em>
+<a class="jxr_linenumber" name="L305" href="#L305">305</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L306" href="#L306">306</a> <em class="jxr_comment">          &lt;p&gt;If you want a &lt;code&gt;pattern&lt;/code&gt; to not match a particular</em>
+<a class="jxr_linenumber" name="L307" href="#L307">307</a> <em class="jxr_comment">             &lt;code&gt;abi&lt;/code&gt;, for example adding a dep on all non-k8 platforms, you</em>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_comment">             can use a negative lookahead pattern.  This would look like</em>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_comment">             &lt;code&gt;(?!k8).*&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_comment">          &lt;p&gt;If using &lt;code&gt;abi_deps&lt;/code&gt;, do not provide &lt;code&gt;deps&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L312" href="#L312">312</a> <em class="jxr_comment">             Instead, use an entry with a &lt;code&gt;pattern&lt;/code&gt; of &lt;code&gt;'.*'&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L313" href="#L313">313</a> <em class="jxr_comment">             because that matches everything.  This is also how to share</em>
+<a class="jxr_linenumber" name="L314" href="#L314">314</a> <em class="jxr_comment">             dependencies across multiple different &lt;code&gt;abi&lt;/code&gt; values.</em>
+<a class="jxr_linenumber" name="L315" href="#L315">315</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> <em class="jxr_comment">          &lt;p&gt;Typically, this mechanism is used to specify the appropriate set of</em>
+<a class="jxr_linenumber" name="L317" href="#L317">317</a> <em class="jxr_comment">             paths to pre-compiled libraries for the target architecture of the</em>
+<a class="jxr_linenumber" name="L318" href="#L318">318</a> <em class="jxr_comment">             current build.  Such paths are parameterized over "Make" variables</em>
+<a class="jxr_linenumber" name="L319" href="#L319">319</a> <em class="jxr_comment">             such as &lt;code&gt;$(ABI)&lt;/code&gt;, &lt;code&gt;$(TARGET_CPU)&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L320" href="#L320">320</a> <em class="jxr_comment">             &lt;code&gt;$(C_COMPILER)&lt;/code&gt;, etc, but since "Make" variables are not</em>
+<a class="jxr_linenumber" name="L321" href="#L321">321</a> <em class="jxr_comment">             allowed in &lt;a href="build-ref.html#labels"&gt;labels&lt;/a&gt;, the</em>
+<a class="jxr_linenumber" name="L322" href="#L322">322</a> <em class="jxr_comment">             architecture-specific files cannot be specified via the normal</em>
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_comment">             &lt;code&gt;srcs&lt;/code&gt; attribute. Instead, this mechanism can be used</em>
+<a class="jxr_linenumber" name="L324" href="#L324">324</a> <em class="jxr_comment">             to declare architecture-specific dependent rules for the current</em>
+<a class="jxr_linenumber" name="L325" href="#L325">325</a> <em class="jxr_comment">             target that can specify the correct libraries in their own</em>
+<a class="jxr_linenumber" name="L326" href="#L326">326</a> <em class="jxr_comment">             &lt;code&gt;srcs&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L327" href="#L327">327</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L328" href="#L328">328</a> <em class="jxr_comment">          &lt;p&gt;This mechanism is also used to specify the appropriate set of</em>
+<a class="jxr_linenumber" name="L329" href="#L329">329</a> <em class="jxr_comment">             dependencies when some targets can't compile for the target architecture</em>
+<a class="jxr_linenumber" name="L330" href="#L330">330</a> <em class="jxr_comment">             of the current build.  In most cases, uses an &lt;code&gt;#ifdef&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L331" href="#L331">331</a> <em class="jxr_comment">             Only use &lt;code&gt;abi_deps&lt;/code&gt; for more significant dependency changes.</em>
+<a class="jxr_linenumber" name="L332" href="#L332">332</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L333" href="#L333">333</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>           <em class="jxr_comment">// Deprecated in favor of configurable attributes.</em>
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>           .add(attr(<span class="jxr_string">"abi_deps"</span>, LABEL_LIST_DICT))
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_decl_rule).ATTRIBUTE(defines) --&gt;</em>
+<a class="jxr_linenumber" name="L337" href="#L337">337</a> <em class="jxr_comment">          List of defines to add to the compile line.</em>
+<a class="jxr_linenumber" name="L338" href="#L338">338</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L339" href="#L339">339</a> <em class="jxr_comment">          Subject to &lt;a href="#make_variables"&gt;"Make" variable&lt;/a&gt; substitution and</em>
+<a class="jxr_linenumber" name="L340" href="#L340">340</a> <em class="jxr_comment">          &lt;a href="#sh-tokenization"&gt;Bourne shell tokenization&lt;/a&gt;.</em>
+<a class="jxr_linenumber" name="L341" href="#L341">341</a> <em class="jxr_comment">          Each string, which must consist of a single Bourne shell token,</em>
+<a class="jxr_linenumber" name="L342" href="#L342">342</a> <em class="jxr_comment">          is prepended with &lt;code&gt;-D&lt;/code&gt; and added to</em>
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> <em class="jxr_comment">          &lt;code&gt;COPTS&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L344" href="#L344">344</a> <em class="jxr_comment">          Unlike &lt;a href="#cc_binary.copts"&gt;&lt;code&gt;copts&lt;/code&gt;&lt;/a&gt;, these flags are added for the</em>
+<a class="jxr_linenumber" name="L345" href="#L345">345</a> <em class="jxr_comment">          target and every rule that depends on it!  Be very careful, since this may have</em>
+<a class="jxr_linenumber" name="L346" href="#L346">346</a> <em class="jxr_comment">          far-reaching effects.  When in doubt, add "-D" flags to</em>
+<a class="jxr_linenumber" name="L347" href="#L347">347</a> <em class="jxr_comment">          &lt;a href="#cc_binary.copts"&gt;&lt;code&gt;copts&lt;/code&gt;&lt;/a&gt; instead.</em>
+<a class="jxr_linenumber" name="L348" href="#L348">348</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>           .add(attr(<span class="jxr_string">"defines"</span>, STRING_LIST))
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_decl_rule).ATTRIBUTE(includes) --&gt;</em>
+<a class="jxr_linenumber" name="L351" href="#L351">351</a> <em class="jxr_comment">          List of include dirs to be added to the compile line.</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L353" href="#L353">353</a> <em class="jxr_comment">          Subject to &lt;a href="#make_variables"&gt;"Make variable"&lt;/a&gt; substitution.</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> <em class="jxr_comment">          Each string is prepended with &lt;code&gt;-I&lt;/code&gt; and added to &lt;code&gt;COPTS&lt;/code&gt;. Unlike</em>
+<a class="jxr_linenumber" name="L355" href="#L355">355</a> <em class="jxr_comment">          &lt;a href="#cc_binary.copts"&gt;COPTS&lt;/a&gt;, these flags are added for this rule</em>
+<a class="jxr_linenumber" name="L356" href="#L356">356</a> <em class="jxr_comment">          and every rule that depends on it. (Note: not the rules it depends upon!) Be</em>
+<a class="jxr_linenumber" name="L357" href="#L357">357</a> <em class="jxr_comment">          very careful, since this may have far-reaching effects.  When in doubt, add</em>
+<a class="jxr_linenumber" name="L358" href="#L358">358</a> <em class="jxr_comment">          "-I" flags to &lt;a href="#cc_binary.copts"&gt;COPTS&lt;/a&gt; instead.</em>
+<a class="jxr_linenumber" name="L359" href="#L359">359</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>           .add(attr(<span class="jxr_string">"includes"</span>, STRING_LIST))
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>           .add(attr(<span class="jxr_string">":lipo_context_collector"</span>, LABEL)
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>               .cfg(CppTransition.LIPO_COLLECTOR)
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>               .value(LIPO_CONTEXT_COLLECTOR))
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>           .build();
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     }
+<a class="jxr_linenumber" name="L366" href="#L366">366</a> 
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>     @Override
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>           .name(<span class="jxr_string">"$cc_decl_rule"</span>)
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>           .ancestors(BaseRuleClasses.RuleBase.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>           .build();
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>     }
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>   }
+<a class="jxr_linenumber" name="L376" href="#L376">376</a> 
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L378" href="#L378">378</a> <em class="jxr_javadoccomment">   * Helper rule class.</em>
+<a class="jxr_linenumber" name="L379" href="#L379">379</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>     @Override
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <strong class="jxr_keyword">final</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(srcs) --&gt;</em>
+<a class="jxr_linenumber" name="L385" href="#L385">385</a> <em class="jxr_comment">          The list of C and C++ files that are processed to create the target.</em>
+<a class="jxr_linenumber" name="L386" href="#L386">386</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L387" href="#L387">387</a> <em class="jxr_comment">          These are C/C++ source and header files, either non-generated (normal source</em>
+<a class="jxr_linenumber" name="L388" href="#L388">388</a> <em class="jxr_comment">          code) or generated.</em>
+<a class="jxr_linenumber" name="L389" href="#L389">389</a> <em class="jxr_comment">          &lt;p&gt;All &lt;code&gt;.cc&lt;/code&gt;, &lt;code&gt;.c&lt;/code&gt;, and &lt;code&gt;.cpp&lt;/code&gt; files will</em>
+<a class="jxr_linenumber" name="L390" href="#L390">390</a> <em class="jxr_comment">             be compiled. These might be generated files: if a named file is in</em>
+<a class="jxr_linenumber" name="L391" href="#L391">391</a> <em class="jxr_comment">             the &lt;code&gt;outs&lt;/code&gt; of some other rule, this rule</em>
+<a class="jxr_linenumber" name="L392" href="#L392">392</a> <em class="jxr_comment">             will automatically depend on that other rule.</em>
+<a class="jxr_linenumber" name="L393" href="#L393">393</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L394" href="#L394">394</a> <em class="jxr_comment">          &lt;p&gt;A &lt;code&gt;.h&lt;/code&gt; file will not be compiled, but will be available for</em>
+<a class="jxr_linenumber" name="L395" href="#L395">395</a> <em class="jxr_comment">             inclusion by sources in this rule. Both &lt;code&gt;.cc&lt;/code&gt; and</em>
+<a class="jxr_linenumber" name="L396" href="#L396">396</a> <em class="jxr_comment">             &lt;code&gt;.h&lt;/code&gt; files can directly include headers listed in</em>
+<a class="jxr_linenumber" name="L397" href="#L397">397</a> <em class="jxr_comment">             these &lt;code&gt;srcs&lt;/code&gt; or in the &lt;code&gt;hdrs&lt;/code&gt; of any rule listed in</em>
+<a class="jxr_linenumber" name="L398" href="#L398">398</a> <em class="jxr_comment">             the &lt;code&gt;deps&lt;/code&gt; argument. For compatibility with older</em>
+<a class="jxr_linenumber" name="L399" href="#L399">399</a> <em class="jxr_comment">             implementations, and depending on the checking strictness specified by</em>
+<a class="jxr_linenumber" name="L400" href="#L400">400</a> <em class="jxr_comment">             each library, additional headers may be available for inclusion. See</em>
+<a class="jxr_linenumber" name="L401" href="#L401">401</a> <em class="jxr_comment">             &lt;a href="#cc_library.hdrs_check"&gt;&lt;code&gt;cc_library.hdrs_check&lt;/code&gt;&lt;/a&gt;.</em>
+<a class="jxr_linenumber" name="L402" href="#L402">402</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L403" href="#L403">403</a> <em class="jxr_comment">          &lt;p&gt;All &lt;code&gt;#include&lt;/code&gt;d files must be mentioned in the</em>
+<a class="jxr_linenumber" name="L404" href="#L404">404</a> <em class="jxr_comment">             &lt;code&gt;srcs&lt;/code&gt; attribute of this rule, or in the</em>
+<a class="jxr_linenumber" name="L405" href="#L405">405</a> <em class="jxr_comment">             &lt;code&gt;hdrs&lt;/code&gt; attribute of referenced &lt;code&gt;cc_library()&lt;/code&gt;s.</em>
+<a class="jxr_linenumber" name="L406" href="#L406">406</a> <em class="jxr_comment">             The recommended style is for headers associated with a library to be</em>
+<a class="jxr_linenumber" name="L407" href="#L407">407</a> <em class="jxr_comment">             listed in that library's &lt;code&gt;hdrs&lt;/code&gt; attribute, and any remaining</em>
+<a class="jxr_linenumber" name="L408" href="#L408">408</a> <em class="jxr_comment">             headers associated with this rule's sources to be listed in</em>
+<a class="jxr_linenumber" name="L409" href="#L409">409</a> <em class="jxr_comment">             &lt;code&gt;srcs&lt;/code&gt;. See &lt;a href="#hdrs"&gt;"Header inclusion checking"&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L410" href="#L410">410</a> <em class="jxr_comment">             for a more detailed description.</em>
+<a class="jxr_linenumber" name="L411" href="#L411">411</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L412" href="#L412">412</a> <em class="jxr_comment">          &lt;p&gt;If a rule's name is in the &lt;code&gt;srcs&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L413" href="#L413">413</a> <em class="jxr_comment">             then this rule automatically depends on that one.</em>
+<a class="jxr_linenumber" name="L414" href="#L414">414</a> <em class="jxr_comment">             If the named rule's &lt;code&gt;outs&lt;/code&gt; are C or C++</em>
+<a class="jxr_linenumber" name="L415" href="#L415">415</a> <em class="jxr_comment">             source files, they are compiled into this rule;</em>
+<a class="jxr_linenumber" name="L416" href="#L416">416</a> <em class="jxr_comment">             if they are library files, they are linked in.</em>
+<a class="jxr_linenumber" name="L417" href="#L417">417</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L418" href="#L418">418</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L419" href="#L419">419</a> <em class="jxr_comment">            Permitted &lt;code&gt;srcs&lt;/code&gt; file types:</em>
+<a class="jxr_linenumber" name="L420" href="#L420">420</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L421" href="#L421">421</a> <em class="jxr_comment">          &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L422" href="#L422">422</a> <em class="jxr_comment">            &lt;li&gt;C and C++ source files: &lt;code&gt;.c&lt;/code&gt;, &lt;code&gt;.cc&lt;/code&gt;, &lt;code&gt;.cpp&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L423" href="#L423">423</a> <em class="jxr_comment">              &lt;code&gt;.cxx&lt;/code&gt;, &lt;code&gt;.c++&lt;/code, &lt;code&gt;.C&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L424" href="#L424">424</a> <em class="jxr_comment">            &lt;li&gt;C and C++ header files: &lt;code&gt;.h&lt;/code&gt;, &lt;code&gt;.hh&lt;/code&gt;, &lt;code&gt;.hpp&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a> <em class="jxr_comment">              &lt;code&gt;.hxx&lt;/code&gt;, &lt;code&gt;.inc&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L426" href="#L426">426</a> <em class="jxr_comment">            &lt;li&gt;Assembler with C preprocessor: &lt;code&gt;.S&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L427" href="#L427">427</a> <em class="jxr_comment">            &lt;li&gt;Archive: &lt;code&gt;.a&lt;/code&gt;, &lt;code&gt;.pic.a&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L428" href="#L428">428</a> <em class="jxr_comment">            &lt;li&gt;"Always link" library: &lt;code&gt;.lo&lt;/code&gt;, &lt;code&gt;.pic.lo&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L429" href="#L429">429</a> <em class="jxr_comment">            &lt;li&gt;Shared library, versioned or unversioned: &lt;code&gt;.so&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L430" href="#L430">430</a> <em class="jxr_comment">              &lt;code&gt;.so.&lt;i&gt;version&lt;/i&gt;&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L431" href="#L431">431</a> <em class="jxr_comment">            &lt;li&gt;Object file: &lt;code&gt;.o&lt;/code&gt;, &lt;code&gt;.pic.o&lt;/code&gt;&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L432" href="#L432">432</a> <em class="jxr_comment">          &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L433" href="#L433">433</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L434" href="#L434">434</a> <em class="jxr_comment">            ...and any rules that produce those files.</em>
+<a class="jxr_linenumber" name="L435" href="#L435">435</a> <em class="jxr_comment">            Different extensions denote different programming languages in</em>
+<a class="jxr_linenumber" name="L436" href="#L436">436</a> <em class="jxr_comment">            accordance with gcc convention.</em>
+<a class="jxr_linenumber" name="L437" href="#L437">437</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L438" href="#L438">438</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>           .add(attr(<span class="jxr_string">"srcs"</span>, LABEL_LIST)
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>               .direct_compile_time_input()
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>               .allowedFileTypes(ALLOWED_SRC_FILES))
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(deps) --&gt;</em>
+<a class="jxr_linenumber" name="L443" href="#L443">443</a> <em class="jxr_comment">          The list of other libraries to be linked in to the binary target.</em>
+<a class="jxr_linenumber" name="L444" href="#L444">444</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L445" href="#L445">445</a> <em class="jxr_comment">          &lt;p&gt;These are always &lt;code&gt;cc_library&lt;/code&gt; rules.&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L446" href="#L446">446</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>           .override(attr(<span class="jxr_string">"deps"</span>, LABEL_LIST)
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>               .allowedRuleClasses(DEPS_ALLOWED_RULES)
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>               .allowedFileTypes(CppFileTypes.LINKER_SCRIPT)
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>               .skipAnalysisTimeFileTypeCheck())
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(linkopts) --&gt;</em>
+<a class="jxr_linenumber" name="L452" href="#L452">452</a> <em class="jxr_comment">          Add these flags to the C++ linker command.</em>
+<a class="jxr_linenumber" name="L453" href="#L453">453</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L454" href="#L454">454</a> <em class="jxr_comment">          Subject to &lt;a href="#make_variables"&gt;"Make" variable&lt;/a&gt; substitution,</em>
+<a class="jxr_linenumber" name="L455" href="#L455">455</a> <em class="jxr_comment">          &lt;a href="#sh-tokenization"&gt;Bourne shell tokenization&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L456" href="#L456">456</a> <em class="jxr_comment">          and &lt;a href="#label-expansion"&gt;label expansion&lt;/a&gt;.</em>
+<a class="jxr_linenumber" name="L457" href="#L457">457</a> <em class="jxr_comment">          Each string in this attribute is added to &lt;code&gt;LINKOPTS&lt;/code&gt; before</em>
+<a class="jxr_linenumber" name="L458" href="#L458">458</a> <em class="jxr_comment">          linking the binary target.</em>
+<a class="jxr_linenumber" name="L459" href="#L459">459</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L460" href="#L460">460</a> <em class="jxr_comment">            Each element of this list that does not start with &lt;code&gt;$&lt;/code&gt; or &lt;code&gt;-&lt;/code&gt; is</em>
+<a class="jxr_linenumber" name="L461" href="#L461">461</a> <em class="jxr_comment">            assumed to be the label of a target in &lt;code&gt;deps&lt;/code&gt;.  The</em>
+<a class="jxr_linenumber" name="L462" href="#L462">462</a> <em class="jxr_comment">            list of files generated by that target is appended to the linker</em>
+<a class="jxr_linenumber" name="L463" href="#L463">463</a> <em class="jxr_comment">            options.  An error is reported if the label is invalid, or is</em>
+<a class="jxr_linenumber" name="L464" href="#L464">464</a> <em class="jxr_comment">            not declared in &lt;code&gt;deps&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L465" href="#L465">465</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L466" href="#L466">466</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>           .add(attr(<span class="jxr_string">"linkopts"</span>, STRING_LIST))
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(nocopts) --&gt;</em>
+<a class="jxr_linenumber" name="L469" href="#L469">469</a> <em class="jxr_comment">          Remove matching options from the C++ compilation command.</em>
+<a class="jxr_linenumber" name="L470" href="#L470">470</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L471" href="#L471">471</a> <em class="jxr_comment">          Subject to &lt;a href="#make_variables"&gt;"Make" variable&lt;/a&gt; substitution.</em>
+<a class="jxr_linenumber" name="L472" href="#L472">472</a> <em class="jxr_comment">          The value of this attribute is interpreted as a regular expression.</em>
+<a class="jxr_linenumber" name="L473" href="#L473">473</a> <em class="jxr_comment">          Any preexisting &lt;code&gt;COPTS&lt;/code&gt; that match this regular expression</em>
+<a class="jxr_linenumber" name="L474" href="#L474">474</a> <em class="jxr_comment">          (not including values explicitly specified in the rule's &lt;a</em>
+<a class="jxr_linenumber" name="L475" href="#L475">475</a> <em class="jxr_comment">          href="#cc_binary.copts"&gt;copts&lt;/a&gt; attribute) will be removed from</em>
+<a class="jxr_linenumber" name="L476" href="#L476">476</a> <em class="jxr_comment">          &lt;code&gt;COPTS&lt;/code&gt; for purposes of compiling this rule.</em>
+<a class="jxr_linenumber" name="L477" href="#L477">477</a> <em class="jxr_comment">          This attribute should rarely be needed.</em>
+<a class="jxr_linenumber" name="L478" href="#L478">478</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>           .add(attr(<span class="jxr_string">"nocopts"</span>, STRING))
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>           <em class="jxr_comment">// cc_library.hdrs_check is an alias for cc_binary.hdrs_check</em>
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>           <em class="jxr_comment">// because many external links depend on it.</em>
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(hdrs_check)[DEPRECATED] --&gt;</em>
+<a class="jxr_linenumber" name="L483" href="#L483">483</a> <em class="jxr_comment">          Deprecated: we will roll out support for C++ modules, which are strict by design.</em>
+<a class="jxr_linenumber" name="L484" href="#L484">484</a> <em class="jxr_comment">          &lt;a id="cc_library.hdrs_check"&gt;&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L485" href="#L485">485</a> <em class="jxr_comment">          The strictness of the header file check to be applied to dependents and the</em>
+<a class="jxr_linenumber" name="L486" href="#L486">486</a> <em class="jxr_comment">          source files of this library. Must be one of: &lt;code&gt;"loose"&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L487" href="#L487">487</a> <em class="jxr_comment">          &lt;code&gt;"warn"&lt;/code&gt; or &lt;code&gt;"strict"&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L488" href="#L488">488</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L489" href="#L489">489</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L490" href="#L490">490</a> <em class="jxr_comment">             The three levels of checking operate as follows:</em>
+<a class="jxr_linenumber" name="L491" href="#L491">491</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L492" href="#L492">492</a> <em class="jxr_comment">          &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L493" href="#L493">493</a> <em class="jxr_comment">             &lt;li&gt;&lt;code&gt;"loose"&lt;/code&gt;: Any source header file in any of the</em>
+<a class="jxr_linenumber" name="L494" href="#L494">494</a> <em class="jxr_comment">             directories of the containing package may be &lt;code&gt;#include&lt;/code&gt;d by</em>
+<a class="jxr_linenumber" name="L495" href="#L495">495</a> <em class="jxr_comment">             sources in this rule and dependent rules. Generated header files must be</em>
+<a class="jxr_linenumber" name="L496" href="#L496">496</a> <em class="jxr_comment">             explicitly listed in &lt;code&gt;hdrs&lt;/code&gt; or &lt;code&gt;srcs&lt;/code&gt;. This</em>
+<a class="jxr_linenumber" name="L497" href="#L497">497</a> <em class="jxr_comment">             check level is the current default, but it will be phased out.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L498" href="#L498">498</a> <em class="jxr_comment">             &lt;li&gt;&lt;code&gt;"warn"&lt;/code&gt;: Enforcement is the same as for</em>
+<a class="jxr_linenumber" name="L499" href="#L499">499</a> <em class="jxr_comment">             &lt;code&gt;"loose"&lt;/code&gt;, but any case that would violate the</em>
+<a class="jxr_linenumber" name="L500" href="#L500">500</a> <em class="jxr_comment">             &lt;code&gt;"strict"&lt;/code&gt; check will cause a warning to be emitted.</em>
+<a class="jxr_linenumber" name="L501" href="#L501">501</a> <em class="jxr_comment">             This check level is provided to help with the migration to strict.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L502" href="#L502">502</a> <em class="jxr_comment">             &lt;li&gt;&lt;code&gt;"strict"&lt;/code&gt;: All &lt;code&gt;#include&lt;/code&gt;d files must be explicitly declared</em>
+<a class="jxr_linenumber" name="L503" href="#L503">503</a> <em class="jxr_comment">             somewhere in the &lt;code&gt;hdrs&lt;/code&gt; or &lt;code&gt;srcs&lt;/code&gt; of the rules providing the</em>
+<a class="jxr_linenumber" name="L504" href="#L504">504</a> <em class="jxr_comment">             libraries or the rules containing the including source. Note that this means that a</em>
+<a class="jxr_linenumber" name="L505" href="#L505">505</a> <em class="jxr_comment">             rule can include any header that is in the &lt;code&gt;hdrs&lt;/code&gt; or &lt;code&gt;srcs&lt;/code&gt; of</em>
+<a class="jxr_linenumber" name="L506" href="#L506">506</a> <em class="jxr_comment">             any rule it transitively depends on. A stricter layering check is currently being</em>
+<a class="jxr_linenumber" name="L507" href="#L507">507</a> <em class="jxr_comment">             rolled out.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L508" href="#L508">508</a> <em class="jxr_comment">          &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L509" href="#L509">509</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>           .add(attr(<span class="jxr_string">"hdrs_check"</span>, STRING).value(<span class="jxr_string">"strict"</span>))
+<a class="jxr_linenumber" name="L511" href="#L511">511</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_rule).ATTRIBUTE(linkstatic) --&gt;</em>
+<a class="jxr_linenumber" name="L512" href="#L512">512</a> <em class="jxr_comment">           Link the binary in mostly-static mode.</em>
+<a class="jxr_linenumber" name="L513" href="#L513">513</a> <em class="jxr_comment">           ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L514" href="#L514">514</a> <em class="jxr_comment">           By default this option is on for &lt;code&gt;cc_binary&lt;/code&gt; and off for &lt;code&gt;cc_test&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L515" href="#L515">515</a> <em class="jxr_comment">           &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L516" href="#L516">516</a> <em class="jxr_comment">             If enabled, this tells the build tool to link in &lt;code&gt;.a&lt;/code&gt;'s instead of</em>
+<a class="jxr_linenumber" name="L517" href="#L517">517</a> <em class="jxr_comment">             &lt;code&gt;.so&lt;/code&gt;'s for user libraries whenever possible. Some system libraries may</em>
+<a class="jxr_linenumber" name="L518" href="#L518">518</a> <em class="jxr_comment">             still be linked dynamically, as are libraries for which there's no static library. So</em>
+<a class="jxr_linenumber" name="L519" href="#L519">519</a> <em class="jxr_comment">             the resulting binary will be dynamically linked, hence only &lt;i&gt;mostly&lt;/i&gt; static.</em>
+<a class="jxr_linenumber" name="L520" href="#L520">520</a> <em class="jxr_comment">           &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L521" href="#L521">521</a> <em class="jxr_comment">           &lt;p&gt;There are really three different ways to link an executable:&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L522" href="#L522">522</a> <em class="jxr_comment">           &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L523" href="#L523">523</a> <em class="jxr_comment">           &lt;li&gt; FULLY STATIC, in which everything is linked statically; e.g. "&lt;code&gt;gcc -static</em>
+<a class="jxr_linenumber" name="L524" href="#L524">524</a> <em class="jxr_comment">             foo.o libbar.a libbaz.a -lm&lt;/code&gt;".&lt;br/&gt;This mode is enabled by specifying</em>
+<a class="jxr_linenumber" name="L525" href="#L525">525</a> <em class="jxr_comment">             &lt;code&gt;-static&lt;/code&gt; in the &lt;a href="#cc_binary.linkopts"&gt;&lt;code&gt;linkopts&lt;/code&gt;&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L526" href="#L526">526</a> <em class="jxr_comment">             attribute.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L527" href="#L527">527</a> <em class="jxr_comment">           &lt;li&gt; MOSTLY STATIC, in which all user libraries are linked statically (if a static</em>
+<a class="jxr_linenumber" name="L528" href="#L528">528</a> <em class="jxr_comment">             version is available), but where system libraries are linked dynamically, e.g.</em>
+<a class="jxr_linenumber" name="L529" href="#L529">529</a> <em class="jxr_comment">             "&lt;code&gt;gcc foo.o libfoo.a libbaz.a -lm&lt;/code&gt;".&lt;br/&gt;This mode is enabled by specifying</em>
+<a class="jxr_linenumber" name="L530" href="#L530">530</a> <em class="jxr_comment">             &lt;code&gt;linkstatic=1&lt;/code&gt;.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L531" href="#L531">531</a> <em class="jxr_comment">           &lt;li&gt; DYNAMIC, in which all libraries are linked dynamically (if a dynamic version is</em>
+<a class="jxr_linenumber" name="L532" href="#L532">532</a> <em class="jxr_comment">             available), e.g. "&lt;code&gt;gcc foo.o libfoo.so libbaz.so -lm&lt;/code&gt;".&lt;br/&gt; This mode is</em>
+<a class="jxr_linenumber" name="L533" href="#L533">533</a> <em class="jxr_comment">             enabled by specifying &lt;code&gt;linkstatic=0&lt;/code&gt;.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L534" href="#L534">534</a> <em class="jxr_comment">           &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L535" href="#L535">535</a> <em class="jxr_comment">           &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L536" href="#L536">536</a> <em class="jxr_comment">           The &lt;code&gt;linkstatic&lt;/code&gt; attribute has a different meaning if used on a</em>
+<a class="jxr_linenumber" name="L537" href="#L537">537</a> <em class="jxr_comment">           &lt;a href="#cc_library"&gt;&lt;code&gt;cc_library()&lt;/code&gt;&lt;/a&gt; rule.</em>
+<a class="jxr_linenumber" name="L538" href="#L538">538</a> <em class="jxr_comment">           For a C++ library, &lt;code&gt;linkstatic=1&lt;/code&gt; indicates that only</em>
+<a class="jxr_linenumber" name="L539" href="#L539">539</a> <em class="jxr_comment">           static linking is allowed, so no &lt;code&gt;.so&lt;/code&gt; will be produced.</em>
+<a class="jxr_linenumber" name="L540" href="#L540">540</a> <em class="jxr_comment">           &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L541" href="#L541">541</a> <em class="jxr_comment">           &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L542" href="#L542">542</a> <em class="jxr_comment">           If &lt;code&gt;linkstatic=0&lt;/code&gt;, then the build tool will create symlinks to</em>
+<a class="jxr_linenumber" name="L543" href="#L543">543</a> <em class="jxr_comment">           depended-upon shared libraries in the &lt;code&gt;*.runfiles&lt;/code&gt; area.</em>
+<a class="jxr_linenumber" name="L544" href="#L544">544</a> <em class="jxr_comment">           &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L545" href="#L545">545</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>           .add(attr(<span class="jxr_string">"linkstatic"</span>, BOOLEAN).value(<strong class="jxr_keyword">true</strong>))
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>           .override(attr(<span class="jxr_string">"$stl"</span>, LABEL).value(<strong class="jxr_keyword">new</strong> Attribute.ComputedDefault() {
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>             @Override
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>             <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../java/lang/Object.html">Object</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/AttributeMap.html">AttributeMap</a> rule) {
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>               <em class="jxr_comment">// Every cc_rule depends implicitly on STL to make</em>
+<a class="jxr_linenumber" name="L551" href="#L551">551</a>               <em class="jxr_comment">// sure that the correct headers are used for inclusion. The only exception is</em>
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>               <em class="jxr_comment">// STL itself to avoid cycles in the dependency graph.</em>
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>               <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> stl = env.getLabel(<span class="jxr_string">"//tools/cpp:stl"</span>);
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>               <strong class="jxr_keyword">return</strong> rule.getLabel().equals(stl) ? <strong class="jxr_keyword">null</strong> : stl;
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>             }
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>           }))
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>           .build();
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>     }
+<a class="jxr_linenumber" name="L559" href="#L559">559</a>     @Override
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>           .name(<span class="jxr_string">"$cc_rule"</span>)
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L564" href="#L564">564</a>           .ancestors(CcDeclRule.<strong class="jxr_keyword">class</strong>, CcBaseRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>           .build();
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>     }
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>   }
+<a class="jxr_linenumber" name="L568" href="#L568">568</a> 
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L570" href="#L570">570</a> <em class="jxr_javadoccomment">   * Helper rule class.</em>
+<a class="jxr_linenumber" name="L571" href="#L571">571</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcBinaryBaseRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>     @Override
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_binary_base).ATTRIBUTE(malloc) --&gt;</em>
+<a class="jxr_linenumber" name="L577" href="#L577">577</a> <em class="jxr_comment">          Override the default dependency on malloc.</em>
+<a class="jxr_linenumber" name="L578" href="#L578">578</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L580" href="#L580">580</a> <em class="jxr_comment">            By default, Linux C++ binaries are linked against &lt;code&gt;//tools/cpp:malloc&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L581" href="#L581">581</a> <em class="jxr_comment">            which is an empty library so the binary ends up using libc malloc. This label must</em>
+<a class="jxr_linenumber" name="L582" href="#L582">582</a> <em class="jxr_comment">            refer to a &lt;code&gt;cc_library&lt;/code&gt;. If compilation is for a non-C++ rule, this option</em>
+<a class="jxr_linenumber" name="L583" href="#L583">583</a> <em class="jxr_comment">            has no effect. The value of this attribute is ignored if &lt;code&gt;linkshared=1&lt;/code&gt; is</em>
+<a class="jxr_linenumber" name="L584" href="#L584">584</a> <em class="jxr_comment">            specified.</em>
+<a class="jxr_linenumber" name="L585" href="#L585">585</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L586" href="#L586">586</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>           .add(attr(<span class="jxr_string">"malloc"</span>, LABEL)
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>               .value(env.getLabel(<span class="jxr_string">"//tools/cpp:malloc"</span>))
+<a class="jxr_linenumber" name="L589" href="#L589">589</a>               .allowedFileTypes()
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>               .allowedRuleClasses(<span class="jxr_string">"cc_library"</span>))
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>           .add(attr(<span class="jxr_string">":default_malloc"</span>, LABEL).value(DEFAULT_MALLOC))
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_binary_base).ATTRIBUTE(stamp) --&gt;</em>
+<a class="jxr_linenumber" name="L593" href="#L593">593</a> <em class="jxr_comment">          Enable link stamping.</em>
+<a class="jxr_linenumber" name="L594" href="#L594">594</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L595" href="#L595">595</a> <em class="jxr_comment">          Whether to encode build information into the binary. Possible values:</em>
+<a class="jxr_linenumber" name="L596" href="#L596">596</a> <em class="jxr_comment">          &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L597" href="#L597">597</a> <em class="jxr_comment">            &lt;li&gt;&lt;code&gt;stamp = 1&lt;/code&gt;: Stamp the build information into the</em>
+<a class="jxr_linenumber" name="L598" href="#L598">598</a> <em class="jxr_comment">              binary. Stamped binaries are only rebuilt when their dependencies</em>
+<a class="jxr_linenumber" name="L599" href="#L599">599</a> <em class="jxr_comment">              change. Use this if there are tests that depend on the build</em>
+<a class="jxr_linenumber" name="L600" href="#L600">600</a> <em class="jxr_comment">              information.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L601" href="#L601">601</a> <em class="jxr_comment">            &lt;li&gt;&lt;code&gt;stamp = 0&lt;/code&gt;: Always replace build information by constant</em>
+<a class="jxr_linenumber" name="L602" href="#L602">602</a> <em class="jxr_comment">              values. This gives good build result caching.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L603" href="#L603">603</a> <em class="jxr_comment">            &lt;li&gt;&lt;code&gt;stamp = -1&lt;/code&gt;: Embedding of build information is controlled</em>
+<a class="jxr_linenumber" name="L604" href="#L604">604</a> <em class="jxr_comment">              by the &lt;a href="blaze-user-manual.html#flag--stamp"&gt;--[no]stamp&lt;/a&gt; flag.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L605" href="#L605">605</a> <em class="jxr_comment">          &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L606" href="#L606">606</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L607" href="#L607">607</a>           <em class="jxr_comment">// TODO(bazel-team): document this. Figure out a standard way to access stamp data at</em>
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>           <em class="jxr_comment">// runtime.</em>
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>           .add(attr(<span class="jxr_string">"stamp"</span>, TRISTATE).value(TriState.AUTO))
+<a class="jxr_linenumber" name="L610" href="#L610">610</a>           .build();
+<a class="jxr_linenumber" name="L611" href="#L611">611</a>     }
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>     @Override
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L614" href="#L614">614</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L615" href="#L615">615</a>           .name(<span class="jxr_string">"$cc_binary_base"</span>)
+<a class="jxr_linenumber" name="L616" href="#L616">616</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>           .ancestors(CcRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L618" href="#L618">618</a>           .build();
+<a class="jxr_linenumber" name="L619" href="#L619">619</a>     }
+<a class="jxr_linenumber" name="L620" href="#L620">620</a>   }
+<a class="jxr_linenumber" name="L621" href="#L621">621</a> 
+<a class="jxr_linenumber" name="L622" href="#L622">622</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L623" href="#L623">623</a> <em class="jxr_javadoccomment">   * Rule definition for cc_binary rules.</em>
+<a class="jxr_linenumber" name="L624" href="#L624">624</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcBinaryRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>     @Override
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L628" href="#L628">628</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L629" href="#L629">629</a>           .requiresConfigurationFragments(CppConfiguration.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L630" href="#L630">630</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE(cc_binary).IMPLICIT_OUTPUTS --&gt;</em>
+<a class="jxr_linenumber" name="L631" href="#L631">631</a> <em class="jxr_comment">          &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L632" href="#L632">632</a> <em class="jxr_comment">          &lt;li&gt;&lt;code&gt;&lt;var&gt;name&lt;/var&gt;.stripped&lt;/code&gt; (only built if explicitly requested): A stripped</em>
+<a class="jxr_linenumber" name="L633" href="#L633">633</a> <em class="jxr_comment">            version of the binary. &lt;code&gt;strip -g&lt;/code&gt; is run on the binary to remove debug</em>
+<a class="jxr_linenumber" name="L634" href="#L634">634</a> <em class="jxr_comment">            symbols.  Additional strip options can be provided on the command line using</em>
+<a class="jxr_linenumber" name="L635" href="#L635">635</a> <em class="jxr_comment">            &lt;code&gt;--stripopt=-foo&lt;/code&gt;. This output is only built if explicitly requested.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L636" href="#L636">636</a> <em class="jxr_comment">          &lt;li&gt;&lt;code&gt;&lt;var&gt;name&lt;/var&gt;.dwp&lt;/code&gt; (only built if explicitly requested): If</em>
+<a class="jxr_linenumber" name="L637" href="#L637">637</a> <em class="jxr_comment">            &lt;a href="https://gcc.gnu.org/wiki/DebugFission"&gt;Fission&lt;/a&gt; is enabled: a debug</em>
+<a class="jxr_linenumber" name="L638" href="#L638">638</a> <em class="jxr_comment">            information package file suitable for debugging remotely deployed binaries. Else: an</em>
+<a class="jxr_linenumber" name="L639" href="#L639">639</a> <em class="jxr_comment">            empty file.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L640" href="#L640">640</a> <em class="jxr_comment">          &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L641" href="#L641">641</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.IMPLICIT_OUTPUTS --&gt;*/</em>
+<a class="jxr_linenumber" name="L642" href="#L642">642</a>           .setImplicitOutputsFunction(CC_BINARY_IMPLICIT_OUTPUTS)
+<a class="jxr_linenumber" name="L643" href="#L643">643</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE(cc_binary).ATTRIBUTE(linkshared) --&gt;</em>
+<a class="jxr_linenumber" name="L644" href="#L644">644</a> <em class="jxr_comment">          Create a shared library.</em>
+<a class="jxr_linenumber" name="L645" href="#L645">645</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L646" href="#L646">646</a> <em class="jxr_comment">          To enable this attribute, include &lt;code&gt;linkshared=1&lt;/code&gt; in your rule. By default</em>
+<a class="jxr_linenumber" name="L647" href="#L647">647</a> <em class="jxr_comment">          this option is off. If you enable it, you must name your binary</em>
+<a class="jxr_linenumber" name="L648" href="#L648">648</a> <em class="jxr_comment">          &lt;code&gt;lib&lt;i&gt;foo&lt;/i&gt;.so&lt;/code&gt; (or whatever is the naming convention of libraries on the</em>
+<a class="jxr_linenumber" name="L649" href="#L649">649</a> <em class="jxr_comment">          target platform) for some sensible value of &lt;i&gt;foo&lt;/i&gt;.</em>
+<a class="jxr_linenumber" name="L650" href="#L650">650</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L651" href="#L651">651</a> <em class="jxr_comment">            The presence of this flag means that linking occurs with the &lt;code&gt;-shared&lt;/code&gt; flag</em>
+<a class="jxr_linenumber" name="L652" href="#L652">652</a> <em class="jxr_comment">            to &lt;code&gt;gcc&lt;/code&gt;, and the resulting shared library is suitable for loading into for</em>
+<a class="jxr_linenumber" name="L653" href="#L653">653</a> <em class="jxr_comment">            example a Java program. However, for build purposes it will never be linked into the</em>
+<a class="jxr_linenumber" name="L654" href="#L654">654</a> <em class="jxr_comment">            dependent binary, as it is assumed that shared libraries built with a</em>
+<a class="jxr_linenumber" name="L655" href="#L655">655</a> <em class="jxr_comment">            &lt;a href="#cc_binary"&gt;cc_binary&lt;/a&gt; rule are only loaded manually by other programs, so</em>
+<a class="jxr_linenumber" name="L656" href="#L656">656</a> <em class="jxr_comment">            it should not be considered a substitute for the &lt;a href="#cc_library"&gt;cc_library&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L657" href="#L657">657</a> <em class="jxr_comment">            rule. For sake of scalability we recommend avoiding this approach altogether and</em>
+<a class="jxr_linenumber" name="L658" href="#L658">658</a> <em class="jxr_comment">            simply letting &lt;code&gt;java_library&lt;/code&gt; depend on &lt;code&gt;cc_library&lt;/code&gt; rules</em>
+<a class="jxr_linenumber" name="L659" href="#L659">659</a> <em class="jxr_comment">            instead.</em>
+<a class="jxr_linenumber" name="L660" href="#L660">660</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L661" href="#L661">661</a> <em class="jxr_comment">          &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L662" href="#L662">662</a> <em class="jxr_comment">            If you specify both &lt;code&gt;linkopts=['-static']&lt;/code&gt; and &lt;code&gt;linkshared=1&lt;/code&gt;,</em>
+<a class="jxr_linenumber" name="L663" href="#L663">663</a> <em class="jxr_comment">            you get a single completely self-contained unit. If you specify both</em>
+<a class="jxr_linenumber" name="L664" href="#L664">664</a> <em class="jxr_comment">            &lt;code&gt;linkstatic=1&lt;/code&gt; and &lt;code&gt;linkshared=1&lt;/code&gt;, you get a single, mostly</em>
+<a class="jxr_linenumber" name="L665" href="#L665">665</a> <em class="jxr_comment">            self-contained unit.</em>
+<a class="jxr_linenumber" name="L666" href="#L666">666</a> <em class="jxr_comment">          &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L667" href="#L667">667</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L668" href="#L668">668</a>           .add(attr(<span class="jxr_string">"linkshared"</span>, BOOLEAN).value(false)
+<a class="jxr_linenumber" name="L669" href="#L669">669</a>               .nonconfigurable(<span class="jxr_string">"used to *determine* the rule's configuration"</span>))
+<a class="jxr_linenumber" name="L670" href="#L670">670</a>           .cfg(LIPO_ON_DEMAND)
+<a class="jxr_linenumber" name="L671" href="#L671">671</a>           .build();
+<a class="jxr_linenumber" name="L672" href="#L672">672</a>     }
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>     @Override
+<a class="jxr_linenumber" name="L674" href="#L674">674</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L676" href="#L676">676</a>           .name(<span class="jxr_string">"cc_binary"</span>)
+<a class="jxr_linenumber" name="L677" href="#L677">677</a>           .ancestors(CcBinaryBaseRule.<strong class="jxr_keyword">class</strong>, BazelBaseRuleClasses.BinaryBaseRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L678" href="#L678">678</a>           .factoryClass(BazelCcBinary.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L679" href="#L679">679</a>           .build();
+<a class="jxr_linenumber" name="L680" href="#L680">680</a>     }
+<a class="jxr_linenumber" name="L681" href="#L681">681</a>   }
+<a class="jxr_linenumber" name="L682" href="#L682">682</a> 
+<a class="jxr_linenumber" name="L683" href="#L683">683</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L684" href="#L684">684</a> <em class="jxr_javadoccomment">   * Implementation for the :lipo_context attribute.</em>
+<a class="jxr_linenumber" name="L685" href="#L685">685</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L686" href="#L686">686</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LateBoundLabel&lt;BuildConfiguration&gt; LIPO_CONTEXT =
+<a class="jxr_linenumber" name="L687" href="#L687">687</a>       <strong class="jxr_keyword">new</strong> LateBoundLabel&lt;BuildConfiguration&gt;() {
+<a class="jxr_linenumber" name="L688" href="#L688">688</a>     @Override
+<a class="jxr_linenumber" name="L689" href="#L689">689</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> getDefault(<a href="../../../../../../../../com/google/devtools/build/lib/packages/Rule.html">Rule</a> rule, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> configuration) {
+<a class="jxr_linenumber" name="L690" href="#L690">690</a>       <a href="../../../../../../../../com/google/devtools/build/lib/syntax/Label.html">Label</a> result = configuration.getFragment(CppConfiguration.<strong class="jxr_keyword">class</strong>).getLipoContextLabel();
+<a class="jxr_linenumber" name="L691" href="#L691">691</a>       <strong class="jxr_keyword">return</strong> (rule == <strong class="jxr_keyword">null</strong> || rule.getLabel().equals(result)) ? <strong class="jxr_keyword">null</strong> : result;
+<a class="jxr_linenumber" name="L692" href="#L692">692</a>     }
+<a class="jxr_linenumber" name="L693" href="#L693">693</a>   };
+<a class="jxr_linenumber" name="L694" href="#L694">694</a> 
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L696" href="#L696">696</a> <em class="jxr_javadoccomment">   * Rule definition for cc_test rules.</em>
+<a class="jxr_linenumber" name="L697" href="#L697">697</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L698" href="#L698">698</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcTestRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>     @Override
+<a class="jxr_linenumber" name="L700" href="#L700">700</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L702" href="#L702">702</a>           .setImplicitOutputsFunction(CppRuleClasses.CC_BINARY_DEBUG_PACKAGE)
+<a class="jxr_linenumber" name="L703" href="#L703">703</a>           .override(attr(<span class="jxr_string">"linkstatic"</span>, BOOLEAN).value(false))
+<a class="jxr_linenumber" name="L704" href="#L704">704</a>           .override(attr(<span class="jxr_string">"stamp"</span>, TRISTATE).value(TriState.NO))
+<a class="jxr_linenumber" name="L705" href="#L705">705</a>           .add(attr(<span class="jxr_string">":lipo_context"</span>, LABEL).value(LIPO_CONTEXT))
+<a class="jxr_linenumber" name="L706" href="#L706">706</a>           .build();
+<a class="jxr_linenumber" name="L707" href="#L707">707</a>     }
+<a class="jxr_linenumber" name="L708" href="#L708">708</a>     @Override
+<a class="jxr_linenumber" name="L709" href="#L709">709</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L711" href="#L711">711</a>           .name(<span class="jxr_string">"cc_test"</span>)
+<a class="jxr_linenumber" name="L712" href="#L712">712</a>           .type(RuleClassType.TEST)
+<a class="jxr_linenumber" name="L713" href="#L713">713</a>           .ancestors(CcBinaryBaseRule.<strong class="jxr_keyword">class</strong>, BaseRuleClasses.TestBaseRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L714" href="#L714">714</a>           .factoryClass(BazelCcTest.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L715" href="#L715">715</a>           .build();
+<a class="jxr_linenumber" name="L716" href="#L716">716</a>     }
+<a class="jxr_linenumber" name="L717" href="#L717">717</a>   }
+<a class="jxr_linenumber" name="L718" href="#L718">718</a> 
+<a class="jxr_linenumber" name="L719" href="#L719">719</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L720" href="#L720">720</a> <em class="jxr_javadoccomment">   * Helper rule class.</em>
+<a class="jxr_linenumber" name="L721" href="#L721">721</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L722" href="#L722">722</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcLibraryBaseRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L723" href="#L723">723</a>     @Override
+<a class="jxr_linenumber" name="L724" href="#L724">724</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L725" href="#L725">725</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L726" href="#L726">726</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE($cc_library).ATTRIBUTE(hdrs) --&gt;</em>
+<a class="jxr_linenumber" name="L727" href="#L727">727</a> <em class="jxr_comment">           The list of header files published by</em>
+<a class="jxr_linenumber" name="L728" href="#L728">728</a> <em class="jxr_comment">           this library to be directly included by sources in dependent rules.</em>
+<a class="jxr_linenumber" name="L729" href="#L729">729</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L730" href="#L730">730</a> <em class="jxr_comment">          &lt;p&gt;This is the strongly preferred location for declaring header files that</em>
+<a class="jxr_linenumber" name="L731" href="#L731">731</a> <em class="jxr_comment">             describe the interface for the library. These headers will be made</em>
+<a class="jxr_linenumber" name="L732" href="#L732">732</a> <em class="jxr_comment">             available for inclusion by sources in this rule or in dependent rules.</em>
+<a class="jxr_linenumber" name="L733" href="#L733">733</a> <em class="jxr_comment">             Headers not meant to be included by a client of this library should be</em>
+<a class="jxr_linenumber" name="L734" href="#L734">734</a> <em class="jxr_comment">             listed in the &lt;code&gt;srcs&lt;/code&gt; attribute instead, even if they are</em>
+<a class="jxr_linenumber" name="L735" href="#L735">735</a> <em class="jxr_comment">             included by a published header. See &lt;a href="#hdrs"&gt;"Header inclusion</em>
+<a class="jxr_linenumber" name="L736" href="#L736">736</a> <em class="jxr_comment">             checking"&lt;/a&gt; for a more detailed description. &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L737" href="#L737">737</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L738" href="#L738">738</a>           .add(attr(<span class="jxr_string">"hdrs"</span>, LABEL_LIST).orderIndependent().direct_compile_time_input()
+<a class="jxr_linenumber" name="L739" href="#L739">739</a>               .allowedFileTypes(FileTypeSet.ANY_FILE))
+<a class="jxr_linenumber" name="L740" href="#L740">740</a>           <em class="jxr_comment">/* &lt;!-- #BLAZE_RULE($cc_library).ATTRIBUTE(textual_hdrs) --&gt;</em>
+<a class="jxr_linenumber" name="L741" href="#L741">741</a> <em class="jxr_comment">           The list of header files published by</em>
+<a class="jxr_linenumber" name="L742" href="#L742">742</a> <em class="jxr_comment">           this library to be textually included by sources in dependent rules.</em>
+<a class="jxr_linenumber" name="L743" href="#L743">743</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L744" href="#L744">744</a> <em class="jxr_comment">          &lt;p&gt;This is the location for declaring header files that cannot be compiled on their own;</em>
+<a class="jxr_linenumber" name="L745" href="#L745">745</a> <em class="jxr_comment">             that is, they always need to be textually included by other source files to build valid</em>
+<a class="jxr_linenumber" name="L746" href="#L746">746</a> <em class="jxr_comment">             code.&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L747" href="#L747">747</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt; */</em>
+<a class="jxr_linenumber" name="L748" href="#L748">748</a>           .add(attr(<span class="jxr_string">"textual_hdrs"</span>, LABEL_LIST).orderIndependent().direct_compile_time_input()
+<a class="jxr_linenumber" name="L749" href="#L749">749</a>               .legacyAllowAnyFileType())
+<a class="jxr_linenumber" name="L750" href="#L750">750</a>           <em class="jxr_comment">// TODO(bazel-team): document or remove.</em>
+<a class="jxr_linenumber" name="L751" href="#L751">751</a>           .add(attr(<span class="jxr_string">"linkstamp"</span>, LABEL).allowedFileTypes(CPP_SOURCE, C_SOURCE))
+<a class="jxr_linenumber" name="L752" href="#L752">752</a>           .build();
+<a class="jxr_linenumber" name="L753" href="#L753">753</a>     }
+<a class="jxr_linenumber" name="L754" href="#L754">754</a>     @Override
+<a class="jxr_linenumber" name="L755" href="#L755">755</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L756" href="#L756">756</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L757" href="#L757">757</a>           .name(<span class="jxr_string">"$cc_library"</span>)
+<a class="jxr_linenumber" name="L758" href="#L758">758</a>           .type(RuleClassType.ABSTRACT)
+<a class="jxr_linenumber" name="L759" href="#L759">759</a>           .ancestors(CcRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L760" href="#L760">760</a>           .build();
+<a class="jxr_linenumber" name="L761" href="#L761">761</a>     }
+<a class="jxr_linenumber" name="L762" href="#L762">762</a>   }
+<a class="jxr_linenumber" name="L763" href="#L763">763</a> 
+<a class="jxr_linenumber" name="L764" href="#L764">764</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L765" href="#L765">765</a> <em class="jxr_javadoccomment">   * Rule definition for the cc_library rule.</em>
+<a class="jxr_linenumber" name="L766" href="#L766">766</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L767" href="#L767">767</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../../com/google/devtools/build/lib/bazel/rules/cpp/BazelCppRuleClasses.html">CcLibraryRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L768" href="#L768">768</a>     @Override
+<a class="jxr_linenumber" name="L769" href="#L769">769</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L770" href="#L770">770</a>       <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L771" href="#L771">771</a>           <em class="jxr_comment">// TODO: Google cc_library overrides documentation for:</em>
+<a class="jxr_linenumber" name="L772" href="#L772">772</a>           <em class="jxr_comment">// deps, data, linkopts, defines, srcs; override here too?</em>
+<a class="jxr_linenumber" name="L773" href="#L773">773</a> 
+<a class="jxr_linenumber" name="L774" href="#L774">774</a>           .requiresConfigurationFragments(CppConfiguration.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L775" href="#L775">775</a>           <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE(cc_library).ATTRIBUTE(alwayslink) --&gt;</em>
+<a class="jxr_linenumber" name="L776" href="#L776">776</a> <em class="jxr_comment">          If 1, any binary that depends (directly or indirectly) on this C++</em>
+<a class="jxr_linenumber" name="L777" href="#L777">777</a> <em class="jxr_comment">          library will link in all the object files for the files listed in</em>
+<a class="jxr_linenumber" name="L778" href="#L778">778</a> <em class="jxr_comment">          &lt;code&gt;srcs&lt;/code&gt;, even if some contain no symbols referenced by the binary.</em>
+<a class="jxr_linenumber" name="L779" href="#L779">779</a> <em class="jxr_comment">          ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L780" href="#L780">780</a> <em class="jxr_comment">          This is useful if your code isn't explicitly called by code in</em>
+<a class="jxr_linenumber" name="L781" href="#L781">781</a> <em class="jxr_comment">          the binary, e.g., if your code registers to receive some callback</em>
+<a class="jxr_linenumber" name="L782" href="#L782">782</a> <em class="jxr_comment">          provided by some service.</em>
+<a class="jxr_linenumber" name="L783" href="#L783">783</a> <em class="jxr_comment">          &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L784" href="#L784">784</a>           .add(attr(<span class="jxr_string">"alwayslink"</span>, BOOLEAN).
+<a class="jxr_linenumber" name="L785" href="#L785">785</a>               nonconfigurable(<span class="jxr_string">"value is referenced in an ImplicitOutputsFunction"</span>))
+<a class="jxr_linenumber" name="L786" href="#L786">786</a>           .override(attr(<span class="jxr_string">"linkstatic"</span>, BOOLEAN).value(false)
+<a class="jxr_linenumber" name="L787" href="#L787">787</a>               .nonconfigurable(<span class="jxr_string">"value is referenced in an ImplicitOutputsFunction"</span>))
+<a class="jxr_linenumber" name="L788" href="#L788">788</a>           .build();
+<a class="jxr_linenumber" name="L789" href="#L789">789</a>     }
+<a class="jxr_linenumber" name="L790" href="#L790">790</a>     @Override
+<a class="jxr_linenumber" name="L791" href="#L791">791</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L792" href="#L792">792</a>       <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L793" href="#L793">793</a>           .name(<span class="jxr_string">"cc_library"</span>)
+<a class="jxr_linenumber" name="L794" href="#L794">794</a>           .ancestors(CcLibraryBaseRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L795" href="#L795">795</a>           .factoryClass(BazelCcLibrary.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L796" href="#L796">796</a>           .build();
+<a class="jxr_linenumber" name="L797" href="#L797">797</a>     }
+<a class="jxr_linenumber" name="L798" href="#L798">798</a>   }
+<a class="jxr_linenumber" name="L799" href="#L799">799</a> }
+<a class="jxr_linenumber" name="L800" href="#L800">800</a> 
+<a class="jxr_linenumber" name="L801" href="#L801">801</a> <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE (NAME = cc_binary, TYPE = BINARY, FAMILY = C / C++) --&gt;</em>
+<a class="jxr_linenumber" name="L802" href="#L802">802</a> 
+<a class="jxr_linenumber" name="L803" href="#L803">803</a> <em class="jxr_comment">${ATTRIBUTE_SIGNATURE}</em>
+<a class="jxr_linenumber" name="L804" href="#L804">804</a> 
+<a class="jxr_linenumber" name="L805" href="#L805">805</a> <em class="jxr_comment">${IMPLICIT_OUTPUTS}</em>
+<a class="jxr_linenumber" name="L806" href="#L806">806</a> 
+<a class="jxr_linenumber" name="L807" href="#L807">807</a> <em class="jxr_comment">${ATTRIBUTE_DEFINITION}</em>
+<a class="jxr_linenumber" name="L808" href="#L808">808</a> 
+<a class="jxr_linenumber" name="L809" href="#L809">809</a> <em class="jxr_comment">&lt;!-- #END_BLAZE_RULE --&gt;*/</em>
+<a class="jxr_linenumber" name="L810" href="#L810">810</a> 
+<a class="jxr_linenumber" name="L811" href="#L811">811</a> 
+<a class="jxr_linenumber" name="L812" href="#L812">812</a> <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE (NAME = cc_library, TYPE = LIBRARY, FAMILY = C / C++) --&gt;</em>
+<a class="jxr_linenumber" name="L813" href="#L813">813</a> 
+<a class="jxr_linenumber" name="L814" href="#L814">814</a> <em class="jxr_comment">${ATTRIBUTE_SIGNATURE}</em>
+<a class="jxr_linenumber" name="L815" href="#L815">815</a> 
+<a class="jxr_linenumber" name="L816" href="#L816">816</a> <em class="jxr_comment">${ATTRIBUTE_DEFINITION}</em>
+<a class="jxr_linenumber" name="L817" href="#L817">817</a> 
+<a class="jxr_linenumber" name="L818" href="#L818">818</a> <em class="jxr_comment">&lt;h4 id="hdrs"&gt;Header inclusion checking&lt;/h4&gt;</em>
+<a class="jxr_linenumber" name="L819" href="#L819">819</a> 
+<a class="jxr_linenumber" name="L820" href="#L820">820</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L821" href="#L821">821</a> <em class="jxr_comment">  All header files that are used in the build must be declared in the &lt;code&gt;hdrs&lt;/code&gt; or</em>
+<a class="jxr_linenumber" name="L822" href="#L822">822</a> <em class="jxr_comment">  &lt;code&gt;srcs&lt;/code&gt; of &lt;code&gt;cc_*&lt;/code&gt; rules. This is enforced by default (i.e.</em>
+<a class="jxr_linenumber" name="L823" href="#L823">823</a> <em class="jxr_comment">  &lt;code&gt;&lt;a href="#cc_library.hdrs_check"&gt;hdrs_check&lt;/a&gt; = 'strict'&lt;/code&gt;).</em>
+<a class="jxr_linenumber" name="L824" href="#L824">824</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L825" href="#L825">825</a> 
+<a class="jxr_linenumber" name="L826" href="#L826">826</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L827" href="#L827">827</a> <em class="jxr_comment">  For &lt;code&gt;cc_library&lt;/code&gt; rules, headers in &lt;code&gt;hdrs&lt;/code&gt; comprise the public interface of</em>
+<a class="jxr_linenumber" name="L828" href="#L828">828</a> <em class="jxr_comment">  the library and can be directly included both from the files in &lt;code&gt;hdrs&lt;/code&gt; and</em>
+<a class="jxr_linenumber" name="L829" href="#L829">829</a> <em class="jxr_comment">  &lt;code&gt;srcs&lt;/code&gt; of the library itself as well as from files in &lt;code&gt;hdrs&lt;/code&gt; and</em>
+<a class="jxr_linenumber" name="L830" href="#L830">830</a> <em class="jxr_comment">  &lt;code&gt;srcs&lt;/code&gt; of &lt;code&gt;cc_*&lt;/code&gt; rules that list the library in their &lt;code&gt;deps&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L831" href="#L831">831</a> <em class="jxr_comment">  Headers in &lt;code&gt;srcs&lt;/code&gt; must only be directly included from the files in &lt;code&gt;hdrs&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L832" href="#L832">832</a> <em class="jxr_comment">  and &lt;code&gt;srcs&lt;/code&gt; of the library itself. When deciding whether to put a header into</em>
+<a class="jxr_linenumber" name="L833" href="#L833">833</a> <em class="jxr_comment">  &lt;code&gt;hdrs&lt;/code&gt; or &lt;code&gt;srcs&lt;/code&gt;, you should ask whether you want consumers of this library</em>
+<a class="jxr_linenumber" name="L834" href="#L834">834</a> <em class="jxr_comment">  to be able to directly include it. This is roughly the same decision as between</em>
+<a class="jxr_linenumber" name="L835" href="#L835">835</a> <em class="jxr_comment">  &lt;code&gt;public&lt;/code&gt; and &lt;code&gt;private&lt;/code&gt; visibility in programming languages.</em>
+<a class="jxr_linenumber" name="L836" href="#L836">836</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L837" href="#L837">837</a> 
+<a class="jxr_linenumber" name="L838" href="#L838">838</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L839" href="#L839">839</a> <em class="jxr_comment">  &lt;code&gt;cc_binary&lt;/code&gt; and &lt;code&gt;cc_test&lt;/code&gt; rules do not have an exported interface, so they</em>
+<a class="jxr_linenumber" name="L840" href="#L840">840</a> <em class="jxr_comment">  also do not have a &lt;code&gt;hdrs&lt;/code&gt; attribute. All headers that belong to the binary or test</em>
+<a class="jxr_linenumber" name="L841" href="#L841">841</a> <em class="jxr_comment">  directly should be listed in the &lt;code&gt;srcs&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L842" href="#L842">842</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L843" href="#L843">843</a> 
+<a class="jxr_linenumber" name="L844" href="#L844">844</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L845" href="#L845">845</a> <em class="jxr_comment">  To illustrate these rules, look at the following example.</em>
+<a class="jxr_linenumber" name="L846" href="#L846">846</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L847" href="#L847">847</a> 
+<a class="jxr_linenumber" name="L848" href="#L848">848</a> <em class="jxr_comment">&lt;pre class="code"&gt;</em>
+<a class="jxr_linenumber" name="L849" href="#L849">849</a> <em class="jxr_comment">cc_binary(</em>
+<a class="jxr_linenumber" name="L850" href="#L850">850</a> <em class="jxr_comment">    name = "foo",</em>
+<a class="jxr_linenumber" name="L851" href="#L851">851</a> <em class="jxr_comment">    srcs = [</em>
+<a class="jxr_linenumber" name="L852" href="#L852">852</a> <em class="jxr_comment">        "foo.cc",</em>
+<a class="jxr_linenumber" name="L853" href="#L853">853</a> <em class="jxr_comment">        "foo.h",</em>
+<a class="jxr_linenumber" name="L854" href="#L854">854</a> <em class="jxr_comment">    ],</em>
+<a class="jxr_linenumber" name="L855" href="#L855">855</a> <em class="jxr_comment">    deps = [":bar"],</em>
+<a class="jxr_linenumber" name="L856" href="#L856">856</a> <em class="jxr_comment">)</em>
+<a class="jxr_linenumber" name="L857" href="#L857">857</a> 
+<a class="jxr_linenumber" name="L858" href="#L858">858</a> <em class="jxr_comment">cc_library(</em>
+<a class="jxr_linenumber" name="L859" href="#L859">859</a> <em class="jxr_comment">    name = "bar",</em>
+<a class="jxr_linenumber" name="L860" href="#L860">860</a> <em class="jxr_comment">    srcs = [</em>
+<a class="jxr_linenumber" name="L861" href="#L861">861</a> <em class="jxr_comment">        "bar.cc",</em>
+<a class="jxr_linenumber" name="L862" href="#L862">862</a> <em class="jxr_comment">        "bar-impl.h",</em>
+<a class="jxr_linenumber" name="L863" href="#L863">863</a> <em class="jxr_comment">    ],</em>
+<a class="jxr_linenumber" name="L864" href="#L864">864</a> <em class="jxr_comment">    hdrs = ["bar.h"],</em>
+<a class="jxr_linenumber" name="L865" href="#L865">865</a> <em class="jxr_comment">    deps = [":baz"],</em>
+<a class="jxr_linenumber" name="L866" href="#L866">866</a> <em class="jxr_comment">)</em>
+<a class="jxr_linenumber" name="L867" href="#L867">867</a> 
+<a class="jxr_linenumber" name="L868" href="#L868">868</a> <em class="jxr_comment">cc_library(</em>
+<a class="jxr_linenumber" name="L869" href="#L869">869</a> <em class="jxr_comment">    name = "baz",</em>
+<a class="jxr_linenumber" name="L870" href="#L870">870</a> <em class="jxr_comment">    srcs = [</em>
+<a class="jxr_linenumber" name="L871" href="#L871">871</a> <em class="jxr_comment">        "baz.cc",</em>
+<a class="jxr_linenumber" name="L872" href="#L872">872</a> <em class="jxr_comment">        "baz-impl.h",</em>
+<a class="jxr_linenumber" name="L873" href="#L873">873</a> <em class="jxr_comment">    ],</em>
+<a class="jxr_linenumber" name="L874" href="#L874">874</a> <em class="jxr_comment">    hdrs = ["baz.h"],</em>
+<a class="jxr_linenumber" name="L875" href="#L875">875</a> <em class="jxr_comment">)</em>
+<a class="jxr_linenumber" name="L876" href="#L876">876</a> <em class="jxr_comment">&lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L877" href="#L877">877</a> 
+<a class="jxr_linenumber" name="L878" href="#L878">878</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L879" href="#L879">879</a> <em class="jxr_comment">  The allowed direct inclusions in this example are listed in the table below. For example</em>
+<a class="jxr_linenumber" name="L880" href="#L880">880</a> <em class="jxr_comment">  &lt;code&gt;foo.cc&lt;/code&gt; is allowed to directly include &lt;code&gt;foo.h&lt;/code&gt; and &lt;code&gt;bar.h&lt;/code&gt;, but</em>
+<a class="jxr_linenumber" name="L881" href="#L881">881</a> <em class="jxr_comment">  not &lt;code&gt;baz.h&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L882" href="#L882">882</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L883" href="#L883">883</a> 
+<a class="jxr_linenumber" name="L884" href="#L884">884</a> <em class="jxr_comment">&lt;table class="table table-striped table-bordered table-condensed"&gt;</em>
+<a class="jxr_linenumber" name="L885" href="#L885">885</a> <em class="jxr_comment">  &lt;thead&gt;</em>
+<a class="jxr_linenumber" name="L886" href="#L886">886</a> <em class="jxr_comment">    &lt;tr&gt;&lt;th&gt;Including file&lt;/th&gt;&lt;th&gt;Allowed inclusions&lt;/th&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L887" href="#L887">887</a> <em class="jxr_comment">  &lt;/thead&gt;</em>
+<a class="jxr_linenumber" name="L888" href="#L888">888</a> <em class="jxr_comment">  &lt;tbody&gt;</em>
+<a class="jxr_linenumber" name="L889" href="#L889">889</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;foo.h&lt;/td&gt;&lt;td&gt;bar.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L890" href="#L890">890</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;foo.cc&lt;/td&gt;&lt;td&gt;foo.h bar.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L891" href="#L891">891</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;bar.h&lt;/td&gt;&lt;td&gt;bar-impl.h baz.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L892" href="#L892">892</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;bar-impl.h&lt;/td&gt;&lt;td&gt;bar.h baz.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L893" href="#L893">893</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;bar.cc&lt;/td&gt;&lt;td&gt;bar.h bar-impl.h baz.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L894" href="#L894">894</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;baz.h&lt;/td&gt;&lt;td&gt;baz-impl.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L895" href="#L895">895</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;baz-impl.h&lt;/td&gt;&lt;td&gt;baz.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L896" href="#L896">896</a> <em class="jxr_comment">    &lt;tr&gt;&lt;td&gt;baz.cc&lt;/td&gt;&lt;td&gt;baz.h baz-impl.h&lt;/td&gt;&lt;/tr&gt;</em>
+<a class="jxr_linenumber" name="L897" href="#L897">897</a> <em class="jxr_comment">  &lt;/tbody&gt;</em>
+<a class="jxr_linenumber" name="L898" href="#L898">898</a> <em class="jxr_comment">&lt;/table&gt;</em>
+<a class="jxr_linenumber" name="L899" href="#L899">899</a> 
+<a class="jxr_linenumber" name="L900" href="#L900">900</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L901" href="#L901">901</a> <em class="jxr_comment">  The inclusion checking rules only apply to &lt;em&gt;direct&lt;/em&gt;</em>
+<a class="jxr_linenumber" name="L902" href="#L902">902</a> <em class="jxr_comment">  inclusions. In the example above &lt;code&gt;foo.cc&lt;/code&gt; is allowed to</em>
+<a class="jxr_linenumber" name="L903" href="#L903">903</a> <em class="jxr_comment">  include &lt;code&gt;bar.h&lt;/code&gt;, which may include &lt;code&gt;baz.h&lt;/code&gt;, which in</em>
+<a class="jxr_linenumber" name="L904" href="#L904">904</a> <em class="jxr_comment">  turn is allowed to include &lt;code&gt;baz-impl.h&lt;/code&gt;. Technically, the</em>
+<a class="jxr_linenumber" name="L905" href="#L905">905</a> <em class="jxr_comment">  compilation of a &lt;code&gt;.cc&lt;/code&gt; file may transitively include any header</em>
+<a class="jxr_linenumber" name="L906" href="#L906">906</a> <em class="jxr_comment">  file in the &lt;code&gt;hdrs&lt;/code&gt; or &lt;code&gt;srcs&lt;/code&gt; in</em>
+<a class="jxr_linenumber" name="L907" href="#L907">907</a> <em class="jxr_comment">  any &lt;code&gt;cc_library&lt;/code&gt; in the transitive &lt;code&gt;deps&lt;/code&gt; closure. In</em>
+<a class="jxr_linenumber" name="L908" href="#L908">908</a> <em class="jxr_comment">  this case the compiler may read &lt;code&gt;baz.h&lt;/code&gt; and &lt;code&gt;baz-impl.h&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L909" href="#L909">909</a> <em class="jxr_comment">  when compiling &lt;code&gt;foo.cc&lt;/code&gt;, but &lt;code&gt;foo.cc&lt;/code&gt; must not</em>
+<a class="jxr_linenumber" name="L910" href="#L910">910</a> <em class="jxr_comment">  contain &lt;code&gt;#include "baz.h"&lt;/code&gt;. For that to be</em>
+<a class="jxr_linenumber" name="L911" href="#L911">911</a> <em class="jxr_comment">  allowed, &lt;code&gt;baz&lt;/code&gt; must be added to the &lt;code&gt;deps&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L912" href="#L912">912</a> <em class="jxr_comment">  of &lt;code&gt;foo&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L913" href="#L913">913</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L914" href="#L914">914</a> 
+<a class="jxr_linenumber" name="L915" href="#L915">915</a> <em class="jxr_comment">&lt;p&gt;</em>
+<a class="jxr_linenumber" name="L916" href="#L916">916</a> <em class="jxr_comment">  Unfortunately Bazel currently cannot distinguish between direct and transitive</em>
+<a class="jxr_linenumber" name="L917" href="#L917">917</a> <em class="jxr_comment">  inclusions, so it cannot detect error cases where a file illegally includes a</em>
+<a class="jxr_linenumber" name="L918" href="#L918">918</a> <em class="jxr_comment">  header directly that is only allowed to be included transitively. For example,</em>
+<a class="jxr_linenumber" name="L919" href="#L919">919</a> <em class="jxr_comment">  Bazel would not complain if in the example above &lt;code&gt;foo.cc&lt;/code&gt; directly</em>
+<a class="jxr_linenumber" name="L920" href="#L920">920</a> <em class="jxr_comment">  includes &lt;code&gt;baz.h&lt;/code&gt;. This would be illegal, because &lt;code&gt;foo&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L921" href="#L921">921</a> <em class="jxr_comment">  does not directly depend on &lt;code&gt;baz&lt;/code&gt;. Currently, no error is produced</em>
+<a class="jxr_linenumber" name="L922" href="#L922">922</a> <em class="jxr_comment">  in that case, but such error checking may be added in the future.</em>
+<a class="jxr_linenumber" name="L923" href="#L923">923</a> <em class="jxr_comment">&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L924" href="#L924">924</a> 
+<a class="jxr_linenumber" name="L925" href="#L925">925</a> <em class="jxr_comment">&lt;!-- #END_BLAZE_RULE --&gt;*/</em>
+<a class="jxr_linenumber" name="L926" href="#L926">926</a> 
+<a class="jxr_linenumber" name="L927" href="#L927">927</a> 
+<a class="jxr_linenumber" name="L928" href="#L928">928</a> <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE (NAME = cc_test, TYPE = TEST, FAMILY = C / C++) --&gt;</em>
+<a class="jxr_linenumber" name="L929" href="#L929">929</a> 
+<a class="jxr_linenumber" name="L930" href="#L930">930</a> <em class="jxr_comment">${ATTRIBUTE_SIGNATURE}</em>
+<a class="jxr_linenumber" name="L931" href="#L931">931</a> 
+<a class="jxr_linenumber" name="L932" href="#L932">932</a> <em class="jxr_comment">${ATTRIBUTE_DEFINITION}</em>
+<a class="jxr_linenumber" name="L933" href="#L933">933</a> 
+<a class="jxr_linenumber" name="L934" href="#L934">934</a> <em class="jxr_comment">&lt;!-- #END_BLAZE_RULE --&gt;*/</em>
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>
