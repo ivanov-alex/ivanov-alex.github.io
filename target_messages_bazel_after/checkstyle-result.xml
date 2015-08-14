@@ -75,7 +75,7 @@
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXVariantGroup.java">
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXTargetDependency.java">
-<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="20" severity="warning" message="Wrong order for &apos;com.google.common.base.Preconditions&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXShellScriptBuildPhase.java">
@@ -87,7 +87,7 @@
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXFrameworksBuildPhase.java">
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/XCBuildConfiguration.java">
-<error line="21" severity="warning" message="Import statement for &apos;com.facebook.buck.apple.xcode.XcodeprojSerializer&apos; is in the wrong order. Should be in the &apos;THIRD_PARTY_PACKAGE&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="21" severity="warning" message="Import statement for &apos;com.facebook.buck.apple.xcode.XcodeprojSerializer&apos; is in the wrong order. Should be in the &apos;THIRD_PARTY_PACKAGE&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="21" severity="warning" message="Wrong order for &apos;com.facebook.buck.apple.xcode.XcodeprojSerializer&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXProject.java">
@@ -108,7 +108,7 @@
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXSourcesBuildPhase.java">
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXBuildStyle.java">
-<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="21" severity="warning" message="Wrong order for &apos;com.google.common.base.Preconditions&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/XCConfigurationList.java">
@@ -132,7 +132,7 @@
 <error line="22" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;STANDARD_JAVA_PACKAGE&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXContainerItemProxy.java">
-<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="20" severity="warning" message="Wrong order for &apos;com.google.common.base.Preconditions&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXGroup.java">
@@ -145,12 +145,12 @@
 <error line="24" severity="warning" message="Wrong order for &apos;com.google.common.base.Preconditions&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXBuildFile.java">
-<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Optional&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Optional&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="21" severity="warning" message="Wrong order for &apos;com.google.common.base.Optional&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
-<error line="22" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="22" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXCopyFilesBuildPhase.java">
-<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="20" severity="warning" message="Wrong order for &apos;com.google.common.base.Preconditions&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/XCVersionGroup.java">
@@ -168,9 +168,9 @@
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXHeadersBuildPhase.java">
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXFileReference.java">
-<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Optional&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="21" severity="warning" message="Import statement for &apos;com.google.common.base.Optional&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="21" severity="warning" message="Wrong order for &apos;com.google.common.base.Optional&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
-<error line="22" severity="warning" message="Import statement for &apos;com.google.common.io.Files&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="22" severity="warning" message="Import statement for &apos;com.google.common.io.Files&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/apple/xcode/xcodeproj/PBXTarget.java">
 <error line="20" severity="warning" message="Import statement for &apos;com.google.common.base.Preconditions&apos; is in the wrong order. Should be in the &apos;SPECIAL_IMPORTS&apos; group, expecting group &apos;STANDARD_JAVA_PACKAGE&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
@@ -188,14 +188,14 @@
 <error line="24" severity="warning" message="Wrong order for &apos;com.facebook.buck.apple.xcode.xcodeproj.PBXObject&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/buck-ios-support/java/com/facebook/buck/log/Logger.java">
-<error line="37" severity="warning" message="Import statement for &apos;java.lang.String.format&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="37" severity="warning" message="Import statement for &apos;java.lang.String.format&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 <error line="37" severity="warning" message="Wrong order for &apos;java.lang.String.format&apos; import." source="com.puppycrawl.tools.checkstyle.checks.imports.ImportOrderCheck"/>
-<error line="38" severity="warning" message="Import statement for &apos;java.util.Arrays.asList&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
-<error line="39" severity="warning" message="Import statement for &apos;java.util.logging.Level.FINE&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
-<error line="40" severity="warning" message="Import statement for &apos;java.util.logging.Level.FINER&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
-<error line="41" severity="warning" message="Import statement for &apos;java.util.logging.Level.INFO&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
-<error line="42" severity="warning" message="Import statement for &apos;java.util.logging.Level.SEVERE&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
-<error line="43" severity="warning" message="Import statement for &apos;java.util.logging.Level.WARNING&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting group &apos;NOT_ASSIGNED_TO_ANY_GROUP&apos; on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="38" severity="warning" message="Import statement for &apos;java.util.Arrays.asList&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="39" severity="warning" message="Import statement for &apos;java.util.logging.Level.FINE&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="40" severity="warning" message="Import statement for &apos;java.util.logging.Level.FINER&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="41" severity="warning" message="Import statement for &apos;java.util.logging.Level.INFO&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="42" severity="warning" message="Import statement for &apos;java.util.logging.Level.SEVERE&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
+<error line="43" severity="warning" message="Import statement for &apos;java.util.logging.Level.WARNING&apos; is in the wrong order. Should be in the &apos;STATIC&apos; group, expecting not assigned imports on this line." source="com.puppycrawl.tools.checkstyle.checks.imports.CustomImportOrderCheck"/>
 </file>
 <file name="/home/alex/workspace/contribution/checkstyle-tester/src/main/java/bazel/third_party/java/dd_plist/java/com/dd/plist/NSNumber.java">
 </file>
