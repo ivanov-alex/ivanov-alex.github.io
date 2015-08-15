@@ -22,7 +22,7 @@
 </module>    </module><PMD-->
 
 <!--                                    GUAWA-->
-<module name="ImportOrder">
+<!--module name="ImportOrder">
     <property name="groups" value="com.google,*,/^javax?\./"/>
     <property name="ordered" value="true"/>
     <property name="separated" value="true"/>
@@ -34,10 +34,10 @@
 <property name="specialImportsRegExp" value="com.google"/>
 <property name="sortImportsInGroupAlphabetically" value="true"/>
 <property name="customImportOrderRules" value="STATIC###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE"/>
-</module>    
+</module-->    
 
 <!--                                    Eclipse-->
-<!--module name="ImportOrder">
+<module name="ImportOrder">
     <property name="groups" value="/^javax?\./,org"/>
     <property name="ordered" value="true"/>
     <property name="separated" value="true"/>
@@ -50,7 +50,7 @@
             <property name="specialImportsRegExp" value="org"/>
             <property name="sortImportsInGroupAlphabetically" value="true"/>
             <property name="separateLineBetweenGroups" value="true"/>
-        </module-->
+        </module>
 
 <!--                                     PMD-->
 <!--module name="ImportOrder">
