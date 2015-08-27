@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>IosExtensionRule xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../../apidocs/com/google/devtools/build/lib/rules/objc/IosExtensionRule.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">// Copyright 2015 Google Inc. All rights reserved.</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment">// Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment">// you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment">// You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment">//    http://www.apache.org/licenses/LICENSE-2.0</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment">// Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment">// distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment">// See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment">// limitations under the License.</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">package</strong> com.google.devtools.build.lib.rules.objc;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Attribute.attr;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.packages.Type.LABEL;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.BaseRuleClasses;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.RuleDefinition;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.RuleDefinitionEnvironment;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.ImplicitOutputsFunction;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RuleClass;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.RuleClass.Builder;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <em class="jxr_javadoccomment"> * Rule definition for ios_extension.</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../com/google/devtools/build/lib/rules/objc/IosExtensionRule.html">IosExtensionRule</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">RuleDefinition</a> {
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>    @Override
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>    <strong class="jxr_keyword">public</strong> <a href="../../../../../../../com/google/devtools/build/lib/packages/RuleClass.html">RuleClass</a> build(<a href="../../../../../../../com/google/devtools/build/lib/analysis/AutoValueRuleDefinitionMetadata.html">Builder</a> builder, <a href="../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinitionEnvironment.html">RuleDefinitionEnvironment</a> env) {
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      <strong class="jxr_keyword">return</strong> builder
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>          .requiresConfigurationFragments(ObjcConfiguration.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>          <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE(ios_extension).IMPLICIT_OUTPUTS --&gt;</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_comment">        &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <em class="jxr_comment">         &lt;li&gt;&lt;code&gt;&lt;var&gt;name&lt;/var&gt;.ipa&lt;/code&gt;: the extension bundle as an &lt;code&gt;.ipa&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_comment">             file&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_comment">         &lt;li&gt;&lt;code&gt;&lt;var&gt;name&lt;/var&gt;.xcodeproj/project.pbxproj&lt;/code&gt;: An Xcode project file which</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <em class="jxr_comment">             can be used to develop or build on a Mac.&lt;/li&gt;</em>
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_comment">        &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_comment">        &lt;!-- #END_BLAZE_RULE.IMPLICIT_OUTPUTS --&gt;*/</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>          .setImplicitOutputsFunction(
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>              ImplicitOutputsFunction.fromFunctions(ReleaseBundlingSupport.IPA, XcodeSupport.PBXPROJ))
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>          <em class="jxr_comment">/* &lt;!-- #BLAZE_RULE(ios_extension).ATTRIBUTE(binary) --&gt;</em>
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <em class="jxr_comment">        The binary target containing the logic for the extension.</em>
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <em class="jxr_comment">        ${SYNOPSIS}</em>
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  <em class="jxr_comment">        &lt;!-- #END_BLAZE_RULE.ATTRIBUTE --&gt;*/</em>
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          .add(attr(<span class="jxr_string">"binary"</span>, LABEL)
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>              .allowedRuleClasses(<span class="jxr_string">"ios_extension_binary"</span>)
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>              .allowedFileTypes()
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>              .mandatory()
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>              .direct_compile_time_input()
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>              .cfg(IosExtension.MINIMUM_OS_AND_SPLIT_ARCH_TRANSITION))
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          .build();
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    }
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    @Override
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>    <strong class="jxr_keyword">public</strong> <a href="../../../../../../../com/google/devtools/build/lib/analysis/RuleDefinition.html">Metadata</a> getMetadata() {
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>      <strong class="jxr_keyword">return</strong> RuleDefinition.Metadata.builder()
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          .name(<span class="jxr_string">"ios_extension"</span>)
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          .factoryClass(IosExtension.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          .ancestors(BaseRuleClasses.BaseRule.<strong class="jxr_keyword">class</strong>, ObjcRuleClasses.ReleaseBundlingRule.<strong class="jxr_keyword">class</strong>,
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>              ObjcRuleClasses.XcodegenRule.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>          .build();
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>    }
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  }
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_comment">/*&lt;!-- #BLAZE_RULE (NAME = ios_extension, TYPE = BINARY, FAMILY = Objective-C) --&gt;</em>
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_comment">${ATTRIBUTE_SIGNATURE}</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_comment">&lt;p&gt;This rule produces a bundled binary for an iOS app extension from a compiled binary and bundle</em>
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_comment">metadata.&lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_comment">&lt;p&gt;An iOS app extension is a nested bundle that is located inside the application bundle and is</em>
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_comment">released with it. An iOS app extension cannot be released alone, although this rule allows you to</em>
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_comment">build an &lt;code&gt;.ipa&lt;/code&gt; with only the extension.</em>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <em class="jxr_comment">&lt;p&gt;Bundles generated by this rule use a bundle directory called</em>
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  <em class="jxr_comment">&lt;code&gt;PlugIns/&lt;var&gt;target-name&lt;/var&gt;.appex&lt;/code&gt;, while an application bundle uses</em>
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_comment">&lt;code&gt;Payload/&lt;var&gt;target-name&lt;/var&gt;.app&lt;/code&gt;. For instance, if an application call Foo has an app</em>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_comment">extension called Bar, the Bar extension bundle files will be stored in</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_comment">&lt;code&gt;Payload/Foo.app/PlugIns/Bar.appex&lt;/code&gt; in the final application &lt;code&gt;.ipa&lt;/code&gt;.</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_comment">&lt;p&gt;There are many similarities between app extensions and applications with little to no difference</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_comment">between how each thing is processed:</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>  <em class="jxr_comment">&lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  <em class="jxr_comment">  &lt;li&gt;both have entitlements and Info.plist files</em>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_comment">  &lt;li&gt;both are code-signed. Signing and merging happens in this order: the extension is code-signed,</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_comment">      bundles are merged, application is code-signed</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_comment">  &lt;li&gt;both can have an app icon and launch image, and of course asset catalogs and all kinds of</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_comment">      resources</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_comment">  &lt;li&gt;both have linked binaries. The app extension binary is different in that it is linked with</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_comment">      these additional flags:</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  <em class="jxr_comment">      &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  <em class="jxr_comment">          &lt;li&gt;&lt;code&gt;-e _NSExtensionMain&lt;/code&gt; - sets the entry point to a standard function in the</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  <em class="jxr_comment">              iOS runtime rather than &lt;code&gt;main()&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>  <em class="jxr_comment">          &lt;li&gt;&lt;code&gt;-fapplicationextension&lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_comment">      &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <em class="jxr_comment">&lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> 
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> <em class="jxr_comment">${IMPLICIT_OUTPUTS}</em>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a> <em class="jxr_comment">${ATTRIBUTE_DEFINITION}</em>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a> 
+<a class="jxr_linenumber" name="L107" href="#L107">107</a> <em class="jxr_comment">&lt;!-- #END_BLAZE_RULE --&gt;*/</em>
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>
