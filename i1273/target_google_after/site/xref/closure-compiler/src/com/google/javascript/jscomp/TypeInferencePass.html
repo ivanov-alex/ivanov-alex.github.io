@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>TypeInferencePass xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/com/google/javascript/jscomp/TypeInferencePass.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2009 The Closure Compiler Authors.</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">package</strong> com.google.javascript.jscomp;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Preconditions;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.Node;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> java.util.HashMap;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment"> * A compiler pass to run the type inference analysis.</em>
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">TypeInferencePass</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../com/google/javascript/jscomp/CompilerPass.html">CompilerPass</a> {
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/DiagnosticType.html">DiagnosticType</a> DATAFLOW_ERROR = DiagnosticType.warning(
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>        <span class="jxr_string">"JSC_INTERNAL_ERROR_DATAFLOW"</span>,
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>        <span class="jxr_string">"non-monotonic data-flow analysis"</span>);
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/AbstractCompiler.html">AbstractCompiler</a> compiler;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/type/ReverseAbstractInterpreter.html">ReverseAbstractInterpreter</a> reverseInterpreter;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> topScope;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/MemoizedScopeCreator.html">MemoizedScopeCreator</a> scopeCreator;
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Map&lt;String, AssertionFunctionSpec&gt; assertionFunctionsMap;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>    <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">TypeInferencePass</a>(<a href="../../../../com/google/javascript/jscomp/AbstractCompiler.html">AbstractCompiler</a> compiler,
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>        <a href="../../../../com/google/javascript/jscomp/type/ReverseAbstractInterpreter.html">ReverseAbstractInterpreter</a> reverseInterpreter,
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>        <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> topScope, <a href="../../../../com/google/javascript/jscomp/MemoizedScopeCreator.html">MemoizedScopeCreator</a> scopeCreator) {
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>      <strong class="jxr_keyword">this</strong>.compiler = compiler;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <strong class="jxr_keyword">this</strong>.reverseInterpreter = reverseInterpreter;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>      <strong class="jxr_keyword">this</strong>.topScope = topScope;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>      <strong class="jxr_keyword">this</strong>.scopeCreator = scopeCreator;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      assertionFunctionsMap = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>      <strong class="jxr_keyword">for</strong> (AssertionFunctionSpec assertionFunction :
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          compiler.getCodingConvention().getAssertionFunctions()) {
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>        assertionFunctionsMap.put(assertionFunction.getFunctionName(),
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>            assertionFunction);
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      }
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    }
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>    <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">   * Main entry point for type inference when running over the whole tree.</em>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">   * @param externsRoot The root of the externs parse tree.</em>
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment">   * @param jsRoot The root of the input parse tree to be checked.</em>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>    @Override
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> process(<a href="../../../../com/google/javascript/rhino/Node.html">Node</a> externsRoot, <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> jsRoot) {
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>      <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> externsAndJs = jsRoot.getParent();
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>      Preconditions.checkState(externsAndJs != <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      Preconditions.checkState(
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          externsRoot == <strong class="jxr_keyword">null</strong> || externsAndJs.hasChild(externsRoot));
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>      inferAllScopes(externsAndJs);
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>    }
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>    <em class="jxr_javadoccomment">/** Entry point for type inference when running over part of the tree. */</em>
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>    <strong class="jxr_keyword">void</strong> inferAllScopes(<a href="../../../../com/google/javascript/rhino/Node.html">Node</a> node) {
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>      <em class="jxr_comment">// Type analysis happens in two major phases.</em>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>      <em class="jxr_comment">// 1) Finding all the symbols.</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <em class="jxr_comment">// 2) Propagating all the inferred types.</em>
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>      <em class="jxr_comment">// The order of this analysis is non-obvious. In a complete inference</em>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      <em class="jxr_comment">// system, we may need to backtrack arbitrarily far. But the compile-time</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>      <em class="jxr_comment">// costs would be unacceptable.</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>      <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <em class="jxr_comment">// We do one pass where we do typed scope creation for all scopes</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <em class="jxr_comment">// in pre-order.</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>      <em class="jxr_comment">// Then we do a second pass where we do all type inference</em>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>      <em class="jxr_comment">// (type propagation) in pre-order.</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      <em class="jxr_comment">// We use a memoized scope creator so that we never create a scope</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>      <em class="jxr_comment">// more than once.</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>      <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>      <em class="jxr_comment">// This will allow us to handle cases like:</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>      <em class="jxr_comment">// var ns = {};</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>      <em class="jxr_comment">// (function() { /** JSDoc */ ns.method = function() {}; })();</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>      <em class="jxr_comment">// ns.method();</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>      <em class="jxr_comment">// In this code, we need to build the symbol table for the inner scope in</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>     <em class="jxr_comment">// order to propagate the type of ns.method in the outer scope.</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>     (<strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a>(
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>         compiler, <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">FirstScopeBuildingCallback</a>(), scopeCreator))
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         .traverseWithScope(node, topScope);
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>     <strong class="jxr_keyword">for</strong> (TypedScope s : scopeCreator.getAllMemoizedScopes()) {
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>       s.resolveTypes();
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>     }
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> 
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>     (<strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a>(
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>         compiler, <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">SecondScopeBuildingCallback</a>(), scopeCreator))
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>         .traverseWithScope(node, topScope);
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>   }
+<a class="jxr_linenumber" name="L113" href="#L113">113</a> 
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>   <strong class="jxr_keyword">void</strong> inferScope(<a href="../../../../com/google/javascript/rhino/Node.html">Node</a> n, <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> scope) {
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>     <a href="../../../../com/google/javascript/jscomp/TypeInference.html">TypeInference</a> typeInference =
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/TypeInference.html">TypeInference</a>(
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>             compiler, computeCfg(n), reverseInterpreter, scope,
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>             assertionFunctionsMap);
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>       typeInference.analyze();
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> 
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>       <em class="jxr_comment">// Resolve any new type names found during the inference.</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>       compiler.getTypeRegistry().resolveTypesInScope(scope);
+<a class="jxr_linenumber" name="L124" href="#L124">124</a> 
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>     } <strong class="jxr_keyword">catch</strong> (DataFlowAnalysis.MaxIterationsExceededException e) {
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>       compiler.report(JSError.make(n, DATAFLOW_ERROR));
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>     }
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>   }
+<a class="jxr_linenumber" name="L129" href="#L129">129</a> 
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">FirstScopeBuildingCallback</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">AbstractScopedCallback</a> {
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>     @Override
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> enterScope(<a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a> t) {
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>       t.getTypedScope();
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>     }
+<a class="jxr_linenumber" name="L135" href="#L135">135</a> 
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>     @Override
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> visit(<a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a> t, <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> n, <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> parent) {
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>       <em class="jxr_comment">// Do nothing</em>
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>     }
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>   }
+<a class="jxr_linenumber" name="L141" href="#L141">141</a> 
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/TypeInferencePass.html">SecondScopeBuildingCallback</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">AbstractScopedCallback</a> {
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>     @Override
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> enterScope(<a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a> t) {
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>       <em class="jxr_comment">// Only infer the entry root, rather than the scope root.</em>
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>       <em class="jxr_comment">// This ensures that incremental compilation only touches the root</em>
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>       <em class="jxr_comment">// that's been swapped out.</em>
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>       inferScope(t.getCurrentNode(), t.getTypedScope());
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>     }
+<a class="jxr_linenumber" name="L150" href="#L150">150</a> 
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>     @Override
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> visit(<a href="../../../../com/google/javascript/jscomp/NodeTraversal.html">NodeTraversal</a> t, <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> n, <a href="../../../../com/google/javascript/rhino/Node.html">Node</a> parent) {
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>       <em class="jxr_comment">// Do nothing</em>
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>     }
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>   }
+<a class="jxr_linenumber" name="L156" href="#L156">156</a> 
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>   <strong class="jxr_keyword">private</strong> ControlFlowGraph&lt;Node&gt; computeCfg(<a href="../../../../com/google/javascript/rhino/Node.html">Node</a> n) {
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>     <a href="../../../../com/google/javascript/jscomp/ControlFlowAnalysis.html">ControlFlowAnalysis</a> cfa = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/ControlFlowAnalysis.html">ControlFlowAnalysis</a>(compiler, false, false);
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>     cfa.process(<strong class="jxr_keyword">null</strong>, n);
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>     <strong class="jxr_keyword">return</strong> cfa.getCfg();
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>   }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

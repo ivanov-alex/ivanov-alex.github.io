@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>CollapseVariableDeclarationsTest xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/com/google/javascript/jscomp/CollapseVariableDeclarationsTest.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2006 The Closure Compiler Authors.</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">package</strong> com.google.javascript.jscomp;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <em class="jxr_javadoccomment"> * Tests for variable declaration collapsing.</em>
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/CollapseVariableDeclarationsTest.html">CollapseVariableDeclarationsTest</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/google/javascript/jscomp/CompilerTestCase.html">CompilerTestCase</a> {
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>    @Override
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setUp() {
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      compareJsDoc = false;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>    }
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testCollapsing() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      <em class="jxr_comment">// Basic collapsing</em>
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>      test(<span class="jxr_string">"var a;var b;"</span>,
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>           <span class="jxr_string">"var a,b;"</span>);
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      <em class="jxr_comment">// With initial values</em>
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>      test(<span class="jxr_string">"var a = 1;var b = 1;"</span>,
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>           <span class="jxr_string">"var a=1,b=1;"</span>);
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <em class="jxr_comment">// Already collapsed</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>      test(<span class="jxr_string">"var a, b;"</span>,
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>           <span class="jxr_string">"var a,b;"</span>);
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>      <em class="jxr_comment">// Already collapsed with values</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>      test(<span class="jxr_string">"var a = 1, b = 1;"</span>,
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>           <span class="jxr_string">"var a=1,b=1;"</span>);
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>      <em class="jxr_comment">// Some already collapsed</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>      test(<span class="jxr_string">"var a;var b, c;var d;"</span>,
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>           <span class="jxr_string">"var a,b,c,d;"</span>);
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      <em class="jxr_comment">// Some already collapsed with values</em>
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      test(<span class="jxr_string">"var a = 1;var b = 2, c = 3;var d = 4;"</span>,
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>           <span class="jxr_string">"var a=1,b=2,c=3,d=4;"</span>);
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>    }
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIssue820() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>      <em class="jxr_comment">// Don't redeclare function parameters, this is incompatible with</em>
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>      <em class="jxr_comment">// strict mode.</em>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>      testSame(<span class="jxr_string">"function f(a){ var b=1; a=2; var c; }"</span>);
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>    }
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>  
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIfElseVarDeclarations() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>      testSame(<span class="jxr_string">"if (x) var a = 1; else var b = 2;"</span>);
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    }
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testAggressiveRedeclaration() {
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>      test(<span class="jxr_string">"var x = 2; foo(x);     x = 3; var y = 2;"</span>,
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>           <span class="jxr_string">"var x = 2; foo(x); var x = 3,     y = 2;"</span>);
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>      test(<span class="jxr_string">"var x = 2; foo(x);     x = 3; x = 1; var y = 2;"</span>,
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>           <span class="jxr_string">"var x = 2; foo(x); var x = 3, x = 1,     y = 2;"</span>);
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>      test(<span class="jxr_string">"var x = 2; foo(x);     x = 3; x = 1; var y = 2; var z = 4"</span>,
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>           <span class="jxr_string">"var x = 2; foo(x); var x = 3, x = 1,     y = 2,     z = 4"</span>);
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      test(<span class="jxr_string">"var x = 2; foo(x);     x = 3; x = 1; var y = 2; var z = 4; x = 5"</span>,
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>           <span class="jxr_string">"var x = 2; foo(x); var x = 3, x = 1,     y = 2,     z = 4, x = 5"</span>);
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>    }
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testAggressiveRedeclarationInFor() {
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>      testSame(<span class="jxr_string">"for(var x = 1; x = 2; x = 3) {x = 4}"</span>);
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>      testSame(<span class="jxr_string">"for(var x = 1; y = 2; z = 3) {var a = 4}"</span>);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>      testSame(<span class="jxr_string">"var x; for(x = 1; x = 2; z = 3) {x = 4}"</span>);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>    }
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIssue397() {
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      test(<span class="jxr_string">"var x; var y = 3; x = 5;"</span>,
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>           <span class="jxr_string">"var x, y = 3; x = 5;"</span>);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      testSame(<span class="jxr_string">"var x; x = 5; var z = 7;"</span>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>      test(<span class="jxr_string">"var x; var y = 3; x = 5; var z = 7;"</span>,
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>           <span class="jxr_string">"var x, y = 3; x = 5; var z = 7;"</span>);
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      test(<span class="jxr_string">"var a = 1; var x; var y = 3; x = 5;"</span>,
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>           <span class="jxr_string">"var a = 1, x, y = 3; x = 5;"</span>);
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>    }
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>    @Override
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>    <strong class="jxr_keyword">protected</strong> <a href="../../../../com/google/javascript/jscomp/CompilerPass.html">CompilerPass</a> getProcessor(<a href="../../../../com/google/javascript/jscomp/Compiler.html">Compiler</a> compiler) {
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/CollapseVariableDeclarations.html">CollapseVariableDeclarations</a>(compiler);
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>    }
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

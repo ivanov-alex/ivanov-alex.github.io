@@ -1,0 +1,973 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>TypeTransformationTest xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/com/google/javascript/jscomp/TypeTransformationTest.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2014 The Closure Compiler Authors.</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">package</strong> com.google.javascript.jscomp;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.ImmutableMap;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.jscomp.parsing.TypeTransformationParser;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.Node;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.JSType;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.ObjectType;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.RecordTypeBuilder;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.testing.TestErrorReporter;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> java.util.Map.Entry;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/TypeTransformationTest.html">TypeTransformationTest</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/google/javascript/jscomp/CompilerTypeTestCase.html">CompilerTypeTestCase</a> {
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>    <strong class="jxr_keyword">private</strong> ImmutableMap&lt;String, JSType&gt; typeVars;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>    <strong class="jxr_keyword">private</strong> ImmutableMap&lt;String, String&gt; nameVars;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> recordTypeTest, nestedRecordTypeTest, asynchRecord;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String EXTRA_TYPE_DEFS =
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>        <span class="jxr_string">"/** @constructor */\n"</span>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>            + <span class="jxr_string">"function Bar() {}"</span>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>            + <span class="jxr_string">"/** @type {number} */"</span>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>            + <span class="jxr_string">"var n = 10;"</span>;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>    @Override
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setUp() {
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>      <strong class="jxr_keyword">super</strong>.setUp();
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>      errorReporter = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/rhino/testing/TestErrorReporter.html">TestErrorReporter</a>(<strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>      initRecordTypeTests();
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      typeVars = <strong class="jxr_keyword">new</strong> ImmutableMap.Builder&lt;String, JSType&gt;()
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>          .put(<span class="jxr_string">"S"</span>, STRING_TYPE)
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>          .put(<span class="jxr_string">"N"</span>, NUMBER_TYPE)
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          .put(<span class="jxr_string">"B"</span>, BOOLEAN_TYPE)
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>          .put(<span class="jxr_string">"BOT"</span>, NO_TYPE)
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>          .put(<span class="jxr_string">"TOP"</span>, ALL_TYPE)
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>          .put(<span class="jxr_string">"UNK"</span>, UNKNOWN_TYPE)
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>          .put(<span class="jxr_string">"CHKUNK"</span>, CHECKED_UNKNOWN_TYPE)
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          .put(<span class="jxr_string">"SO"</span>, STRING_OBJECT_TYPE)
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          .put(<span class="jxr_string">"NO"</span>, NUMBER_OBJECT_TYPE)
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>          .put(<span class="jxr_string">"BO"</span>, BOOLEAN_OBJECT_TYPE)
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>          .put(<span class="jxr_string">"NULL"</span>, NULL_TYPE)
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>          .put(<span class="jxr_string">"OBJ"</span>, OBJECT_TYPE)
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>          .put(<span class="jxr_string">"UNDEF"</span>, VOID_TYPE)
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>          .put(<span class="jxr_string">"ARR"</span>, ARRAY_TYPE)
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          .put(<span class="jxr_string">"ARRNUM"</span>, type(ARRAY_TYPE, NUMBER_TYPE))
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          .put(<span class="jxr_string">"REC"</span>, recordTypeTest)
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          .put(<span class="jxr_string">"NESTEDREC"</span>, nestedRecordTypeTest)
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>          .put(<span class="jxr_string">"ASYNCH"</span>, asynchRecord)
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>          .build();
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      nameVars = <strong class="jxr_keyword">new</strong> ImmutableMap.Builder&lt;String, String&gt;()
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          .put(<span class="jxr_string">"s"</span>, <span class="jxr_string">"string"</span>)
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          .put(<span class="jxr_string">"n"</span>, <span class="jxr_string">"number"</span>)
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>          .put(<span class="jxr_string">"b"</span>, <span class="jxr_string">"boolean"</span>)
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>          .build();
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>    }
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithValidBasicTypePredicate() {
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      testTTL(NUMBER_TYPE, <span class="jxr_string">"'number'"</span>);
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>    }
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithBasicTypePredicateWithInvalidTypename() {
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>      testTTL(UNKNOWN_TYPE, <span class="jxr_string">"'foo'"</span>,
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>          <span class="jxr_string">"Reference to an unknown type name foo"</span>);
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>    }
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithSingleTypeVar() {
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      testTTL(STRING_TYPE, <span class="jxr_string">"S"</span>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>    }
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMultipleTypeVars() {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      testTTL(STRING_TYPE, <span class="jxr_string">"S"</span>);
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      testTTL(NUMBER_TYPE, <span class="jxr_string">"N"</span>);
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>    }
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithValidUnionTypeOnlyVars() {
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      testTTL(union(NUMBER_TYPE, STRING_TYPE), <span class="jxr_string">"union(N, S)"</span>);
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>    }
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithValidUnionTypeOnlyTypePredicates() {
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>      testTTL(union(NUMBER_TYPE, STRING_TYPE),
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>          <span class="jxr_string">"union('number', 'string')"</span>);
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>    }
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> 
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithValidUnionTypeMixed() {
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>     testTTL(union(NUMBER_TYPE, STRING_TYPE), <span class="jxr_string">"union(S, 'number')"</span>);
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>   }
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUnknownParameter() {
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>     <em class="jxr_comment">// Returns ? because foo is not defined</em>
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"union(foo, 'number')"</span>,
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>         <span class="jxr_string">"Reference to an unknown type variable foo"</span>);
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>   }
+<a class="jxr_linenumber" name="L110" href="#L110">110</a> 
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUnknownParameter2() {
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>     <em class="jxr_comment">// Returns ? because foo is not defined</em>
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"union(N, 'foo')"</span>,
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>         <span class="jxr_string">"Reference to an unknown type name foo"</span>);
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>   }
+<a class="jxr_linenumber" name="L116" href="#L116">116</a> 
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedUnionInFirstParameter() {
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>     testTTL(union(NUMBER_TYPE, NULL_TYPE, STRING_TYPE),
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>         <span class="jxr_string">"union(union(N, 'null'), S)"</span>);
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>   }
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> 
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedUnionInSecondParameter() {
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>     testTTL(union(NUMBER_TYPE, NULL_TYPE, STRING_TYPE),
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>         <span class="jxr_string">"union(N, union('null', S))"</span>);
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>   }
+<a class="jxr_linenumber" name="L126" href="#L126">126</a> 
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRepeatedTypePredicate() {
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"union('number', 'number')"</span>);
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>   }
+<a class="jxr_linenumber" name="L130" href="#L130">130</a> 
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUndefinedTypeVar() {
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"foo"</span>, <span class="jxr_string">"Reference to an unknown type variable foo"</span>);
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>   }
+<a class="jxr_linenumber" name="L134" href="#L134">134</a> 
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueEqtypeConditional() {
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(eq(N, N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>   }
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> 
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseEqtypeConditional() {
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(eq(N, S), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>   }
+<a class="jxr_linenumber" name="L142" href="#L142">142</a> 
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueSubtypeConditional() {
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>         <span class="jxr_string">"cond( sub('Number', 'Object'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>   }
+<a class="jxr_linenumber" name="L147" href="#L147">147</a> 
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseSubtypeConditional() {
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>         <span class="jxr_string">"cond( sub('Number', 'String'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>   }
+<a class="jxr_linenumber" name="L152" href="#L152">152</a> 
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueStreqConditional() {
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(streq(n, 'number'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>   }
+<a class="jxr_linenumber" name="L156" href="#L156">156</a> 
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueStreqConditional2() {
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(streq(n, n), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>   }
+<a class="jxr_linenumber" name="L160" href="#L160">160</a> 
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueStreqConditional3() {
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(streq('number', 'number'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>   }
+<a class="jxr_linenumber" name="L164" href="#L164">164</a> 
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseStreqConditional() {
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(streq('number', 'foo'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>   }
+<a class="jxr_linenumber" name="L168" href="#L168">168</a> 
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseStreqConditional2() {
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(streq(n, 'foo'), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>   }
+<a class="jxr_linenumber" name="L172" href="#L172">172</a> 
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseStreqConditional3() {
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(streq(n, s), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>   }
+<a class="jxr_linenumber" name="L176" href="#L176">176</a> 
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidEqConditional() {
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>     <em class="jxr_comment">// It returns number since a failing boolean expression returns false</em>
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(eq(foo, S), 'string', 'number')"</span>,
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>         <span class="jxr_string">"Reference to an unknown type variable foo"</span>);
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>   }
+<a class="jxr_linenumber" name="L182" href="#L182">182</a> 
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidStreqConditional() {
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>     <em class="jxr_comment">// It returns number since a failing boolean expression returns false</em>
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(streq(foo, s), 'string', 'number')"</span>,
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>         <span class="jxr_string">"Reference to an unknown string variable foo"</span>);
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>   }
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> 
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedExpressionInBooleanFirstParam() {
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>         <span class="jxr_string">"cond( eq( cond(eq(N, N), 'string', 'number'), 'string'),"</span>
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>             + <span class="jxr_string">"'string', "</span>
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>             + <span class="jxr_string">"'number')"</span>);
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>   }
+<a class="jxr_linenumber" name="L195" href="#L195">195</a> 
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedExpressionInBooleanSecondParam() {
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>         <span class="jxr_string">"cond( eq( 'string', cond(eq(N, N), 'string', 'number')),"</span>
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>             + <span class="jxr_string">"'string', "</span>
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>             + <span class="jxr_string">"'number')"</span>);
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>   }
+<a class="jxr_linenumber" name="L202" href="#L202">202</a> 
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedExpressionInIfBranch() {
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>     testTTL(STRING_OBJECT_TYPE,
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>         <span class="jxr_string">"cond( eq(N, N),"</span>
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>             + <span class="jxr_string">"cond(eq(N, S), 'string', 'String'),"</span>
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>             + <span class="jxr_string">"'number')"</span>);
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>   }
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> 
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedExpressionInElseBranch() {
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>     testTTL(STRING_OBJECT_TYPE,
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>         <span class="jxr_string">"cond( eq(N, S),"</span>
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>         +     <span class="jxr_string">"'number',"</span>
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>         +     <span class="jxr_string">"cond(eq(N, S), 'string', 'String'))"</span>);
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>   }
+<a class="jxr_linenumber" name="L216" href="#L216">216</a> 
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMapunionMappingEverythingToString() {
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>     testTTL(STRING_TYPE, <span class="jxr_string">"mapunion(union(S, N), (x) =&gt; S)"</span>);
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>   }
+<a class="jxr_linenumber" name="L220" href="#L220">220</a> 
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMapunionIdentity() {
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>     testTTL(union(NUMBER_TYPE, STRING_TYPE),
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>         <span class="jxr_string">"mapunion(union(N, S), (x) =&gt; x)"</span>);
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>   }
+<a class="jxr_linenumber" name="L225" href="#L225">225</a> 
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMapunionWithUnionEvaluatedToANonUnion() {
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>         <span class="jxr_string">"mapunion(union(N, 'number'), (x) =&gt; x)"</span>);
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>   }
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> 
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMapunionFilterWithOnlyString() {
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>         <span class="jxr_string">"mapunion(union(S, B, N), (x) =&gt; cond(eq(x, S), x, BOT))"</span>);
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>   }
+<a class="jxr_linenumber" name="L235" href="#L235">235</a> 
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMapunionOnSingletonStringToNumber() {
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"mapunion(S, (x) =&gt; cond(eq(x, S), N, BOT))"</span>);
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>   }
+<a class="jxr_linenumber" name="L239" href="#L239">239</a> 
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedUnionInMapunionFilterString() {
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>     testTTL(union(NUMBER_TYPE, BOOLEAN_TYPE),
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>         <span class="jxr_string">"mapunion(union(union(S, B), union(N, S)),"</span>
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>         + <span class="jxr_string">"(x) =&gt; cond(eq(x, S), BOT, x))"</span>);
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>   }
+<a class="jxr_linenumber" name="L245" href="#L245">245</a> 
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedMapunionInMapFunctionBody() {
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>         <span class="jxr_string">"mapunion(union(S, B),"</span>
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>         + <span class="jxr_string">"(x) =&gt; mapunion(union(S, N), "</span>
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>         +          <span class="jxr_string">"(y) =&gt; cond(eq(x, y), x, BOT)))"</span>);
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>   }
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> 
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithObjectUseCase() {
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>     testTTL(OBJECT_TYPE,
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>         <span class="jxr_string">"mapunion("</span>
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>         + <span class="jxr_string">"union(S, N, B, NULL, UNDEF, ARR),"</span>
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>         + <span class="jxr_string">"(x) =&gt; "</span>
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>         + <span class="jxr_string">"cond(eq(x, S), SO,"</span>
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>         + <span class="jxr_string">"cond(eq(x, N), NO,"</span>
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>         + <span class="jxr_string">"cond(eq(x, B), BO,"</span>
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>         + <span class="jxr_string">"cond(eq(x, NULL), OBJ,"</span>
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>         + <span class="jxr_string">"cond(eq(x, UNDEF), OBJ,"</span>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a>         + <span class="jxr_string">"x ))))))"</span>);
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>   }
+<a class="jxr_linenumber" name="L265" href="#L265">265</a> 
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithNoneType() {
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>     testTTL(NO_TYPE, <span class="jxr_string">"none()"</span>);
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>   }
+<a class="jxr_linenumber" name="L269" href="#L269">269</a> 
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithNoneTypeInConditional() {
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>     testTTL(NO_TYPE, <span class="jxr_string">"cond(eq(BOT, none()), none(), N)"</span>);
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>   }
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> 
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithNoneTypeInMapunionFilterString() {
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>         <span class="jxr_string">"mapunion(union(S, B, N), (x) =&gt; cond(eq(x, S), x, none()))"</span>);
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>   }
+<a class="jxr_linenumber" name="L278" href="#L278">278</a> 
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithAllType() {
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>     testTTL(ALL_TYPE, <span class="jxr_string">"all()"</span>);
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>   }
+<a class="jxr_linenumber" name="L282" href="#L282">282</a> 
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithAllTypeInConditional() {
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>     testTTL(ALL_TYPE, <span class="jxr_string">"cond(eq(TOP, all()), all(), N)"</span>);
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>   }
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> 
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithAllTypeMixUnion() {
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>     testTTL(ALL_TYPE,
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>         <span class="jxr_string">"mapunion(union(S, B, N), (x) =&gt; cond(eq(x, S), x, all()))"</span>);
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>   }
+<a class="jxr_linenumber" name="L291" href="#L291">291</a> 
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithUnknownType() {
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"unknown()"</span>);
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>   }
+<a class="jxr_linenumber" name="L295" href="#L295">295</a> 
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithUnknownTypeInConditional() {
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(eq(UNK, unknown()), N, S)"</span>);
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>   }
+<a class="jxr_linenumber" name="L299" href="#L299">299</a> 
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformatioWithUnknownTypeInMapunionStringToUnknown() {
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>     testTTL(UNKNOWN_TYPE,
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>         <span class="jxr_string">"mapunion(union(S, B, N), (x) =&gt; cond(eq(x, S), x, unknown()))"</span>);
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>   }
+<a class="jxr_linenumber" name="L304" href="#L304">304</a> 
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplatizedType() {
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>     testTTL(type(ARRAY_TYPE, NUMBER_TYPE), <span class="jxr_string">"type('Array', 'number')"</span>);
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>   }
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> 
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplatizedType2() {
+<a class="jxr_linenumber" name="L310" href="#L310">310</a>     testTTL(type(ARRAY_TYPE, NUMBER_TYPE), <span class="jxr_string">"type(ARR, 'number')"</span>);
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>   }
+<a class="jxr_linenumber" name="L312" href="#L312">312</a> 
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplatizedType3() {
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>     testTTL(type(ARRAY_TYPE, NUMBER_TYPE), <span class="jxr_string">"type(ARR, N)"</span>);
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>   }
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> 
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplatizedTypeInvalidBaseType() {
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"type('string', 'number')"</span>,
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>         <span class="jxr_string">"The type string cannot be templatized"</span>);
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>   }
+<a class="jxr_linenumber" name="L321" href="#L321">321</a> 
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplatizedTypeInvalidBaseType2() {
+<a class="jxr_linenumber" name="L323" href="#L323">323</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"type(S, 'number')"</span>,
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>         <span class="jxr_string">"The type string cannot be templatized"</span>);
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>   }
+<a class="jxr_linenumber" name="L326" href="#L326">326</a> 
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRawTypeOf() {
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>     testTTL(ARRAY_TYPE, <span class="jxr_string">"rawTypeOf(type('Array', 'number'))"</span>);
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>   }
+<a class="jxr_linenumber" name="L330" href="#L330">330</a> 
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRawTypeOf2() {
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>     testTTL(ARRAY_TYPE, <span class="jxr_string">"rawTypeOf(ARRNUM)"</span>);
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>   }
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> 
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRawTypeOf() {
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>     testTTL(ARRAY_TYPE, <span class="jxr_string">"rawTypeOf(type('Array', rawTypeOf(ARRNUM)))"</span>);
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>   }
+<a class="jxr_linenumber" name="L338" href="#L338">338</a> 
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidRawTypeOf() {
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"rawTypeOf(N)"</span>,
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>         <span class="jxr_string">"Expected templatized type in rawTypeOf found number"</span>);
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>   }
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> 
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplateTypeOf() {
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"templateTypeOf(type('Array', 'number'), 0)"</span>);
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>   }
+<a class="jxr_linenumber" name="L347" href="#L347">347</a> 
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTemplateTypeOf2() {
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"templateTypeOf(ARRNUM, 0)"</span>);
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>   }
+<a class="jxr_linenumber" name="L351" href="#L351">351</a> 
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedTemplateTypeOf() {
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>         <span class="jxr_string">"templateTypeOf("</span>
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>         + <span class="jxr_string">"templateTypeOf(type('Array', type('Array', 'number')), 0),"</span>
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>         + <span class="jxr_string">"0)"</span>);
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>   }
+<a class="jxr_linenumber" name="L358" href="#L358">358</a> 
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidTypeTemplateTypeOf() {
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"templateTypeOf(N, 0)"</span>,
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>         <span class="jxr_string">"Expected templatized type in templateTypeOf found number"</span>);
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>   }
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> 
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidIndexTemplateTypeOf() {
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"templateTypeOf(ARRNUM, 2)"</span>,
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>         <span class="jxr_string">"Index out of bounds in templateTypeOf: 2 &gt; 1"</span>);
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>   }
+<a class="jxr_linenumber" name="L368" href="#L368">368</a> 
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRecordType() {
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>         <span class="jxr_string">"record({x:'number'})"</span>);
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>   }
+<a class="jxr_linenumber" name="L373" href="#L373">373</a> 
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRecordType2() {
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>     testTTL(record(<span class="jxr_string">"0"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>         <span class="jxr_string">"record({0:'number'})"</span>);
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>   }
+<a class="jxr_linenumber" name="L378" href="#L378">378</a> 
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithRecordTypeMultipleProperties() {
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE, <span class="jxr_string">"y"</span>, STRING_TYPE),
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>         <span class="jxr_string">"record({x:'number', y:S})"</span>);
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>   }
+<a class="jxr_linenumber" name="L383" href="#L383">383</a> 
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordType() {
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>     testTTL(record(<span class="jxr_string">"x"</span>, record(<span class="jxr_string">"z"</span>, BOOLEAN_TYPE), <span class="jxr_string">"y"</span>, STRING_TYPE),
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>         <span class="jxr_string">"record({x:record({z:B}), y:S})"</span>);
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>   }
+<a class="jxr_linenumber" name="L388" href="#L388">388</a> 
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordType2() {
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>         <span class="jxr_string">"record(record({x:N}))"</span>);
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>   }
+<a class="jxr_linenumber" name="L393" href="#L393">393</a> 
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithEmptyRecordType() {
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>     testTTL(record(), <span class="jxr_string">"record({})"</span>);
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>   }
+<a class="jxr_linenumber" name="L397" href="#L397">397</a> 
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMergeRecord() {
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE, <span class="jxr_string">"y"</span>, STRING_TYPE, <span class="jxr_string">"z"</span>, BOOLEAN_TYPE),
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>         <span class="jxr_string">"record({x:N}, {y:S}, {z:B})"</span>);
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>   }
+<a class="jxr_linenumber" name="L402" href="#L402">402</a> 
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMergeDuplicatedRecords() {
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>         <span class="jxr_string">"record({x:N}, {x:N}, {x:N})"</span>);
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>   }
+<a class="jxr_linenumber" name="L407" href="#L407">407</a> 
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMergeRecordTypeWithEmpty() {
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>     testTTL(record(<span class="jxr_string">"x"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>         <span class="jxr_string">"record({x:N}, {})"</span>);
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>   }
+<a class="jxr_linenumber" name="L412" href="#L412">412</a> 
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidRecordType() {
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"record(N)"</span>,
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>         <span class="jxr_string">"Expected a record type, found number"</span>);
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>   }
+<a class="jxr_linenumber" name="L417" href="#L417">417</a> 
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidMergeRecordType() {
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"record({x:N}, N)"</span>,
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>         <span class="jxr_string">"Expected a record type, found number"</span>);
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>   }
+<a class="jxr_linenumber" name="L422" href="#L422">422</a> 
+<a class="jxr_linenumber" name="L423" href="#L423">423</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTTLTypeTransformationInFirstParamMapunion() {
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>     testTTL(union(NUMBER_TYPE, STRING_TYPE),
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>         <span class="jxr_string">"mapunion(templateTypeOf(type(ARR, union(N, S)), 0),"</span>
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>         + <span class="jxr_string">"(x) =&gt; x)"</span>);
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>   }
+<a class="jxr_linenumber" name="L428" href="#L428">428</a> 
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidNestedMapunion() {
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>     testTTL(UNKNOWN_TYPE,
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <span class="jxr_string">"mapunion(union(S, B),"</span>
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>         + <span class="jxr_string">"(x) =&gt; mapunion(union(S, N), "</span>
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>         +          <span class="jxr_string">"(x) =&gt; cond(eq(x, x), x, BOT)))"</span>,
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>         <span class="jxr_string">"The variable x is already defined"</span>);
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>   }
+<a class="jxr_linenumber" name="L436" href="#L436">436</a> 
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTTLRecordWithReference() {
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>     testTTL(record(<span class="jxr_string">"number"</span>, NUMBER_TYPE, <span class="jxr_string">"string"</span>, STRING_TYPE,
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>         <span class="jxr_string">"boolean"</span>, BOOLEAN_TYPE),
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>         <span class="jxr_string">"record({[n]:N, [s]:S, [b]:B})"</span>);
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>   }
+<a class="jxr_linenumber" name="L442" href="#L442">442</a> 
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTTLRecordWithInvalidReference() {
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"record({[Foo]:N})"</span>,
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>         <span class="jxr_string">"Expected a record type, found ?"</span>,
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>         <span class="jxr_string">"Reference to an unknown name variable Foo"</span>);
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>   }
+<a class="jxr_linenumber" name="L448" href="#L448">448</a> 
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMaprecordMappingEverythingToString() {
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>     <em class="jxr_comment">// {n:number, s:string, b:boolean}</em>
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>     <em class="jxr_comment">// {n:string, s:string, b:string}</em>
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>     testTTL(record(<span class="jxr_string">"n"</span>, STRING_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE, <span class="jxr_string">"b"</span>, STRING_TYPE),
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>         <span class="jxr_string">"maprecord(REC, (k, v) =&gt; record({[k]:S}))"</span>);
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>   }
+<a class="jxr_linenumber" name="L456" href="#L456">456</a> 
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMaprecordIdentity() {
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>     <em class="jxr_comment">// {n:number, s:string, b:boolean} remains the same</em>
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>     testTTL(recordTypeTest, <span class="jxr_string">"maprecord(REC, (k, v) =&gt; record({[k]:v}))"</span>);
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>   }
+<a class="jxr_linenumber" name="L461" href="#L461">461</a> 
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMaprecordDeleteEverything() {
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>     <em class="jxr_comment">// {n:number, s:string, b:boolean}</em>
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L465" href="#L465">465</a>     <em class="jxr_comment">// OBJECT_TYPE</em>
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>     testTTL(OBJECT_TYPE, <span class="jxr_string">"maprecord(REC, (k, v) =&gt; BOT)"</span>);
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>   }
+<a class="jxr_linenumber" name="L468" href="#L468">468</a> 
+<a class="jxr_linenumber" name="L469" href="#L469">469</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidMaprecord() {
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"maprecord(REC, (k, v) =&gt; 'number')"</span>,
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>         <span class="jxr_string">"The body of a maprecord function must evaluate to a record type "</span>
+<a class="jxr_linenumber" name="L472" href="#L472">472</a>             + <span class="jxr_string">"or a no type, found number"</span>);
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>   }
+<a class="jxr_linenumber" name="L474" href="#L474">474</a> 
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMaprecordFilterWithOnlyString() {
+<a class="jxr_linenumber" name="L476" href="#L476">476</a>     <em class="jxr_comment">// {n:number, s:string, b:boolean}</em>
+<a class="jxr_linenumber" name="L477" href="#L477">477</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L478" href="#L478">478</a>     <em class="jxr_comment">// {s:string}</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>     testTTL(record(<span class="jxr_string">"s"</span>, STRING_TYPE),
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>         <span class="jxr_string">"maprecord(REC, (k, v) =&gt; cond(eq(v, S), record({[k]:v}), BOT))"</span>);
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>   }
+<a class="jxr_linenumber" name="L482" href="#L482">482</a> 
+<a class="jxr_linenumber" name="L483" href="#L483">483</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidMaprecordFirstParam() {
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"maprecord(N, (k, v) =&gt; BOT)"</span>,
+<a class="jxr_linenumber" name="L485" href="#L485">485</a>         <span class="jxr_string">"The first parameter of a maprecord must be a record type, found number"</span>);
+<a class="jxr_linenumber" name="L486" href="#L486">486</a>   }
+<a class="jxr_linenumber" name="L487" href="#L487">487</a> 
+<a class="jxr_linenumber" name="L488" href="#L488">488</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithObjectInMaprecord() {
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>     testTTL(OBJECT_TYPE, <span class="jxr_string">"maprecord(OBJ, (k, v) =&gt; record({[k]:v}))"</span>);
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>   }
+<a class="jxr_linenumber" name="L491" href="#L491">491</a> 
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUnionInMaprecord() {
+<a class="jxr_linenumber" name="L493" href="#L493">493</a>     testTTL(UNKNOWN_TYPE,
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>         <span class="jxr_string">"maprecord(union(record({n:N}), S), (k, v) =&gt; record({[k]:v}))"</span>,
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>         <span class="jxr_string">"The first parameter of a maprecord must be a record type, "</span>
+<a class="jxr_linenumber" name="L496" href="#L496">496</a>             + <span class="jxr_string">"found (string|{n: number})"</span>);
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>   }
+<a class="jxr_linenumber" name="L498" href="#L498">498</a> 
+<a class="jxr_linenumber" name="L499" href="#L499">499</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUnionOfRecordsInMaprecord() {
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"maprecord(union(record({n:N}), record({s:S})), "</span>
+<a class="jxr_linenumber" name="L501" href="#L501">501</a>         + <span class="jxr_string">"(k, v) =&gt; record({[k]:v}))"</span>,
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>         <span class="jxr_string">"The first parameter of a maprecord must be a record type, "</span>
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>             + <span class="jxr_string">"found ({n: number}|{s: string})"</span>);
+<a class="jxr_linenumber" name="L504" href="#L504">504</a>   }
+<a class="jxr_linenumber" name="L505" href="#L505">505</a> 
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordInMaprecordFilterOneLevelString() {
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>     <em class="jxr_comment">// {s:string, r:{s:string, b:boolean}}</em>
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L509" href="#L509">509</a>     <em class="jxr_comment">// {r:{s:string, b:boolean}}</em>
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"s"</span>, STRING_TYPE, <span class="jxr_string">"b"</span>, BOOLEAN_TYPE)),
+<a class="jxr_linenumber" name="L511" href="#L511">511</a>         <span class="jxr_string">"maprecord(NESTEDREC,"</span>
+<a class="jxr_linenumber" name="L512" href="#L512">512</a>             + <span class="jxr_string">"(k, v) =&gt; cond(eq(v, S), BOT, record({[k]:v})))"</span>);
+<a class="jxr_linenumber" name="L513" href="#L513">513</a>   }
+<a class="jxr_linenumber" name="L514" href="#L514">514</a> 
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordInMaprecordFilterTwoLevelsString() {
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>     <em class="jxr_comment">// {s:string, r:{s:string, b:boolean}}</em>
+<a class="jxr_linenumber" name="L517" href="#L517">517</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L518" href="#L518">518</a>     <em class="jxr_comment">// {r:{b:boolean}}</em>
+<a class="jxr_linenumber" name="L519" href="#L519">519</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"b"</span>, BOOLEAN_TYPE)),
+<a class="jxr_linenumber" name="L520" href="#L520">520</a>         <span class="jxr_string">"maprecord(NESTEDREC,"</span>
+<a class="jxr_linenumber" name="L521" href="#L521">521</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L522" href="#L522">522</a>             +  <span class="jxr_string">"cond(sub(v1, 'Object'), "</span>
+<a class="jxr_linenumber" name="L523" href="#L523">523</a>             +        <span class="jxr_string">"maprecord(v1, (k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L524" href="#L524">524</a>             +             <span class="jxr_string">"cond(eq(v2, S), BOT, record({[k1]:record({[k2]:v2})}))),"</span>
+<a class="jxr_linenumber" name="L525" href="#L525">525</a>             +        <span class="jxr_string">"cond(eq(v1, S), BOT, record({[k1]:v1}))))"</span>);
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>   }
+<a class="jxr_linenumber" name="L527" href="#L527">527</a> 
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityOneLevel() {
+<a class="jxr_linenumber" name="L529" href="#L529">529</a>     <em class="jxr_comment">// {r:{n:number, s:string}}</em>
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>     testTTL(record(<span class="jxr_string">"r"</span>,
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>         record(<span class="jxr_string">"b"</span>, BOOLEAN_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)),
+<a class="jxr_linenumber" name="L532" href="#L532">532</a>         <span class="jxr_string">"maprecord(record({r:record({b:B, s:S})}),"</span>
+<a class="jxr_linenumber" name="L533" href="#L533">533</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L534" href="#L534">534</a>             +   <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L535" href="#L535">535</a>             +     <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>             +       <span class="jxr_string">"record({[k1]:record({[k2]:v2})})))"</span>);
+<a class="jxr_linenumber" name="L537" href="#L537">537</a>   }
+<a class="jxr_linenumber" name="L538" href="#L538">538</a> 
+<a class="jxr_linenumber" name="L539" href="#L539">539</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityOneLevel2() {
+<a class="jxr_linenumber" name="L540" href="#L540">540</a>     <em class="jxr_comment">// {r:{n:number, s:string}}</em>
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>     testTTL(record(<span class="jxr_string">"r"</span>,
+<a class="jxr_linenumber" name="L542" href="#L542">542</a>         record(<span class="jxr_string">"b"</span>, BOOLEAN_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)),
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>         <span class="jxr_string">"maprecord(record({r:record({b:B, s:S})}),\n"</span>
+<a class="jxr_linenumber" name="L544" href="#L544">544</a>             + <span class="jxr_string">"(k1, v1) =&gt;\n"</span>
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>             +   <span class="jxr_string">"record({[k1]:\n"</span>
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>             +     <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>             +       <span class="jxr_string">"(k2, v2) =&gt; record({[k2]:v2}))}))"</span>);
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>   }
+<a class="jxr_linenumber" name="L549" href="#L549">549</a> 
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityTwoLevels() {
+<a class="jxr_linenumber" name="L551" href="#L551">551</a>     <em class="jxr_comment">// {r:{r2:{n:number, s:string}}}</em>
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"r2"</span>,
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>         record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE))),
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({n:N, s:S})})}),"</span>
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>             +    <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>             +      <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>             +        <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L559" href="#L559">559</a>             +          <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>             +             <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>             +               <span class="jxr_string">"record({[k2]:"</span>
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>             +                 <span class="jxr_string">"record({[k3]:v3})})}))))"</span>);
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>   }
+<a class="jxr_linenumber" name="L564" href="#L564">564</a> 
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityTwoLevels2() {
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>     <em class="jxr_comment">// {r:{r2:{n:number, s:string}}}</em>
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"r2"</span>,
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>         record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE))),
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({n:N, s:S})})}),"</span>
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>             +    <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>             +      <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>             +        <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>             +          <span class="jxr_string">"record({[k2]:"</span>
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>             +            <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>             +              <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>             +                <span class="jxr_string">"record({[k3]:v3}))}))}))"</span>);
+<a class="jxr_linenumber" name="L578" href="#L578">578</a>   }
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> 
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityThreeLevels() {
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>     <em class="jxr_comment">// {r:{r2:{r3:{n:number, s:string}}}}</em>
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"r2"</span>, record(<span class="jxr_string">"r3"</span>,
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>         record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)))),
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"</span>
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>             +    <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>             +      <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>             +        <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L589" href="#L589">589</a>             +          <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>             +            <span class="jxr_string">"maprecord(v3,"</span>
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>             +              <span class="jxr_string">"(k4, v4) =&gt;"</span>
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>             +               <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L593" href="#L593">593</a>             +                 <span class="jxr_string">"record({[k2]:"</span>
+<a class="jxr_linenumber" name="L594" href="#L594">594</a>             +                   <span class="jxr_string">"record({[k3]:"</span>
+<a class="jxr_linenumber" name="L595" href="#L595">595</a>             +                     <span class="jxr_string">"record({[k4]:v4})})})})))))"</span>);
+<a class="jxr_linenumber" name="L596" href="#L596">596</a>   }
+<a class="jxr_linenumber" name="L597" href="#L597">597</a> 
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedIdentityThreeLevels2() {
+<a class="jxr_linenumber" name="L599" href="#L599">599</a>     <em class="jxr_comment">// {r:{r2:{r3:{n:number, s:string}}}}</em>
+<a class="jxr_linenumber" name="L600" href="#L600">600</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"r2"</span>, record(<span class="jxr_string">"r3"</span>,
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>         record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)))),
+<a class="jxr_linenumber" name="L602" href="#L602">602</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"</span>
+<a class="jxr_linenumber" name="L603" href="#L603">603</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L604" href="#L604">604</a>             +   <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L605" href="#L605">605</a>             +     <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L606" href="#L606">606</a>             +       <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L607" href="#L607">607</a>             +         <span class="jxr_string">"record({[k2]:"</span>
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>             +           <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>             +             <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L610" href="#L610">610</a>             +               <span class="jxr_string">"record({[k3]:"</span>
+<a class="jxr_linenumber" name="L611" href="#L611">611</a>             +                 <span class="jxr_string">"maprecord(v3,"</span>
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>             +                   <span class="jxr_string">"(k4, v4) =&gt;"</span>
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>             +                     <span class="jxr_string">"record({[k4]:v4}))}))}))}))"</span>);
+<a class="jxr_linenumber" name="L614" href="#L614">614</a>   }
+<a class="jxr_linenumber" name="L615" href="#L615">615</a> 
+<a class="jxr_linenumber" name="L616" href="#L616">616</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordDeleteLevelTwoAndThree() {
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>     <em class="jxr_comment">// {r:{r2:{r3:{n:number, s:string}}}}</em>
+<a class="jxr_linenumber" name="L618" href="#L618">618</a>     <em class="jxr_comment">// is transformed into</em>
+<a class="jxr_linenumber" name="L619" href="#L619">619</a>     <em class="jxr_comment">// {r:{n:number, s:string}}</em>
+<a class="jxr_linenumber" name="L620" href="#L620">620</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)),
+<a class="jxr_linenumber" name="L621" href="#L621">621</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"</span>
+<a class="jxr_linenumber" name="L622" href="#L622">622</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>             +    <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L624" href="#L624">624</a>             +      <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>             +        <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>             +          <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>             +            <span class="jxr_string">"maprecord(v3,"</span>
+<a class="jxr_linenumber" name="L628" href="#L628">628</a>             +              <span class="jxr_string">"(k4, v4) =&gt;"</span>
+<a class="jxr_linenumber" name="L629" href="#L629">629</a>             +               <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L630" href="#L630">630</a>             +                 <span class="jxr_string">"record({[k4]:v4})})))))"</span>);
+<a class="jxr_linenumber" name="L631" href="#L631">631</a>   }
+<a class="jxr_linenumber" name="L632" href="#L632">632</a> 
+<a class="jxr_linenumber" name="L633" href="#L633">633</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordDeleteLevelTwoAndThree2() {
+<a class="jxr_linenumber" name="L634" href="#L634">634</a>     <em class="jxr_comment">// {r:{r2:{r3:{n:number, s:string}}}}</em>
+<a class="jxr_linenumber" name="L635" href="#L635">635</a>     <em class="jxr_comment">// is transformed into</em>
+<a class="jxr_linenumber" name="L636" href="#L636">636</a>     <em class="jxr_comment">// {r:{n:number, s:string}}</em>
+<a class="jxr_linenumber" name="L637" href="#L637">637</a>     testTTL(record(<span class="jxr_string">"r"</span>, record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE)),
+<a class="jxr_linenumber" name="L638" href="#L638">638</a>         <span class="jxr_string">"maprecord(record({r:record({r2:record({r3:record({n:N, s:S})})})}),"</span>
+<a class="jxr_linenumber" name="L639" href="#L639">639</a>             + <span class="jxr_string">"(k1, v1) =&gt; "</span>
+<a class="jxr_linenumber" name="L640" href="#L640">640</a>             +   <span class="jxr_string">"record({[k1]:"</span>
+<a class="jxr_linenumber" name="L641" href="#L641">641</a>             +     <span class="jxr_string">"maprecord(v1, "</span>
+<a class="jxr_linenumber" name="L642" href="#L642">642</a>             +       <span class="jxr_string">"(k2, v2) =&gt; "</span>
+<a class="jxr_linenumber" name="L643" href="#L643">643</a>             +         <span class="jxr_string">"maprecord(v2, "</span>
+<a class="jxr_linenumber" name="L644" href="#L644">644</a>             +           <span class="jxr_string">"(k3, v3) =&gt;"</span>
+<a class="jxr_linenumber" name="L645" href="#L645">645</a>             +             <span class="jxr_string">"maprecord(v3,"</span>
+<a class="jxr_linenumber" name="L646" href="#L646">646</a>             +               <span class="jxr_string">"(k4, v4) =&gt;"</span>
+<a class="jxr_linenumber" name="L647" href="#L647">647</a>             +                 <span class="jxr_string">"record({[k4]:v4}))))}))"</span>);
+<a class="jxr_linenumber" name="L648" href="#L648">648</a>   }
+<a class="jxr_linenumber" name="L649" href="#L649">649</a> 
+<a class="jxr_linenumber" name="L650" href="#L650">650</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordCollapsePropertiesToRecord() {
+<a class="jxr_linenumber" name="L651" href="#L651">651</a>     <em class="jxr_comment">// {a:Array, b:{n:number}}</em>
+<a class="jxr_linenumber" name="L652" href="#L652">652</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L653" href="#L653">653</a>     <em class="jxr_comment">// {foo:{n:number}}</em>
+<a class="jxr_linenumber" name="L654" href="#L654">654</a>     testTTL(record(<span class="jxr_string">"foo"</span>, record(<span class="jxr_string">"n"</span>, NUMBER_TYPE)),
+<a class="jxr_linenumber" name="L655" href="#L655">655</a>         <span class="jxr_string">"maprecord(record({a:ARR, b:record({n:N})}),"</span>
+<a class="jxr_linenumber" name="L656" href="#L656">656</a>             + <span class="jxr_string">"(k, v) =&gt; record({foo:v}))"</span>);
+<a class="jxr_linenumber" name="L657" href="#L657">657</a>   }
+<a class="jxr_linenumber" name="L658" href="#L658">658</a> 
+<a class="jxr_linenumber" name="L659" href="#L659">659</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordCollapsePropertiesToType() {
+<a class="jxr_linenumber" name="L660" href="#L660">660</a>     <em class="jxr_comment">// {a:{n:number}, b:Array}</em>
+<a class="jxr_linenumber" name="L661" href="#L661">661</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L662" href="#L662">662</a>     <em class="jxr_comment">// {foo:Array}</em>
+<a class="jxr_linenumber" name="L663" href="#L663">663</a>     testTTL(record(<span class="jxr_string">"foo"</span>, ARRAY_TYPE),
+<a class="jxr_linenumber" name="L664" href="#L664">664</a>         <span class="jxr_string">"maprecord(record({a:record({n:N}), b:ARR}),"</span>
+<a class="jxr_linenumber" name="L665" href="#L665">665</a>             + <span class="jxr_string">"(k, v) =&gt;  record({foo:v}))"</span>);
+<a class="jxr_linenumber" name="L666" href="#L666">666</a>   }
+<a class="jxr_linenumber" name="L667" href="#L667">667</a> 
+<a class="jxr_linenumber" name="L668" href="#L668">668</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordCollapsePropertiesJoinRecords() {
+<a class="jxr_linenumber" name="L669" href="#L669">669</a>     <em class="jxr_comment">// {a:{n:number}, b:{s:Array}}</em>
+<a class="jxr_linenumber" name="L670" href="#L670">670</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L671" href="#L671">671</a>     <em class="jxr_comment">// {foo:{n:number, s:Array}}</em>
+<a class="jxr_linenumber" name="L672" href="#L672">672</a>     testTTL(record(<span class="jxr_string">"foo"</span>, record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, ARRAY_TYPE)),
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>         <span class="jxr_string">"maprecord(record({a:record({n:N}), b:record({s:ARR})}),"</span>
+<a class="jxr_linenumber" name="L674" href="#L674">674</a>             + <span class="jxr_string">"(k, v) =&gt; record({foo:v}))"</span>);
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>   }
+<a class="jxr_linenumber" name="L676" href="#L676">676</a> 
+<a class="jxr_linenumber" name="L677" href="#L677">677</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithNestedRecordCollapsePropertiesJoinRecords2() {
+<a class="jxr_linenumber" name="L678" href="#L678">678</a>     <em class="jxr_comment">// {a:{n:number, {x:number}}, b:{s:Array, {y:number}}}</em>
+<a class="jxr_linenumber" name="L679" href="#L679">679</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L680" href="#L680">680</a>     <em class="jxr_comment">// {foo:{n:number, s:Array, r:{x:number, y:number}}}</em>
+<a class="jxr_linenumber" name="L681" href="#L681">681</a>     testTTL(record(<span class="jxr_string">"foo"</span>, record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, ARRAY_TYPE,
+<a class="jxr_linenumber" name="L682" href="#L682">682</a>         <span class="jxr_string">"r"</span>, record(<span class="jxr_string">"x"</span>, NUMBER_TYPE, <span class="jxr_string">"y"</span>, NUMBER_TYPE))),
+<a class="jxr_linenumber" name="L683" href="#L683">683</a>         <span class="jxr_string">"maprecord(record({a:record({n:N, r:record({x:N})}), "</span>
+<a class="jxr_linenumber" name="L684" href="#L684">684</a>         + <span class="jxr_string">"b:record({s:ARR, r:record({y:N})})}),"</span>
+<a class="jxr_linenumber" name="L685" href="#L685">685</a>             + <span class="jxr_string">"(k, v) =&gt; record({foo:v}))"</span>);
+<a class="jxr_linenumber" name="L686" href="#L686">686</a>   }
+<a class="jxr_linenumber" name="L687" href="#L687">687</a> 
+<a class="jxr_linenumber" name="L688" href="#L688">688</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithAsynchUseCase() {
+<a class="jxr_linenumber" name="L689" href="#L689">689</a>     <em class="jxr_comment">// TODO(lpino): Use the type Promise instead of Array</em>
+<a class="jxr_linenumber" name="L690" href="#L690">690</a>     <em class="jxr_comment">// {service:Array&lt;number&gt;}</em>
+<a class="jxr_linenumber" name="L691" href="#L691">691</a>     <em class="jxr_comment">// is transformed to</em>
+<a class="jxr_linenumber" name="L692" href="#L692">692</a>     <em class="jxr_comment">// {service:number}</em>
+<a class="jxr_linenumber" name="L693" href="#L693">693</a>     testTTL(record(<span class="jxr_string">"service"</span>, NUMBER_TYPE),
+<a class="jxr_linenumber" name="L694" href="#L694">694</a>         <span class="jxr_string">"cond(sub(ASYNCH, 'Object'),\n"</span>
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>             +       <span class="jxr_string">"maprecord(ASYNCH, \n"</span>
+<a class="jxr_linenumber" name="L696" href="#L696">696</a>             +       <span class="jxr_string">"(k, v) =&gt; cond(eq(rawTypeOf(v), 'Array'),\n"</span>
+<a class="jxr_linenumber" name="L697" href="#L697">697</a>             +                   <span class="jxr_string">"record({[k]:templateTypeOf(v, 0)}),\n"</span>
+<a class="jxr_linenumber" name="L698" href="#L698">698</a>             +                   <span class="jxr_string">"record({[k]:'undefined'})) "</span>
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>             +               <span class="jxr_string">"),\n"</span>
+<a class="jxr_linenumber" name="L700" href="#L700">700</a>             +       <span class="jxr_string">"ASYNCH)"</span>);
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>   }
+<a class="jxr_linenumber" name="L702" href="#L702">702</a> 
+<a class="jxr_linenumber" name="L703" href="#L703">703</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidNestedMaprecord() {
+<a class="jxr_linenumber" name="L704" href="#L704">704</a>     testTTL(UNKNOWN_TYPE,
+<a class="jxr_linenumber" name="L705" href="#L705">705</a>         <span class="jxr_string">"maprecord(NESTEDREC, (k, v) =&gt; maprecord(v, (k, v) =&gt; BOT))"</span>,
+<a class="jxr_linenumber" name="L706" href="#L706">706</a>         <span class="jxr_string">"The variable k is already defined"</span>);
+<a class="jxr_linenumber" name="L707" href="#L707">707</a> 
+<a class="jxr_linenumber" name="L708" href="#L708">708</a>   }
+<a class="jxr_linenumber" name="L709" href="#L709">709</a> 
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithMaprecordAndStringEquivalence() {
+<a class="jxr_linenumber" name="L711" href="#L711">711</a>     testTTL(record(<span class="jxr_string">"bool"</span>, NUMBER_TYPE, <span class="jxr_string">"str"</span>, STRING_TYPE),
+<a class="jxr_linenumber" name="L712" href="#L712">712</a>         <span class="jxr_string">"maprecord(record({bool:B, str:S}),"</span>
+<a class="jxr_linenumber" name="L713" href="#L713">713</a>         + <span class="jxr_string">"(k, v) =&gt; record({[k]:cond(streq(k, 'bool'), N, v)}))"</span>);
+<a class="jxr_linenumber" name="L714" href="#L714">714</a>   }
+<a class="jxr_linenumber" name="L715" href="#L715">715</a> 
+<a class="jxr_linenumber" name="L716" href="#L716">716</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTypeOfVar() {
+<a class="jxr_linenumber" name="L717" href="#L717">717</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"typeOfVar('n')"</span>);
+<a class="jxr_linenumber" name="L718" href="#L718">718</a>   }
+<a class="jxr_linenumber" name="L719" href="#L719">719</a> 
+<a class="jxr_linenumber" name="L720" href="#L720">720</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithUnknownTypeOfVar() {
+<a class="jxr_linenumber" name="L721" href="#L721">721</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"typeOfVar('foo')"</span>,
+<a class="jxr_linenumber" name="L722" href="#L722">722</a>         <span class="jxr_string">"Variable foo is undefined in the scope"</span>);
+<a class="jxr_linenumber" name="L723" href="#L723">723</a>   }
+<a class="jxr_linenumber" name="L724" href="#L724">724</a> 
+<a class="jxr_linenumber" name="L725" href="#L725">725</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsConstructorConditional() {
+<a class="jxr_linenumber" name="L726" href="#L726">726</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isCtor(typeOfVar('Bar')), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L727" href="#L727">727</a>   }
+<a class="jxr_linenumber" name="L728" href="#L728">728</a> 
+<a class="jxr_linenumber" name="L729" href="#L729">729</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseIsConstructorConditional() {
+<a class="jxr_linenumber" name="L730" href="#L730">730</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(isCtor(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L731" href="#L731">731</a>   }
+<a class="jxr_linenumber" name="L732" href="#L732">732</a> 
+<a class="jxr_linenumber" name="L733" href="#L733">733</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsTemplatizedConditional() {
+<a class="jxr_linenumber" name="L734" href="#L734">734</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isTemplatized(type(ARR, N)), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L735" href="#L735">735</a>   }
+<a class="jxr_linenumber" name="L736" href="#L736">736</a> 
+<a class="jxr_linenumber" name="L737" href="#L737">737</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseIsTemplatizedConditional() {
+<a class="jxr_linenumber" name="L738" href="#L738">738</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(isTemplatized(ARR), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L739" href="#L739">739</a>   }
+<a class="jxr_linenumber" name="L740" href="#L740">740</a> 
+<a class="jxr_linenumber" name="L741" href="#L741">741</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsRecordConditional() {
+<a class="jxr_linenumber" name="L742" href="#L742">742</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isRecord(REC), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L743" href="#L743">743</a>   }
+<a class="jxr_linenumber" name="L744" href="#L744">744</a> 
+<a class="jxr_linenumber" name="L745" href="#L745">745</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseIsRecordConditional() {
+<a class="jxr_linenumber" name="L746" href="#L746">746</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(isRecord(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L747" href="#L747">747</a>   }
+<a class="jxr_linenumber" name="L748" href="#L748">748</a> 
+<a class="jxr_linenumber" name="L749" href="#L749">749</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsDefinedConditional() {
+<a class="jxr_linenumber" name="L750" href="#L750">750</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L751" href="#L751">751</a>   }
+<a class="jxr_linenumber" name="L752" href="#L752">752</a> 
+<a class="jxr_linenumber" name="L753" href="#L753">753</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseIsDefinedConditional() {
+<a class="jxr_linenumber" name="L754" href="#L754">754</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L755" href="#L755">755</a>   }
+<a class="jxr_linenumber" name="L756" href="#L756">756</a> 
+<a class="jxr_linenumber" name="L757" href="#L757">757</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsUnknownConditional() {
+<a class="jxr_linenumber" name="L758" href="#L758">758</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isUnknown(UNK), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L759" href="#L759">759</a>   }
+<a class="jxr_linenumber" name="L760" href="#L760">760</a> 
+<a class="jxr_linenumber" name="L761" href="#L761">761</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueIsUnknownConditional2() {
+<a class="jxr_linenumber" name="L762" href="#L762">762</a>     testTTL(STRING_TYPE, <span class="jxr_string">"cond(isUnknown(CHKUNK), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L763" href="#L763">763</a>   }
+<a class="jxr_linenumber" name="L764" href="#L764">764</a> 
+<a class="jxr_linenumber" name="L765" href="#L765">765</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseIsUnknownConditional() {
+<a class="jxr_linenumber" name="L766" href="#L766">766</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"cond(isUnknown(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L767" href="#L767">767</a>   }
+<a class="jxr_linenumber" name="L768" href="#L768">768</a> 
+<a class="jxr_linenumber" name="L769" href="#L769">769</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueAndConditional() {
+<a class="jxr_linenumber" name="L770" href="#L770">770</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L771" href="#L771">771</a>         <span class="jxr_string">"cond(isDefined(N) &amp;&amp; isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L772" href="#L772">772</a>   }
+<a class="jxr_linenumber" name="L773" href="#L773">773</a> 
+<a class="jxr_linenumber" name="L774" href="#L774">774</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseAndConditional() {
+<a class="jxr_linenumber" name="L775" href="#L775">775</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L776" href="#L776">776</a>         <span class="jxr_string">"cond(isDefined(N) &amp;&amp; isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L777" href="#L777">777</a>   }
+<a class="jxr_linenumber" name="L778" href="#L778">778</a> 
+<a class="jxr_linenumber" name="L779" href="#L779">779</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseAndConditional2() {
+<a class="jxr_linenumber" name="L780" href="#L780">780</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L781" href="#L781">781</a>         <span class="jxr_string">"cond(isDefined(Foo) &amp;&amp; isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L782" href="#L782">782</a>   }
+<a class="jxr_linenumber" name="L783" href="#L783">783</a> 
+<a class="jxr_linenumber" name="L784" href="#L784">784</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseAndConditional3() {
+<a class="jxr_linenumber" name="L785" href="#L785">785</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L786" href="#L786">786</a>         <span class="jxr_string">"cond(isDefined(Foo) &amp;&amp; isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L787" href="#L787">787</a>   }
+<a class="jxr_linenumber" name="L788" href="#L788">788</a> 
+<a class="jxr_linenumber" name="L789" href="#L789">789</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueOrConditional() {
+<a class="jxr_linenumber" name="L790" href="#L790">790</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L791" href="#L791">791</a>         <span class="jxr_string">"cond(isDefined(N) || isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L792" href="#L792">792</a>   }
+<a class="jxr_linenumber" name="L793" href="#L793">793</a> 
+<a class="jxr_linenumber" name="L794" href="#L794">794</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueOrConditional2() {
+<a class="jxr_linenumber" name="L795" href="#L795">795</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L796" href="#L796">796</a>         <span class="jxr_string">"cond(isDefined(Foo) || isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L797" href="#L797">797</a>   }
+<a class="jxr_linenumber" name="L798" href="#L798">798</a> 
+<a class="jxr_linenumber" name="L799" href="#L799">799</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueOrConditional3() {
+<a class="jxr_linenumber" name="L800" href="#L800">800</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L801" href="#L801">801</a>         <span class="jxr_string">"cond(isDefined(N) || isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L802" href="#L802">802</a>   }
+<a class="jxr_linenumber" name="L803" href="#L803">803</a> 
+<a class="jxr_linenumber" name="L804" href="#L804">804</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseOrConditional() {
+<a class="jxr_linenumber" name="L805" href="#L805">805</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L806" href="#L806">806</a>         <span class="jxr_string">"cond(isDefined(Foo) || isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L807" href="#L807">807</a>   }
+<a class="jxr_linenumber" name="L808" href="#L808">808</a> 
+<a class="jxr_linenumber" name="L809" href="#L809">809</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTrueNotConditional3() {
+<a class="jxr_linenumber" name="L810" href="#L810">810</a>     testTTL(STRING_TYPE,
+<a class="jxr_linenumber" name="L811" href="#L811">811</a>         <span class="jxr_string">"cond(!isDefined(Foo), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L812" href="#L812">812</a>   }
+<a class="jxr_linenumber" name="L813" href="#L813">813</a> 
+<a class="jxr_linenumber" name="L814" href="#L814">814</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithFalseNotConditional() {
+<a class="jxr_linenumber" name="L815" href="#L815">815</a>     testTTL(NUMBER_TYPE,
+<a class="jxr_linenumber" name="L816" href="#L816">816</a>         <span class="jxr_string">"cond(!isDefined(N), 'string', 'number')"</span>);
+<a class="jxr_linenumber" name="L817" href="#L817">817</a>   }
+<a class="jxr_linenumber" name="L818" href="#L818">818</a> 
+<a class="jxr_linenumber" name="L819" href="#L819">819</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInstanceOf() {
+<a class="jxr_linenumber" name="L820" href="#L820">820</a>     testTTL(NUMBER_OBJECT_TYPE, <span class="jxr_string">"instanceOf(typeOfVar('Number'))"</span>);
+<a class="jxr_linenumber" name="L821" href="#L821">821</a>   }
+<a class="jxr_linenumber" name="L822" href="#L822">822</a> 
+<a class="jxr_linenumber" name="L823" href="#L823">823</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidInstanceOf() {
+<a class="jxr_linenumber" name="L824" href="#L824">824</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"instanceOf(N)"</span>,
+<a class="jxr_linenumber" name="L825" href="#L825">825</a>         <span class="jxr_string">"Expected a constructor type, found number"</span>);
+<a class="jxr_linenumber" name="L826" href="#L826">826</a>   }
+<a class="jxr_linenumber" name="L827" href="#L827">827</a> 
+<a class="jxr_linenumber" name="L828" href="#L828">828</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithInvalidInstanceOf2() {
+<a class="jxr_linenumber" name="L829" href="#L829">829</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"instanceOf(foo)"</span>,
+<a class="jxr_linenumber" name="L830" href="#L830">830</a>         <span class="jxr_string">"Expected a constructor type, found Unknown"</span>,
+<a class="jxr_linenumber" name="L831" href="#L831">831</a>         <span class="jxr_string">"Reference to an unknown type variable foo"</span>);
+<a class="jxr_linenumber" name="L832" href="#L832">832</a>   }
+<a class="jxr_linenumber" name="L833" href="#L833">833</a> 
+<a class="jxr_linenumber" name="L834" href="#L834">834</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationWithTypeExpr() {
+<a class="jxr_linenumber" name="L835" href="#L835">835</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"typeExpr('number')"</span>);
+<a class="jxr_linenumber" name="L836" href="#L836">836</a>   }
+<a class="jxr_linenumber" name="L837" href="#L837">837</a> 
+<a class="jxr_linenumber" name="L838" href="#L838">838</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testParserWithTTLNativeTypeExprUnion() {
+<a class="jxr_linenumber" name="L839" href="#L839">839</a>     testTTL(union(NUMBER_TYPE, BOOLEAN_TYPE), <span class="jxr_string">"typeExpr('number|boolean')"</span>);
+<a class="jxr_linenumber" name="L840" href="#L840">840</a>   }
+<a class="jxr_linenumber" name="L841" href="#L841">841</a> 
+<a class="jxr_linenumber" name="L842" href="#L842">842</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testParserWithTTLNativeTypeExprRecord() {
+<a class="jxr_linenumber" name="L843" href="#L843">843</a>     testTTL(record(<span class="jxr_string">"foo"</span>, NUMBER_TYPE, <span class="jxr_string">"bar"</span>, BOOLEAN_TYPE),
+<a class="jxr_linenumber" name="L844" href="#L844">844</a>         <span class="jxr_string">"typeExpr('{foo:number, bar:boolean}')"</span>);
+<a class="jxr_linenumber" name="L845" href="#L845">845</a>   }
+<a class="jxr_linenumber" name="L846" href="#L846">846</a> 
+<a class="jxr_linenumber" name="L847" href="#L847">847</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testParserWithTTLNativeTypeExprNullable() {
+<a class="jxr_linenumber" name="L848" href="#L848">848</a>     testTTL(union(NUMBER_TYPE, NULL_TYPE), <span class="jxr_string">"typeExpr('?number')"</span>);
+<a class="jxr_linenumber" name="L849" href="#L849">849</a>   }
+<a class="jxr_linenumber" name="L850" href="#L850">850</a> 
+<a class="jxr_linenumber" name="L851" href="#L851">851</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testParserWithTTLNativeTypeExprNonNullable() {
+<a class="jxr_linenumber" name="L852" href="#L852">852</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"typeExpr('!number')"</span>);
+<a class="jxr_linenumber" name="L853" href="#L853">853</a>   }
+<a class="jxr_linenumber" name="L854" href="#L854">854</a> 
+<a class="jxr_linenumber" name="L855" href="#L855">855</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPrintType() {
+<a class="jxr_linenumber" name="L856" href="#L856">856</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"printType('Test message: ', N)"</span>);
+<a class="jxr_linenumber" name="L857" href="#L857">857</a>   }
+<a class="jxr_linenumber" name="L858" href="#L858">858</a> 
+<a class="jxr_linenumber" name="L859" href="#L859">859</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPrintType2() {
+<a class="jxr_linenumber" name="L860" href="#L860">860</a>     testTTL(recordTypeTest, <span class="jxr_string">"printType('Test message: ', REC)"</span>);
+<a class="jxr_linenumber" name="L861" href="#L861">861</a>   }
+<a class="jxr_linenumber" name="L862" href="#L862">862</a> 
+<a class="jxr_linenumber" name="L863" href="#L863">863</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPropType() {
+<a class="jxr_linenumber" name="L864" href="#L864">864</a>     testTTL(NUMBER_TYPE, <span class="jxr_string">"propType('a', record({a:N, b:record({x:B})}))"</span>);
+<a class="jxr_linenumber" name="L865" href="#L865">865</a>   }
+<a class="jxr_linenumber" name="L866" href="#L866">866</a> 
+<a class="jxr_linenumber" name="L867" href="#L867">867</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPropType2() {
+<a class="jxr_linenumber" name="L868" href="#L868">868</a>     testTTL(record(<span class="jxr_string">"x"</span>, BOOLEAN_TYPE),
+<a class="jxr_linenumber" name="L869" href="#L869">869</a>         <span class="jxr_string">"propType('b', record({a:N, b:record({x:B})}))"</span>);
+<a class="jxr_linenumber" name="L870" href="#L870">870</a>   }
+<a class="jxr_linenumber" name="L871" href="#L871">871</a> 
+<a class="jxr_linenumber" name="L872" href="#L872">872</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPropTypeNotFound() {
+<a class="jxr_linenumber" name="L873" href="#L873">873</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"propType('c', record({a:N, b:record({x:B})}))"</span>);
+<a class="jxr_linenumber" name="L874" href="#L874">874</a>   }
+<a class="jxr_linenumber" name="L875" href="#L875">875</a> 
+<a class="jxr_linenumber" name="L876" href="#L876">876</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationPropTypeInvalid() {
+<a class="jxr_linenumber" name="L877" href="#L877">877</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"propType('c', N)"</span>,
+<a class="jxr_linenumber" name="L878" href="#L878">878</a>         <span class="jxr_string">"Expected object type, found number"</span>);
+<a class="jxr_linenumber" name="L879" href="#L879">879</a>   }
+<a class="jxr_linenumber" name="L880" href="#L880">880</a> 
+<a class="jxr_linenumber" name="L881" href="#L881">881</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationInstanceObjectToRecord() {
+<a class="jxr_linenumber" name="L882" href="#L882">882</a>     testTTL(OBJECT_TYPE, <span class="jxr_string">"record(type(OBJ, N))"</span>);
+<a class="jxr_linenumber" name="L883" href="#L883">883</a>   }
+<a class="jxr_linenumber" name="L884" href="#L884">884</a> 
+<a class="jxr_linenumber" name="L885" href="#L885">885</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationInstanceObjectToRecord2() {
+<a class="jxr_linenumber" name="L886" href="#L886">886</a>     testTTL(record(<span class="jxr_string">"length"</span>, NUMBER_TYPE), <span class="jxr_string">"record(type(ARR, N))"</span>);
+<a class="jxr_linenumber" name="L887" href="#L887">887</a>   }
+<a class="jxr_linenumber" name="L888" href="#L888">888</a> 
+<a class="jxr_linenumber" name="L889" href="#L889">889</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testTransformationInstanceObjectToRecordInvalid() {
+<a class="jxr_linenumber" name="L890" href="#L890">890</a>     testTTL(UNKNOWN_TYPE, <span class="jxr_string">"record(union(OBJ, NULL))"</span>,
+<a class="jxr_linenumber" name="L891" href="#L891">891</a>         <span class="jxr_string">"Expected a record type, found (Object|null)"</span>);
+<a class="jxr_linenumber" name="L892" href="#L892">892</a>   }
+<a class="jxr_linenumber" name="L893" href="#L893">893</a> 
+<a class="jxr_linenumber" name="L894" href="#L894">894</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> initRecordTypeTests() {
+<a class="jxr_linenumber" name="L895" href="#L895">895</a>     <em class="jxr_comment">// {n:number, s:string, b:boolean}</em>
+<a class="jxr_linenumber" name="L896" href="#L896">896</a>     recordTypeTest = record(<span class="jxr_string">"n"</span>, NUMBER_TYPE, <span class="jxr_string">"s"</span>, STRING_TYPE,
+<a class="jxr_linenumber" name="L897" href="#L897">897</a>         <span class="jxr_string">"b"</span>, BOOLEAN_TYPE);
+<a class="jxr_linenumber" name="L898" href="#L898">898</a>     <em class="jxr_comment">// {n:number, r:{s:string, b:boolean}}</em>
+<a class="jxr_linenumber" name="L899" href="#L899">899</a>     nestedRecordTypeTest = record(<span class="jxr_string">"s"</span>, STRING_TYPE,
+<a class="jxr_linenumber" name="L900" href="#L900">900</a>         <span class="jxr_string">"r"</span>, record(<span class="jxr_string">"s"</span>, STRING_TYPE, <span class="jxr_string">"b"</span>, BOOLEAN_TYPE));
+<a class="jxr_linenumber" name="L901" href="#L901">901</a>     <em class="jxr_comment">// {service:Array&lt;number&gt;}</em>
+<a class="jxr_linenumber" name="L902" href="#L902">902</a>     asynchRecord = record(<span class="jxr_string">"service"</span>, type(ARRAY_TYPE, NUMBER_TYPE));
+<a class="jxr_linenumber" name="L903" href="#L903">903</a> 
+<a class="jxr_linenumber" name="L904" href="#L904">904</a>   }
+<a class="jxr_linenumber" name="L905" href="#L905">905</a> 
+<a class="jxr_linenumber" name="L906" href="#L906">906</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> union(JSType... variants) {
+<a class="jxr_linenumber" name="L907" href="#L907">907</a>     <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> type = createUnionType(variants);
+<a class="jxr_linenumber" name="L908" href="#L908">908</a>     assertTrue(type.isUnionType());
+<a class="jxr_linenumber" name="L909" href="#L909">909</a>     <strong class="jxr_keyword">return</strong> type;
+<a class="jxr_linenumber" name="L910" href="#L910">910</a>   }
+<a class="jxr_linenumber" name="L911" href="#L911">911</a> 
+<a class="jxr_linenumber" name="L912" href="#L912">912</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> type(<a href="../../../../com/google/javascript/rhino/jstype/ObjectType.html">ObjectType</a> baseType, JSType... templatizedTypes) {
+<a class="jxr_linenumber" name="L913" href="#L913">913</a>     <strong class="jxr_keyword">return</strong> createTemplatizedType(baseType, templatizedTypes);
+<a class="jxr_linenumber" name="L914" href="#L914">914</a>   }
+<a class="jxr_linenumber" name="L915" href="#L915">915</a> 
+<a class="jxr_linenumber" name="L916" href="#L916">916</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> record() {
+<a class="jxr_linenumber" name="L917" href="#L917">917</a>     <strong class="jxr_keyword">return</strong> record(ImmutableMap.&lt;String, JSType&gt;of());
+<a class="jxr_linenumber" name="L918" href="#L918">918</a>   }
+<a class="jxr_linenumber" name="L919" href="#L919">919</a> 
+<a class="jxr_linenumber" name="L920" href="#L920">920</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> record(String p1, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t1) {
+<a class="jxr_linenumber" name="L921" href="#L921">921</a>     <strong class="jxr_keyword">return</strong> record(ImmutableMap.&lt;String, JSType&gt;of(p1, t1));
+<a class="jxr_linenumber" name="L922" href="#L922">922</a>   }
+<a class="jxr_linenumber" name="L923" href="#L923">923</a> 
+<a class="jxr_linenumber" name="L924" href="#L924">924</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> record(String p1, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t1, String p2, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t2) {
+<a class="jxr_linenumber" name="L925" href="#L925">925</a>     <strong class="jxr_keyword">return</strong> record(ImmutableMap.&lt;String, JSType&gt;of(p1, t1, p2, t2));
+<a class="jxr_linenumber" name="L926" href="#L926">926</a>   }
+<a class="jxr_linenumber" name="L927" href="#L927">927</a> 
+<a class="jxr_linenumber" name="L928" href="#L928">928</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> record(String p1, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t1, String p2, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t2,
+<a class="jxr_linenumber" name="L929" href="#L929">929</a>       String p3, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> t3) {
+<a class="jxr_linenumber" name="L930" href="#L930">930</a>     <strong class="jxr_keyword">return</strong> record(ImmutableMap.&lt;String, JSType&gt;of(p1, t1, p2, t2, p3, t3));
+<a class="jxr_linenumber" name="L931" href="#L931">931</a>   }
+<a class="jxr_linenumber" name="L932" href="#L932">932</a> 
+<a class="jxr_linenumber" name="L933" href="#L933">933</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> record(ImmutableMap&lt;String, JSType&gt; props) {
+<a class="jxr_linenumber" name="L934" href="#L934">934</a>     <a href="../../../../com/google/javascript/rhino/jstype/RecordTypeBuilder.html">RecordTypeBuilder</a> builder = createRecordTypeBuilder();
+<a class="jxr_linenumber" name="L935" href="#L935">935</a>     <strong class="jxr_keyword">for</strong> (Entry&lt;String, JSType&gt; e : props.entrySet()) {
+<a class="jxr_linenumber" name="L936" href="#L936">936</a>       builder.addProperty(e.getKey(), e.getValue(), <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L937" href="#L937">937</a>     }
+<a class="jxr_linenumber" name="L938" href="#L938">938</a>     <strong class="jxr_keyword">return</strong> builder.build();
+<a class="jxr_linenumber" name="L939" href="#L939">939</a>   }
+<a class="jxr_linenumber" name="L940" href="#L940">940</a> 
+<a class="jxr_linenumber" name="L941" href="#L941">941</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> testTTL(<a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> expectedType, String ttlExp,
+<a class="jxr_linenumber" name="L942" href="#L942">942</a>       String... expectedWarnings) {
+<a class="jxr_linenumber" name="L943" href="#L943">943</a>     <a href="../../../../com/google/javascript/jscomp/parsing/TypeTransformationParser.html">TypeTransformationParser</a> ttlParser = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/parsing/TypeTransformationParser.html">TypeTransformationParser</a>(ttlExp,
+<a class="jxr_linenumber" name="L944" href="#L944">944</a>         SourceFile.fromCode(<span class="jxr_string">"[testcode]"</span>, ttlExp), errorReporter, 0, 0);
+<a class="jxr_linenumber" name="L945" href="#L945">945</a>     <em class="jxr_comment">// Run the test if the parsing was successful</em>
+<a class="jxr_linenumber" name="L946" href="#L946">946</a>     <strong class="jxr_keyword">if</strong> (ttlParser.parseTypeTransformation()) {
+<a class="jxr_linenumber" name="L947" href="#L947">947</a>       <a href="../../../../com/google/common/collect/LinkedListMultimap.html">Node</a> ast = ttlParser.getTypeTransformationAst();
+<a class="jxr_linenumber" name="L948" href="#L948">948</a>       <em class="jxr_comment">// Create the scope using the extra definitions</em>
+<a class="jxr_linenumber" name="L949" href="#L949">949</a>       <a href="../../../../com/google/common/collect/LinkedListMultimap.html">Node</a> extraTypeDefs = compiler.parseTestCode(EXTRA_TYPE_DEFS);
+<a class="jxr_linenumber" name="L950" href="#L950">950</a>       <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> scope = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/TypedScopeCreator.html">TypedScopeCreator</a>(compiler).createScope(
+<a class="jxr_linenumber" name="L951" href="#L951">951</a>           extraTypeDefs, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L952" href="#L952">952</a>       <em class="jxr_comment">// Evaluate the type transformation</em>
+<a class="jxr_linenumber" name="L953" href="#L953">953</a>       <a href="../../../../com/google/javascript/jscomp/TypeTransformation.html">TypeTransformation</a> typeTransformation =
+<a class="jxr_linenumber" name="L954" href="#L954">954</a>           <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/TypeTransformation.html">TypeTransformation</a>(compiler, scope);
+<a class="jxr_linenumber" name="L955" href="#L955">955</a>       <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> resultType = typeTransformation.eval(ast, typeVars, nameVars);
+<a class="jxr_linenumber" name="L956" href="#L956">956</a>       checkReportedWarningsHelper(expectedWarnings);
+<a class="jxr_linenumber" name="L957" href="#L957">957</a>       assertTypeEquals(expectedType, resultType);
+<a class="jxr_linenumber" name="L958" href="#L958">958</a>     }
+<a class="jxr_linenumber" name="L959" href="#L959">959</a>   }
+<a class="jxr_linenumber" name="L960" href="#L960">960</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

@@ -1,0 +1,884 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>Profiler xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../apidocs/com/google/devtools/build/lib/profiler/Profiler.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">// Copyright 2014 Google Inc. All rights reserved.</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment">// Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment">// you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment">// You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment">//    http://www.apache.org/licenses/LICENSE-2.0</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment">// Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment">// distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment">// See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment">// limitations under the License.</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">package</strong> com.google.devtools.build.lib.profiler;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> com.google.devtools.build.lib.profiler.ProfilerTask.TASK_COUNT;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Preconditions;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.Iterables;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.util.Clock;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.util.VarInt;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> java.io.BufferedOutputStream;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> java.io.DataOutputStream;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> java.io.IOException;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> java.io.OutputStream;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> java.nio.ByteBuffer;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> java.util.ArrayList;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> java.util.IdentityHashMap;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> java.util.PriorityQueue;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> java.util.Queue;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> java.util.Timer;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> java.util.TimerTask;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.ConcurrentLinkedQueue;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.atomic.AtomicInteger;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> java.util.zip.Deflater;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <strong class="jxr_keyword">import</strong> java.util.zip.DeflaterOutputStream;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_javadoccomment"> * Blaze internal profiler. Provides facility to report various Blaze tasks and</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment"> * store them (asynchronously) in the file for future analysis.</em>
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <em class="jxr_javadoccomment"> * Implemented as singleton so any caller should use Profiler.instance() to</em>
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <em class="jxr_javadoccomment"> * obtain reference.</em>
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  <em class="jxr_javadoccomment"> * Internally, profiler uses two data structures - ThreadLocal task stack to track</em>
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <em class="jxr_javadoccomment"> * nested tasks and single ConcurrentLinkedQueue to gather all completed tasks.</em>
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  <em class="jxr_javadoccomment"> * Also, due to the nature of the provided functionality (instrumentation of all</em>
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  <em class="jxr_javadoccomment"> * Blaze components), build.lib.profiler package will be used by almost every</em>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  <em class="jxr_javadoccomment"> * other Blaze package, so special attention should be paid to avoid any</em>
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  <em class="jxr_javadoccomment"> * dependencies on the rest of the Blaze code, including build.lib.util and</em>
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>  <em class="jxr_javadoccomment"> * build.lib.vfs. This is important because build.lib.util and build.lib.vfs</em>
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>  <em class="jxr_javadoccomment"> * contain Profiler invocations and any dependency on those two packages would</em>
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  <em class="jxr_javadoccomment"> * create circular relationship.</em>
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  <em class="jxr_javadoccomment"> * All gathered instrumentation data will be stored in the file. Please, note,</em>
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment"> * that while file format is described here it is considered internal and can</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment"> * change at any time. For scripting, using blaze analyze-profile --dump=raw</em>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment"> * would be more robust and stable solution.</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment"> * &lt;pre&gt;</em>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <em class="jxr_javadoccomment"> * Profiler file consists of the deflated stream with following overall structure:</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  <em class="jxr_javadoccomment"> *   HEADER</em>
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  <em class="jxr_javadoccomment"> *   TASK_TYPE_TABLE</em>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  <em class="jxr_javadoccomment"> *   TASK_RECORD...</em>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_javadoccomment"> *   EOF_MARKER</em>
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment"> * HEADER:</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  <em class="jxr_javadoccomment"> *   int32: magic token (Profiler.MAGIC)</em>
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment"> *   int32: version format (Profiler.VERSION)</em>
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment"> *   string: file comment</em>
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_javadoccomment"> * TASK_TYPE_TABLE:</em>
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_javadoccomment"> *   int32: number of type names below</em>
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment"> *   string... : type names. Each of the type names is assigned id according to</em>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  <em class="jxr_javadoccomment"> *               their position in this table starting from 0.</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  <em class="jxr_javadoccomment"> * TASK_RECORD:</em>
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment"> *   int32 size: size of the encoded task record</em>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment"> *   byte[size] encoded_task_record:</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment"> *     varint64: thread id - as was returned by Thread.getId()</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment"> *     varint32: task id - starting from 1.</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment"> *     varint32: parent task id for subtasks or 0 for root tasks</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment"> *     varint64: start time in ns, relative to the Profiler.start() invocation</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>  <em class="jxr_javadoccomment"> *     varint64: task duration in ns</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  <em class="jxr_javadoccomment"> *     byte:     task type id (see TASK_TYPE_TABLE)</em>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_javadoccomment"> *     varint32: description string index incremented by 1 (&gt;0) or 0 this is</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_javadoccomment"> *               a first occurrence of the description string</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_javadoccomment"> *     AGGREGATED_STAT...: remainder of the field (if present) represents</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_javadoccomment"> *                         aggregated stats for that task</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_javadoccomment"> *   string: *optional* description string, will appear only if description</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment"> *           string index above was 0. In that case this string will be</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  <em class="jxr_javadoccomment"> *           assigned next sequential id so every unique description string</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  <em class="jxr_javadoccomment"> *           will appear in the file only once - after that it will be</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  <em class="jxr_javadoccomment"> *           referenced by id.</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_javadoccomment"> * AGGREGATE_STAT:</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <em class="jxr_javadoccomment"> *   byte:     stat type</em>
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> <em class="jxr_javadoccomment"> *   varint32: total number of subtask invocations</em>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a> <em class="jxr_javadoccomment"> *   varint64: cumulative duration of subtask invocations in ns.</em>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L105" href="#L105">105</a> <em class="jxr_javadoccomment"> * EOF_MARKER:</em>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a> <em class="jxr_javadoccomment"> *   int64: -1 - please note that this corresponds to the thread id in the</em>
+<a class="jxr_linenumber" name="L107" href="#L107">107</a> <em class="jxr_javadoccomment"> *               TASK_RECORD which is always &gt; 0</em>
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> <em class="jxr_javadoccomment"> * &lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L110" href="#L110">110</a> <em class="jxr_javadoccomment"> * @see ProfilerTask enum for recognized task types.</em>
+<a class="jxr_linenumber" name="L111" href="#L111">111</a> <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L112" href="#L112">112</a> <em class="jxr_comment">//@ThreadSafe - commented out to avoid cyclic dependency with lib.util package</em>
+<a class="jxr_linenumber" name="L113" href="#L113">113</a> <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">Profiler</a> {
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>   <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> MAGIC = 0x11223344;
+<a class="jxr_linenumber" name="L115" href="#L115">115</a> 
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>   <em class="jxr_comment">// File version number. Note that merely adding new record types in</em>
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>   <em class="jxr_comment">// the ProfilerTask does not require bumping version number as long as original</em>
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>   <em class="jxr_comment">// enum values are not renamed or deleted.</em>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>   <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> VERSION = 0x03;
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> 
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>   <em class="jxr_comment">// EOF marker. Must be &lt; 0.</em>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>   <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> EOF_MARKER = -1;
+<a class="jxr_linenumber" name="L123" href="#L123">123</a> 
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>   <em class="jxr_comment">// Profiler will check for gathered data and persist all of it in the</em>
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>   <em class="jxr_comment">// separate thread every SAVE_DELAY ms.</em>
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> SAVE_DELAY = 2000; <em class="jxr_comment">// ms</em>
+<a class="jxr_linenumber" name="L127" href="#L127">127</a> 
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L129" href="#L129">129</a> <em class="jxr_javadoccomment">   * The profiler (a static singleton instance). Inactive by default.</em>
+<a class="jxr_linenumber" name="L130" href="#L130">130</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">Profiler</a> instance = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">Profiler</a>();
+<a class="jxr_linenumber" name="L132" href="#L132">132</a> 
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L134" href="#L134">134</a> <em class="jxr_javadoccomment">   * A task that was very slow.</em>
+<a class="jxr_linenumber" name="L135" href="#L135">135</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowTask</a> <strong class="jxr_keyword">implements</strong> Comparable&lt;SlowTask&gt; {
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> durationNanos;
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>     <strong class="jxr_keyword">final</strong> <a href="../../../../../../java/lang/Object.html">Object</a> object;
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>     <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type;
+<a class="jxr_linenumber" name="L140" href="#L140">140</a> 
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>     <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowTask</a>(<a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> taskData) {
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>       <strong class="jxr_keyword">this</strong>.durationNanos = taskData.duration;
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>       <strong class="jxr_keyword">this</strong>.object = taskData.object;
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>       <strong class="jxr_keyword">this</strong>.type = taskData.type;
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>     }
+<a class="jxr_linenumber" name="L146" href="#L146">146</a> 
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     @Override
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> compareTo(<a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowTask</a> other) {
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>       <strong class="jxr_keyword">long</strong> delta = durationNanos - other.durationNanos;
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>       <strong class="jxr_keyword">if</strong> (delta &lt; 0) {  <em class="jxr_comment">// Very clumsy</em>
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>         <strong class="jxr_keyword">return</strong> -1;
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (delta &gt; 0) {
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>         <strong class="jxr_keyword">return</strong> 1;
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>       } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>         <strong class="jxr_keyword">return</strong> 0;
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>       }
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>     }
+<a class="jxr_linenumber" name="L158" href="#L158">158</a> 
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">long</strong> getDurationNanos() {
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>       <strong class="jxr_keyword">return</strong> durationNanos;
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a> 
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>     <strong class="jxr_keyword">public</strong> String getDescription() {
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>       <strong class="jxr_keyword">return</strong> toDescription(object);
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>     }
+<a class="jxr_linenumber" name="L166" href="#L166">166</a> 
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> getType() {
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>       <strong class="jxr_keyword">return</strong> type;
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>     }
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>   }
+<a class="jxr_linenumber" name="L171" href="#L171">171</a> 
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L173" href="#L173">173</a> <em class="jxr_javadoccomment">   * Container for the single task record.</em>
+<a class="jxr_linenumber" name="L174" href="#L174">174</a> <em class="jxr_javadoccomment">   * Should never be instantiated directly - use TaskStack.create() instead.</em>
+<a class="jxr_linenumber" name="L175" href="#L175">175</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L176" href="#L176">176</a> <em class="jxr_javadoccomment">   * Class itself is not thread safe, but all access to it from Profiler</em>
+<a class="jxr_linenumber" name="L177" href="#L177">177</a> <em class="jxr_javadoccomment">   * methods is.</em>
+<a class="jxr_linenumber" name="L178" href="#L178">178</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>   <em class="jxr_comment">//@ThreadCompatible - commented out to avoid cyclic dependency with lib.util.</em>
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> {
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> threadId;
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">long</strong> startTime;
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>     <strong class="jxr_keyword">long</strong> duration = 0L;
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> id;
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> parentId;
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>     <strong class="jxr_keyword">int</strong>[] counts; <em class="jxr_comment">// number of invocations per ProfilerTask type</em>
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>     <strong class="jxr_keyword">long</strong>[] durations; <em class="jxr_comment">// time spend in the task per ProfilerTask type</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>     <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type;
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>     <strong class="jxr_keyword">final</strong> <a href="../../../../../../java/lang/Object.html">Object</a> object;
+<a class="jxr_linenumber" name="L190" href="#L190">190</a> 
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>     <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a>(<strong class="jxr_keyword">long</strong> startTime, <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> parent,
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>              <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> eventType, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>       threadId = Thread.currentThread().getId();
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>       counts = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>       durations = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>       id = taskId.incrementAndGet();
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>       parentId = (parent == <strong class="jxr_keyword">null</strong>  ? 0 : parent.id);
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>       <strong class="jxr_keyword">this</strong>.startTime = startTime;
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>       <strong class="jxr_keyword">this</strong>.type = eventType;
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>       <strong class="jxr_keyword">this</strong>.object = Preconditions.checkNotNull(object);
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>     }
+<a class="jxr_linenumber" name="L202" href="#L202">202</a> 
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L204" href="#L204">204</a> <em class="jxr_javadoccomment">     * Aggregates information about an *immediate* subtask.</em>
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> aggregateChild(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <strong class="jxr_keyword">long</strong> duration) {
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>       <strong class="jxr_keyword">int</strong> index = type.ordinal();
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>       <strong class="jxr_keyword">if</strong> (counts == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>         <em class="jxr_comment">// one entry for each ProfilerTask type</em>
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>         counts = <strong class="jxr_keyword">new</strong> <strong class="jxr_keyword">int</strong>[TASK_COUNT];
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>         durations = <strong class="jxr_keyword">new</strong> <strong class="jxr_keyword">long</strong>[TASK_COUNT];
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>       }
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>       counts[index]++;
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>       durations[index] += duration;
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>     }
+<a class="jxr_linenumber" name="L216" href="#L216">216</a> 
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>     @Override
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>     <strong class="jxr_keyword">public</strong> String toString() {
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>       <strong class="jxr_keyword">return</strong> <span class="jxr_string">"Thread "</span> + threadId + <span class="jxr_string">", task "</span> + id + <span class="jxr_string">", type "</span> + type + <span class="jxr_string">", "</span> + object;
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     }
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>   }
+<a class="jxr_linenumber" name="L222" href="#L222">222</a> 
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L224" href="#L224">224</a> <em class="jxr_javadoccomment">   * Tracks nested tasks for each thread.</em>
+<a class="jxr_linenumber" name="L225" href="#L225">225</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L226" href="#L226">226</a> <em class="jxr_javadoccomment">   * java.util.ArrayDeque is the most efficient stack implementation in the</em>
+<a class="jxr_linenumber" name="L227" href="#L227">227</a> <em class="jxr_javadoccomment">   * Java Collections Framework (java.util.Stack class is older synchronized</em>
+<a class="jxr_linenumber" name="L228" href="#L228">228</a> <em class="jxr_javadoccomment">   * alternative). It is, however, used here strictly for LIFO operations.</em>
+<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">   * However, ArrayDeque is 1.6 only. For 1.5 best approach would be to utilize</em>
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">   * ArrayList and emulate stack using it.</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>   <em class="jxr_comment">//@ThreadSafe - commented out to avoid cyclic dependency with lib.util.</em>
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskStack</a> <strong class="jxr_keyword">extends</strong> ThreadLocal&lt;List&lt;TaskData&gt;&gt; {
+<a class="jxr_linenumber" name="L234" href="#L234">234</a> 
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>     @Override
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>     <strong class="jxr_keyword">public</strong> List&lt;TaskData&gt; initialValue() {
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>     }
+<a class="jxr_linenumber" name="L239" href="#L239">239</a> 
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> peek() {
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>       List&lt;TaskData&gt; list = get();
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>       <strong class="jxr_keyword">if</strong> (list.isEmpty()) {
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>       }
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>       <strong class="jxr_keyword">return</strong> list.get(list.size() - 1);
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>     }
+<a class="jxr_linenumber" name="L247" href="#L247">247</a> 
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> pop() {
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>       List&lt;TaskData&gt; list = get();
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>       <strong class="jxr_keyword">return</strong> list.remove(list.size() - 1);
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>     }
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> 
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isEmpty() {
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>       <strong class="jxr_keyword">return</strong> get().isEmpty();
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>     }
+<a class="jxr_linenumber" name="L256" href="#L256">256</a> 
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> push(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> eventType, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>       get().add(create(clock.nanoTime(), eventType, object));
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>     }
+<a class="jxr_linenumber" name="L260" href="#L260">260</a> 
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> create(<strong class="jxr_keyword">long</strong> startTime, <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> eventType, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a>(startTime, peek(), eventType, object);
+<a class="jxr_linenumber" name="L263" href="#L263">263</a>     }
+<a class="jxr_linenumber" name="L264" href="#L264">264</a> 
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>     @Override
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>     <strong class="jxr_keyword">public</strong> String toString() {
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>       StringBuilder builder = <strong class="jxr_keyword">new</strong> StringBuilder(
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>           <span class="jxr_string">"Current task stack for thread "</span> + Thread.currentThread().getName() + <span class="jxr_string">":\n"</span>);
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>       List&lt;TaskData&gt; list = get();
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>       <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = list.size() - 1; i &gt;= 0; i--) {
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>         builder.append(list.get(i));
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>         builder.append(<span class="jxr_string">"\n"</span>);
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>       }
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>       <strong class="jxr_keyword">return</strong> builder.toString();
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>     }
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>   }
+<a class="jxr_linenumber" name="L277" href="#L277">277</a> 
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> String toDescription(<a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>     <strong class="jxr_keyword">return</strong> (object instanceof Describable)
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>         ? ((Describable) object).describe()
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>         : object.toString();
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>   }
+<a class="jxr_linenumber" name="L283" href="#L283">283</a> 
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L285" href="#L285">285</a> <em class="jxr_javadoccomment">   * Implements datastore for object description indices. Intended to be used</em>
+<a class="jxr_linenumber" name="L286" href="#L286">286</a> <em class="jxr_javadoccomment">   * only by the Profiler.save() method.</em>
+<a class="jxr_linenumber" name="L287" href="#L287">287</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>   <em class="jxr_comment">//@ThreadCompatible - commented out to avoid cyclic dependency with lib.util.</em>
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ObjectDescriber</a> {
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>     <strong class="jxr_keyword">private</strong> Map&lt;Object, Integer&gt; descMap = <strong class="jxr_keyword">new</strong> IdentityHashMap&lt;&gt;(2000);
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> indexCounter = 0;
+<a class="jxr_linenumber" name="L292" href="#L292">292</a> 
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>     <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ObjectDescriber</a>() { }
+<a class="jxr_linenumber" name="L294" href="#L294">294</a> 
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>     <strong class="jxr_keyword">int</strong> getDescriptionIndex(<a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>       Integer index = descMap.get(object);
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>       <strong class="jxr_keyword">return</strong> (index != <strong class="jxr_keyword">null</strong>) ? index : -1;
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>     }
+<a class="jxr_linenumber" name="L299" href="#L299">299</a> 
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>     String getDescription(<a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>       String description = toDescription(object);
+<a class="jxr_linenumber" name="L302" href="#L302">302</a> 
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>       Integer oldIndex = descMap.put(object, indexCounter++);
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>       <em class="jxr_comment">// Do not use Preconditions class below due to the rather expensive</em>
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>       <em class="jxr_comment">// toString() calls used in the message.</em>
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>       <strong class="jxr_keyword">if</strong> (oldIndex != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>         <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalStateException(<span class="jxr_string">" Object '"</span> + description + <span class="jxr_string">"' @ "</span>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>             + System.identityHashCode(object) + <span class="jxr_string">" already had description index "</span>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>             + oldIndex + <span class="jxr_string">" while assigning index "</span> + descMap.get(object));
+<a class="jxr_linenumber" name="L310" href="#L310">310</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (description.length() &gt; 20000) {
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>         <em class="jxr_comment">// Note size 64k byte limitation in DataOutputStream#writeUTF().</em>
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>         description = description.substring(0, 20000);
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>       }
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>       <strong class="jxr_keyword">return</strong> description;
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>     }
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> 
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>     <strong class="jxr_keyword">boolean</strong> isUnassigned(<strong class="jxr_keyword">int</strong> index) {
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>       <strong class="jxr_keyword">return</strong> (index &lt; 0);
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>     }
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>   }
+<a class="jxr_linenumber" name="L321" href="#L321">321</a> 
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_javadoccomment">   * Aggregator class that keeps track of the slowest tasks of the specified type.</em>
+<a class="jxr_linenumber" name="L324" href="#L324">324</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L325" href="#L325">325</a> <em class="jxr_javadoccomment">   * &lt;p&gt;&lt;code&gt;priorityQueues&lt;/p&gt; is sharded so that all threads need not compete for the same</em>
+<a class="jxr_linenumber" name="L326" href="#L326">326</a> <em class="jxr_javadoccomment">   * lock if they do the same operation at the same time. Access to the individual queues is</em>
+<a class="jxr_linenumber" name="L327" href="#L327">327</a> <em class="jxr_javadoccomment">   * synchronized on the queue objects themselves.</em>
+<a class="jxr_linenumber" name="L328" href="#L328">328</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a> {
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> SHARDS = 16;
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> size;
+<a class="jxr_linenumber" name="L332" href="#L332">332</a> 
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>     @SuppressWarnings({<span class="jxr_string">"unchecked"</span>, <span class="jxr_string">"rawtypes"</span>})
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> PriorityQueue&lt;SlowTask&gt;[] priorityQueues = <strong class="jxr_keyword">new</strong> PriorityQueue[SHARDS];
+<a class="jxr_linenumber" name="L335" href="#L335">335</a> 
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>     <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a>(<strong class="jxr_keyword">int</strong> size) {
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>       <strong class="jxr_keyword">this</strong>.size = size;
+<a class="jxr_linenumber" name="L338" href="#L338">338</a> 
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>       <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; SHARDS; i++) {
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>         priorityQueues[i] = <strong class="jxr_keyword">new</strong> PriorityQueue&lt;&gt;(size + 1);
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>       }
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     }
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> 
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>     <em class="jxr_comment">// @ThreadSafe</em>
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>     <strong class="jxr_keyword">void</strong> add(<a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> taskData) {
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>       PriorityQueue&lt;SlowTask&gt; queue =
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>           priorityQueues[(<strong class="jxr_keyword">int</strong>) (Thread.currentThread().getId() % SHARDS)];
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>       <strong class="jxr_keyword">synchronized</strong> (queue) {
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>         <strong class="jxr_keyword">if</strong> (queue.size() == size) {
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>           <em class="jxr_comment">// Optimization: check if we are faster than the fastest element. If we are, we would</em>
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>           <em class="jxr_comment">// be the ones to fall off the end of the queue, therefore, we can safely return early.</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>           <strong class="jxr_keyword">if</strong> (queue.peek().getDurationNanos() &gt; taskData.duration) {
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>             <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>           }
+<a class="jxr_linenumber" name="L355" href="#L355">355</a> 
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>           queue.add(<strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowTask</a>(taskData));
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>           queue.remove();
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>           queue.add(<strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowTask</a>(taskData));
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>         }
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>       }
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>     }
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> 
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>     <em class="jxr_comment">// @ThreadSafe</em>
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     <strong class="jxr_keyword">void</strong> clear() {
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>       <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; SHARDS; i++) {
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>         PriorityQueue&lt;SlowTask&gt; queue = priorityQueues[i];
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>         <strong class="jxr_keyword">synchronized</strong> (queue) {
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>           queue.clear();
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>         }
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>       }
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>     }
+<a class="jxr_linenumber" name="L373" href="#L373">373</a> 
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>     <em class="jxr_comment">// @ThreadSafe</em>
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>     Iterable&lt;SlowTask&gt; getSlowestTasks() {
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>       <em class="jxr_comment">// This is slow, but since it only happens during the end of the invocation, it's OK</em>
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>       PriorityQueue&lt;SlowTask&gt; merged = <strong class="jxr_keyword">new</strong> PriorityQueue&lt;&gt;(size * SHARDS);
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>       <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; SHARDS; i++) {
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>         PriorityQueue&lt;SlowTask&gt; queue = priorityQueues[i];
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>         <strong class="jxr_keyword">synchronized</strong> (queue) {
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>           merged.addAll(queue);
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>         }
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>       }
+<a class="jxr_linenumber" name="L384" href="#L384">384</a> 
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>       <strong class="jxr_keyword">while</strong> (merged.size() &gt; size) {
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>         merged.remove();
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>       }
+<a class="jxr_linenumber" name="L388" href="#L388">388</a> 
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>       <strong class="jxr_keyword">return</strong> merged;
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>     }
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>   }
+<a class="jxr_linenumber" name="L392" href="#L392">392</a> 
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L394" href="#L394">394</a> <em class="jxr_javadoccomment">   * Which {@link ProfilerTask}s are profiled.</em>
+<a class="jxr_linenumber" name="L395" href="#L395">395</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>   <strong class="jxr_keyword">public</strong> enum <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ProfiledTaskKinds</a> {
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L398" href="#L398">398</a> <em class="jxr_javadoccomment">     * Do not profile anything.</em>
+<a class="jxr_linenumber" name="L399" href="#L399">399</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L400" href="#L400">400</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Performance is best with this case, but we lose critical path analysis and slowest</em>
+<a class="jxr_linenumber" name="L401" href="#L401">401</a> <em class="jxr_javadoccomment">     * operation tracking.</em>
+<a class="jxr_linenumber" name="L402" href="#L402">402</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>     NONE {
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>       @Override
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>       <strong class="jxr_keyword">boolean</strong> isProfiling(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type) {
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>         <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>       }
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>     },
+<a class="jxr_linenumber" name="L409" href="#L409">409</a> 
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L411" href="#L411">411</a> <em class="jxr_javadoccomment">     * Profile on a few, known-to-be-slow tasks.</em>
+<a class="jxr_linenumber" name="L412" href="#L412">412</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L413" href="#L413">413</a> <em class="jxr_javadoccomment">     * &lt;p&gt;Performance is somewhat decreased in comparison to {@link #NONE}, but we still track the</em>
+<a class="jxr_linenumber" name="L414" href="#L414">414</a> <em class="jxr_javadoccomment">     * slowest operations (VFS).</em>
+<a class="jxr_linenumber" name="L415" href="#L415">415</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>     SLOWEST {
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>       @Override
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>       <strong class="jxr_keyword">boolean</strong> isProfiling(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type) {
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>         <strong class="jxr_keyword">return</strong> type.collectsSlowestInstances();
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>       }
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>     },
+<a class="jxr_linenumber" name="L422" href="#L422">422</a> 
+<a class="jxr_linenumber" name="L423" href="#L423">423</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L424" href="#L424">424</a> <em class="jxr_javadoccomment">     * Profile all tasks.</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L426" href="#L426">426</a> <em class="jxr_javadoccomment">     * &lt;p&gt;This is in use when {@code --profile} is specified.</em>
+<a class="jxr_linenumber" name="L427" href="#L427">427</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>     ALL {
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>       @Override
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>       <strong class="jxr_keyword">boolean</strong> isProfiling(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type) {
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>       }
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>     };
+<a class="jxr_linenumber" name="L434" href="#L434">434</a> 
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>     <em class="jxr_javadoccomment">/** Whether the Profiler collects data for the given task type. */</em>
+<a class="jxr_linenumber" name="L436" href="#L436">436</a>     <strong class="jxr_keyword">abstract</strong> <strong class="jxr_keyword">boolean</strong> isProfiling(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type);
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>   }
+<a class="jxr_linenumber" name="L438" href="#L438">438</a> 
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/util/Clock.html">Clock</a> clock;
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ProfiledTaskKinds</a> profiledTaskKinds;
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">volatile</strong> <strong class="jxr_keyword">long</strong> profileStartTime = 0L;
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">volatile</strong> <strong class="jxr_keyword">boolean</strong> recordAllDurations = false;
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../java/util/concurrent/atomic/AtomicInteger.html">AtomicInteger</a> taskId = <strong class="jxr_keyword">new</strong> <a href="../../../../../../java/util/concurrent/atomic/AtomicInteger.html">AtomicInteger</a>();
+<a class="jxr_linenumber" name="L444" href="#L444">444</a> 
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskStack</a> taskStack;
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>   <strong class="jxr_keyword">private</strong> Queue&lt;TaskData&gt; taskQueue;
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>   <strong class="jxr_keyword">private</strong> DataOutputStream out;
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>   <strong class="jxr_keyword">private</strong> Timer timer;
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>   <strong class="jxr_keyword">private</strong> IOException saveException;
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ObjectDescriber</a> describer;
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>   @SuppressWarnings(<span class="jxr_string">"unchecked"</span>)
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a>[] slowestTasks =
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>   <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a>[ProfilerTask.values().length];
+<a class="jxr_linenumber" name="L454" href="#L454">454</a> 
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">Profiler</a>() {
+<a class="jxr_linenumber" name="L456" href="#L456">456</a>     <strong class="jxr_keyword">for</strong> (ProfilerTask task : ProfilerTask.values()) {
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>       <strong class="jxr_keyword">if</strong> (task.slowestInstancesCount != 0) {
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>         slowestTasks[task.ordinal()] = <strong class="jxr_keyword">new</strong> SlowestTaskAggregator(task.slowestInstancesCount);
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>       }
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>     }
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>   }
+<a class="jxr_linenumber" name="L462" href="#L462">462</a> 
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">Profiler</a> instance() {
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>     <strong class="jxr_keyword">return</strong> instance;
+<a class="jxr_linenumber" name="L465" href="#L465">465</a>   }
+<a class="jxr_linenumber" name="L466" href="#L466">466</a> 
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L468" href="#L468">468</a> <em class="jxr_javadoccomment">   * Returns the nanoTime of the current profiler instance, or an arbitrary</em>
+<a class="jxr_linenumber" name="L469" href="#L469">469</a> <em class="jxr_javadoccomment">   * constant if not active.</em>
+<a class="jxr_linenumber" name="L470" href="#L470">470</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">long</strong> nanoTimeMaybe() {
+<a class="jxr_linenumber" name="L472" href="#L472">472</a>     <strong class="jxr_keyword">if</strong> (instance.isActive()) {
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>       <strong class="jxr_keyword">return</strong> instance.clock.nanoTime();
+<a class="jxr_linenumber" name="L474" href="#L474">474</a>     }
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>     <strong class="jxr_keyword">return</strong> -1;
+<a class="jxr_linenumber" name="L476" href="#L476">476</a>   }
+<a class="jxr_linenumber" name="L477" href="#L477">477</a> 
+<a class="jxr_linenumber" name="L478" href="#L478">478</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a> <em class="jxr_javadoccomment">   * Enable profiling.</em>
+<a class="jxr_linenumber" name="L480" href="#L480">480</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L481" href="#L481">481</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Subsequent calls to beginTask/endTask will be recorded</em>
+<a class="jxr_linenumber" name="L482" href="#L482">482</a> <em class="jxr_javadoccomment">   * in the provided output stream. Please note that stream performance is</em>
+<a class="jxr_linenumber" name="L483" href="#L483">483</a> <em class="jxr_javadoccomment">   * extremely important and buffered streams should be utilized.</em>
+<a class="jxr_linenumber" name="L484" href="#L484">484</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L485" href="#L485">485</a> <em class="jxr_javadoccomment">   * @param profiledTaskKinds which kinds of {@link ProfilerTask}s to track</em>
+<a class="jxr_linenumber" name="L486" href="#L486">486</a> <em class="jxr_javadoccomment">   * @param stream output stream to store profile data. Note: passing unbuffered stream object</em>
+<a class="jxr_linenumber" name="L487" href="#L487">487</a> <em class="jxr_javadoccomment">   *     reference may result in significant performance penalties</em>
+<a class="jxr_linenumber" name="L488" href="#L488">488</a> <em class="jxr_javadoccomment">   * @param comment a comment to insert in the profile data</em>
+<a class="jxr_linenumber" name="L489" href="#L489">489</a> <em class="jxr_javadoccomment">   * @param recordAllDurations iff true, record all tasks regardless of their duration; otherwise</em>
+<a class="jxr_linenumber" name="L490" href="#L490">490</a> <em class="jxr_javadoccomment">   *     some tasks may get aggregated if they finished quick enough</em>
+<a class="jxr_linenumber" name="L491" href="#L491">491</a> <em class="jxr_javadoccomment">   * @param clock a {@code BlazeClock.instance()}</em>
+<a class="jxr_linenumber" name="L492" href="#L492">492</a> <em class="jxr_javadoccomment">   * @param execStartTimeNanos execution start time in nanos obtained from {@code clock.nanoTime()}</em>
+<a class="jxr_linenumber" name="L493" href="#L493">493</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">synchronized</strong> <strong class="jxr_keyword">void</strong> start(<a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ProfiledTaskKinds</a> profiledTaskKinds, OutputStream stream,
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>       String comment, <strong class="jxr_keyword">boolean</strong> recordAllDurations, <a href="../../../../../../com/google/devtools/build/lib/util/Clock.html">Clock</a> clock, <strong class="jxr_keyword">long</strong> execStartTimeNanos)
+<a class="jxr_linenumber" name="L496" href="#L496">496</a>       <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>     Preconditions.checkState(!isActive(), <span class="jxr_string">"Profiler already active"</span>);
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>     taskStack = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskStack</a>();
+<a class="jxr_linenumber" name="L499" href="#L499">499</a>     taskQueue = <strong class="jxr_keyword">new</strong> ConcurrentLinkedQueue&lt;&gt;();
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>     describer = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">ObjectDescriber</a>();
+<a class="jxr_linenumber" name="L501" href="#L501">501</a> 
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>     <strong class="jxr_keyword">this</strong>.profiledTaskKinds = profiledTaskKinds;
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>     <strong class="jxr_keyword">this</strong>.clock = clock;
+<a class="jxr_linenumber" name="L504" href="#L504">504</a> 
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>     <em class="jxr_comment">// sanity check for current limitation on the number of supported types due</em>
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>     <em class="jxr_comment">// to using enum.ordinal() to store them instead of EnumSet for performance reasons.</em>
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>     Preconditions.checkState(TASK_COUNT &lt; 256,
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>         <span class="jxr_string">"The profiler implementation supports only up to 255 different ProfilerTask values."</span>);
+<a class="jxr_linenumber" name="L509" href="#L509">509</a> 
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>     <em class="jxr_comment">// reset state for the new profiling session</em>
+<a class="jxr_linenumber" name="L511" href="#L511">511</a>     taskId.set(0);
+<a class="jxr_linenumber" name="L512" href="#L512">512</a>     <strong class="jxr_keyword">this</strong>.recordAllDurations = recordAllDurations;
+<a class="jxr_linenumber" name="L513" href="#L513">513</a>     <strong class="jxr_keyword">this</strong>.saveException = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L514" href="#L514">514</a>     <strong class="jxr_keyword">if</strong> (stream != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>       <strong class="jxr_keyword">this</strong>.timer = <strong class="jxr_keyword">new</strong> Timer(<span class="jxr_string">"ProfilerTimer"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>       <em class="jxr_comment">// Wrapping deflater stream in the buffered stream proved to reduce CPU consumption caused by</em>
+<a class="jxr_linenumber" name="L517" href="#L517">517</a>       <em class="jxr_comment">// the save() method. Values for buffer sizes were chosen by running small amount of tests</em>
+<a class="jxr_linenumber" name="L518" href="#L518">518</a>       <em class="jxr_comment">// and identifying point of diminishing returns - but I have not really tried to optimize</em>
+<a class="jxr_linenumber" name="L519" href="#L519">519</a>       <em class="jxr_comment">// them.</em>
+<a class="jxr_linenumber" name="L520" href="#L520">520</a>       <strong class="jxr_keyword">this</strong>.out = <strong class="jxr_keyword">new</strong> DataOutputStream(<strong class="jxr_keyword">new</strong> BufferedOutputStream(<strong class="jxr_keyword">new</strong> DeflaterOutputStream(
+<a class="jxr_linenumber" name="L521" href="#L521">521</a>           stream, <strong class="jxr_keyword">new</strong> Deflater(Deflater.BEST_SPEED, false), 65536), 262144));
+<a class="jxr_linenumber" name="L522" href="#L522">522</a> 
+<a class="jxr_linenumber" name="L523" href="#L523">523</a>       <strong class="jxr_keyword">this</strong>.out.writeInt(MAGIC); <em class="jxr_comment">// magic</em>
+<a class="jxr_linenumber" name="L524" href="#L524">524</a>       <strong class="jxr_keyword">this</strong>.out.writeInt(VERSION); <em class="jxr_comment">// protocol_version</em>
+<a class="jxr_linenumber" name="L525" href="#L525">525</a>       <strong class="jxr_keyword">this</strong>.out.writeUTF(comment);
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>       <em class="jxr_comment">// ProfileTask.values() method sorts enums using their ordinal() value, so</em>
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>       <em class="jxr_comment">// there there is no need to store ordinal() value for each entry.</em>
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>       <strong class="jxr_keyword">this</strong>.out.writeInt(TASK_COUNT);
+<a class="jxr_linenumber" name="L529" href="#L529">529</a>       <strong class="jxr_keyword">for</strong> (ProfilerTask type : ProfilerTask.values()) {
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>         <strong class="jxr_keyword">this</strong>.out.writeUTF(type.toString());
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>       }
+<a class="jxr_linenumber" name="L532" href="#L532">532</a> 
+<a class="jxr_linenumber" name="L533" href="#L533">533</a>       <em class="jxr_comment">// Start save thread</em>
+<a class="jxr_linenumber" name="L534" href="#L534">534</a>       timer.schedule(<strong class="jxr_keyword">new</strong> TimerTask() {
+<a class="jxr_linenumber" name="L535" href="#L535">535</a>         @Override <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> run() { save(); }
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>       }, SAVE_DELAY, SAVE_DELAY);
+<a class="jxr_linenumber" name="L537" href="#L537">537</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L538" href="#L538">538</a>       <strong class="jxr_keyword">this</strong>.out = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L539" href="#L539">539</a>     }
+<a class="jxr_linenumber" name="L540" href="#L540">540</a> 
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>     <em class="jxr_comment">// activate profiler</em>
+<a class="jxr_linenumber" name="L542" href="#L542">542</a>     profileStartTime = execStartTimeNanos;
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>   }
+<a class="jxr_linenumber" name="L544" href="#L544">544</a> 
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">synchronized</strong> Iterable&lt;SlowTask&gt; getSlowestTasks() {
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>     List&lt;Iterable&lt;SlowTask&gt;&gt; slowestTasksByType = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
+<a class="jxr_linenumber" name="L547" href="#L547">547</a> 
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>     <strong class="jxr_keyword">for</strong> (SlowestTaskAggregator aggregator : slowestTasks) {
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>       <strong class="jxr_keyword">if</strong> (aggregator != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>         slowestTasksByType.add(aggregator.getSlowestTasks());
+<a class="jxr_linenumber" name="L551" href="#L551">551</a>       }
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>     }
+<a class="jxr_linenumber" name="L553" href="#L553">553</a> 
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>     <strong class="jxr_keyword">return</strong> Iterables.concat(slowestTasksByType);
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>   }
+<a class="jxr_linenumber" name="L556" href="#L556">556</a> 
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L558" href="#L558">558</a> <em class="jxr_javadoccomment">   * Disable profiling and complete profile file creation.</em>
+<a class="jxr_linenumber" name="L559" href="#L559">559</a> <em class="jxr_javadoccomment">   * Subsequent calls to beginTask/endTask will no longer</em>
+<a class="jxr_linenumber" name="L560" href="#L560">560</a> <em class="jxr_javadoccomment">   * be recorded in the profile.</em>
+<a class="jxr_linenumber" name="L561" href="#L561">561</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">synchronized</strong> <strong class="jxr_keyword">void</strong> stop() <strong class="jxr_keyword">throws</strong> IOException {
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>     <strong class="jxr_keyword">if</strong> (saveException != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L564" href="#L564">564</a>       <strong class="jxr_keyword">throw</strong> saveException;
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>     }
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>     <strong class="jxr_keyword">if</strong> (!isActive()) {
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>       <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>     }
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>     <em class="jxr_comment">// Log a final event to update the duration of ProfilePhase.FINISH.</em>
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>     logEvent(ProfilerTask.INFO, <span class="jxr_string">"Finishing"</span>);
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>     save();
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>     clear();
+<a class="jxr_linenumber" name="L573" href="#L573">573</a> 
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>     <strong class="jxr_keyword">for</strong> (SlowestTaskAggregator aggregator : slowestTasks) {
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>       <strong class="jxr_keyword">if</strong> (aggregator != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>         aggregator.clear();
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>       }
+<a class="jxr_linenumber" name="L578" href="#L578">578</a>     }
+<a class="jxr_linenumber" name="L579" href="#L579">579</a> 
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>     <strong class="jxr_keyword">if</strong> (saveException != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>       <strong class="jxr_keyword">throw</strong> saveException;
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>     }
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>     <strong class="jxr_keyword">if</strong> (out != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>       out.writeInt(EOF_MARKER);
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>       out.close();
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>       out = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>     }
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>   }
+<a class="jxr_linenumber" name="L589" href="#L589">589</a> 
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L591" href="#L591">591</a> <em class="jxr_javadoccomment">   *  Returns true iff profiling is currently enabled.</em>
+<a class="jxr_linenumber" name="L592" href="#L592">592</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L593" href="#L593">593</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isActive() {
+<a class="jxr_linenumber" name="L594" href="#L594">594</a>     <strong class="jxr_keyword">return</strong> profileStartTime != 0L;
+<a class="jxr_linenumber" name="L595" href="#L595">595</a>   }
+<a class="jxr_linenumber" name="L596" href="#L596">596</a> 
+<a class="jxr_linenumber" name="L597" href="#L597">597</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isProfiling(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type) {
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>     <strong class="jxr_keyword">return</strong> profiledTaskKinds.isProfiling(type);
+<a class="jxr_linenumber" name="L599" href="#L599">599</a>   }
+<a class="jxr_linenumber" name="L600" href="#L600">600</a> 
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L602" href="#L602">602</a> <em class="jxr_javadoccomment">   * Saves all gathered information from taskQueue queue to the file.</em>
+<a class="jxr_linenumber" name="L603" href="#L603">603</a> <em class="jxr_javadoccomment">   * Method is invoked internally by the Timer-based thread and at the end of</em>
+<a class="jxr_linenumber" name="L604" href="#L604">604</a> <em class="jxr_javadoccomment">   * profiling session.</em>
+<a class="jxr_linenumber" name="L605" href="#L605">605</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L606" href="#L606">606</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">synchronized</strong> <strong class="jxr_keyword">void</strong> save() {
+<a class="jxr_linenumber" name="L607" href="#L607">607</a>     <strong class="jxr_keyword">if</strong> (out == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>       <strong class="jxr_keyword">return</strong>;
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>     }
+<a class="jxr_linenumber" name="L610" href="#L610">610</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L611" href="#L611">611</a>       <em class="jxr_comment">// Allocate the sink once to avoid GC</em>
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>       ByteBuffer sink = ByteBuffer.allocate(1024);
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>       <strong class="jxr_keyword">while</strong> (!taskQueue.isEmpty()) {
+<a class="jxr_linenumber" name="L614" href="#L614">614</a>         sink.clear();
+<a class="jxr_linenumber" name="L615" href="#L615">615</a>         <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> data = taskQueue.poll();
+<a class="jxr_linenumber" name="L616" href="#L616">616</a> 
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>         VarInt.putVarLong(data.threadId, sink);
+<a class="jxr_linenumber" name="L618" href="#L618">618</a>         VarInt.putVarInt(data.id, sink);
+<a class="jxr_linenumber" name="L619" href="#L619">619</a>         VarInt.putVarInt(data.parentId, sink);
+<a class="jxr_linenumber" name="L620" href="#L620">620</a>         VarInt.putVarLong(data.startTime - profileStartTime, sink);
+<a class="jxr_linenumber" name="L621" href="#L621">621</a>         VarInt.putVarLong(data.duration, sink);
+<a class="jxr_linenumber" name="L622" href="#L622">622</a> 
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>         <em class="jxr_comment">// To save space (and improve performance), convert all description</em>
+<a class="jxr_linenumber" name="L624" href="#L624">624</a>         <em class="jxr_comment">// strings to the canonical object and use IdentityHashMap to assign</em>
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>         <em class="jxr_comment">// unique numbers for each string.</em>
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>         <strong class="jxr_keyword">int</strong> descIndex = describer.getDescriptionIndex(data.object);
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>         VarInt.putVarInt(descIndex + 1, sink); <em class="jxr_comment">// Add 1 to avoid encoding negative values.</em>
+<a class="jxr_linenumber" name="L628" href="#L628">628</a> 
+<a class="jxr_linenumber" name="L629" href="#L629">629</a>         <em class="jxr_comment">// Save types using their ordinal() value</em>
+<a class="jxr_linenumber" name="L630" href="#L630">630</a>         sink.put((byte) data.type.ordinal());
+<a class="jxr_linenumber" name="L631" href="#L631">631</a> 
+<a class="jxr_linenumber" name="L632" href="#L632">632</a>         <em class="jxr_comment">// Save aggregated data stats.</em>
+<a class="jxr_linenumber" name="L633" href="#L633">633</a>         <strong class="jxr_keyword">if</strong> (data.counts != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L634" href="#L634">634</a>           <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; TASK_COUNT; i++) {
+<a class="jxr_linenumber" name="L635" href="#L635">635</a>             <strong class="jxr_keyword">if</strong> (data.counts[i] &gt; 0) {
+<a class="jxr_linenumber" name="L636" href="#L636">636</a>               sink.put((byte) i); <em class="jxr_comment">// aggregated type ordinal value</em>
+<a class="jxr_linenumber" name="L637" href="#L637">637</a>               VarInt.putVarInt(data.counts[i], sink);
+<a class="jxr_linenumber" name="L638" href="#L638">638</a>               VarInt.putVarLong(data.durations[i], sink);
+<a class="jxr_linenumber" name="L639" href="#L639">639</a>             }
+<a class="jxr_linenumber" name="L640" href="#L640">640</a>           }
+<a class="jxr_linenumber" name="L641" href="#L641">641</a>         }
+<a class="jxr_linenumber" name="L642" href="#L642">642</a> 
+<a class="jxr_linenumber" name="L643" href="#L643">643</a>         <strong class="jxr_keyword">this</strong>.out.writeInt(sink.position());
+<a class="jxr_linenumber" name="L644" href="#L644">644</a>         <strong class="jxr_keyword">this</strong>.out.write(sink.array(), 0, sink.position());
+<a class="jxr_linenumber" name="L645" href="#L645">645</a>         <strong class="jxr_keyword">if</strong> (describer.isUnassigned(descIndex)) {
+<a class="jxr_linenumber" name="L646" href="#L646">646</a>           <strong class="jxr_keyword">this</strong>.out.writeUTF(describer.getDescription(data.object));
+<a class="jxr_linenumber" name="L647" href="#L647">647</a>         }
+<a class="jxr_linenumber" name="L648" href="#L648">648</a>       }
+<a class="jxr_linenumber" name="L649" href="#L649">649</a>       <strong class="jxr_keyword">this</strong>.out.flush();
+<a class="jxr_linenumber" name="L650" href="#L650">650</a>     } <strong class="jxr_keyword">catch</strong> (IOException e) {
+<a class="jxr_linenumber" name="L651" href="#L651">651</a>       saveException = e;
+<a class="jxr_linenumber" name="L652" href="#L652">652</a>       clear();
+<a class="jxr_linenumber" name="L653" href="#L653">653</a>       <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L654" href="#L654">654</a>         out.close();
+<a class="jxr_linenumber" name="L655" href="#L655">655</a>       } <strong class="jxr_keyword">catch</strong> (IOException e2) {
+<a class="jxr_linenumber" name="L656" href="#L656">656</a>         <em class="jxr_comment">// ignore it</em>
+<a class="jxr_linenumber" name="L657" href="#L657">657</a>       }
+<a class="jxr_linenumber" name="L658" href="#L658">658</a>     }
+<a class="jxr_linenumber" name="L659" href="#L659">659</a>   }
+<a class="jxr_linenumber" name="L660" href="#L660">660</a> 
+<a class="jxr_linenumber" name="L661" href="#L661">661</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">synchronized</strong> <strong class="jxr_keyword">void</strong> clear() {
+<a class="jxr_linenumber" name="L662" href="#L662">662</a>     profileStartTime = 0L;
+<a class="jxr_linenumber" name="L663" href="#L663">663</a>     <strong class="jxr_keyword">if</strong> (timer != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L664" href="#L664">664</a>       timer.cancel();
+<a class="jxr_linenumber" name="L665" href="#L665">665</a>       timer = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L666" href="#L666">666</a>     }
+<a class="jxr_linenumber" name="L667" href="#L667">667</a>     taskStack = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L668" href="#L668">668</a>     taskQueue = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L669" href="#L669">669</a>     describer = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L670" href="#L670">670</a> 
+<a class="jxr_linenumber" name="L671" href="#L671">671</a>     <em class="jxr_comment">// Note that slowest task aggregator are not cleared here because clearing happens</em>
+<a class="jxr_linenumber" name="L672" href="#L672">672</a>     <em class="jxr_comment">// periodically over the course of a command invocation.</em>
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>   }
+<a class="jxr_linenumber" name="L674" href="#L674">674</a> 
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L676" href="#L676">676</a> <em class="jxr_javadoccomment">   * Unless --record_full_profiler_data is given we drop small tasks and add their time to the</em>
+<a class="jxr_linenumber" name="L677" href="#L677">677</a> <em class="jxr_javadoccomment">   * parents duration.</em>
+<a class="jxr_linenumber" name="L678" href="#L678">678</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L679" href="#L679">679</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> wasTaskSlowEnoughToRecord(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <strong class="jxr_keyword">long</strong> duration) {
+<a class="jxr_linenumber" name="L680" href="#L680">680</a>     <strong class="jxr_keyword">return</strong> (recordAllDurations || duration &gt;= type.minDuration);
+<a class="jxr_linenumber" name="L681" href="#L681">681</a>   }
+<a class="jxr_linenumber" name="L682" href="#L682">682</a> 
+<a class="jxr_linenumber" name="L683" href="#L683">683</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L684" href="#L684">684</a> <em class="jxr_javadoccomment">   * Adds task directly to the main queue bypassing task stack. Used for simple</em>
+<a class="jxr_linenumber" name="L685" href="#L685">685</a> <em class="jxr_javadoccomment">   * tasks that are known to not have any subtasks.</em>
+<a class="jxr_linenumber" name="L686" href="#L686">686</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L687" href="#L687">687</a> <em class="jxr_javadoccomment">   * @param startTime task start time (obtained through {@link Profiler#nanoTimeMaybe()})</em>
+<a class="jxr_linenumber" name="L688" href="#L688">688</a> <em class="jxr_javadoccomment">   * @param duration task duration</em>
+<a class="jxr_linenumber" name="L689" href="#L689">689</a> <em class="jxr_javadoccomment">   * @param type task type</em>
+<a class="jxr_linenumber" name="L690" href="#L690">690</a> <em class="jxr_javadoccomment">   * @param object object associated with that task. Can be String object that</em>
+<a class="jxr_linenumber" name="L691" href="#L691">691</a> <em class="jxr_javadoccomment">   *               describes it.</em>
+<a class="jxr_linenumber" name="L692" href="#L692">692</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L693" href="#L693">693</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> logTask(<strong class="jxr_keyword">long</strong> startTime, <strong class="jxr_keyword">long</strong> duration, <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L694" href="#L694">694</a>     Preconditions.checkNotNull(object);
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>     Preconditions.checkState(startTime &gt; 0, <span class="jxr_string">"startTime was %s"</span>, startTime);
+<a class="jxr_linenumber" name="L696" href="#L696">696</a>     <strong class="jxr_keyword">if</strong> (duration &lt; 0) {
+<a class="jxr_linenumber" name="L697" href="#L697">697</a>       <em class="jxr_comment">// See note in Clock#nanoTime, which is used by Profiler#nanoTimeMaybe.</em>
+<a class="jxr_linenumber" name="L698" href="#L698">698</a>       duration = 0;
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>     }
+<a class="jxr_linenumber" name="L700" href="#L700">700</a> 
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>     <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> parent = taskStack.peek();
+<a class="jxr_linenumber" name="L702" href="#L702">702</a>     <strong class="jxr_keyword">if</strong> (parent != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L703" href="#L703">703</a>       parent.aggregateChild(type, duration);
+<a class="jxr_linenumber" name="L704" href="#L704">704</a>     }
+<a class="jxr_linenumber" name="L705" href="#L705">705</a>     <strong class="jxr_keyword">if</strong> (wasTaskSlowEnoughToRecord(type, duration)) {
+<a class="jxr_linenumber" name="L706" href="#L706">706</a>       <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> data = taskStack.create(startTime, type, object);
+<a class="jxr_linenumber" name="L707" href="#L707">707</a>       data.duration = duration;
+<a class="jxr_linenumber" name="L708" href="#L708">708</a>       <strong class="jxr_keyword">if</strong> (out != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L709" href="#L709">709</a>         taskQueue.add(data);
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>       }
+<a class="jxr_linenumber" name="L711" href="#L711">711</a> 
+<a class="jxr_linenumber" name="L712" href="#L712">712</a>       <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a> aggregator = slowestTasks[type.ordinal()];
+<a class="jxr_linenumber" name="L713" href="#L713">713</a> 
+<a class="jxr_linenumber" name="L714" href="#L714">714</a>       <strong class="jxr_keyword">if</strong> (aggregator != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L715" href="#L715">715</a>         aggregator.add(data);
+<a class="jxr_linenumber" name="L716" href="#L716">716</a>       }
+<a class="jxr_linenumber" name="L717" href="#L717">717</a>     }
+<a class="jxr_linenumber" name="L718" href="#L718">718</a>   }
+<a class="jxr_linenumber" name="L719" href="#L719">719</a> 
+<a class="jxr_linenumber" name="L720" href="#L720">720</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L721" href="#L721">721</a> <em class="jxr_javadoccomment">   * Used externally to submit simple task (one that does not have any subtasks).</em>
+<a class="jxr_linenumber" name="L722" href="#L722">722</a> <em class="jxr_javadoccomment">   * Depending on the minDuration attribute of the task type, task may be</em>
+<a class="jxr_linenumber" name="L723" href="#L723">723</a> <em class="jxr_javadoccomment">   * just aggregated into the parent task and not stored directly.</em>
+<a class="jxr_linenumber" name="L724" href="#L724">724</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L725" href="#L725">725</a> <em class="jxr_javadoccomment">   * @param startTime task start time (obtained through {@link</em>
+<a class="jxr_linenumber" name="L726" href="#L726">726</a> <em class="jxr_javadoccomment">   *        Profiler#nanoTimeMaybe()})</em>
+<a class="jxr_linenumber" name="L727" href="#L727">727</a> <em class="jxr_javadoccomment">   * @param type task type</em>
+<a class="jxr_linenumber" name="L728" href="#L728">728</a> <em class="jxr_javadoccomment">   * @param object object associated with that task. Can be String object that</em>
+<a class="jxr_linenumber" name="L729" href="#L729">729</a> <em class="jxr_javadoccomment">   *               describes it.</em>
+<a class="jxr_linenumber" name="L730" href="#L730">730</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L731" href="#L731">731</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> logSimpleTask(<strong class="jxr_keyword">long</strong> startTime, <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L732" href="#L732">732</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L733" href="#L733">733</a>       logTask(startTime, clock.nanoTime() - startTime, type, object);
+<a class="jxr_linenumber" name="L734" href="#L734">734</a>     }
+<a class="jxr_linenumber" name="L735" href="#L735">735</a>   }
+<a class="jxr_linenumber" name="L736" href="#L736">736</a> 
+<a class="jxr_linenumber" name="L737" href="#L737">737</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L738" href="#L738">738</a> <em class="jxr_javadoccomment">   * Used externally to submit simple task (one that does not have any</em>
+<a class="jxr_linenumber" name="L739" href="#L739">739</a> <em class="jxr_javadoccomment">   * subtasks). Depending on the minDuration attribute of the task type, task</em>
+<a class="jxr_linenumber" name="L740" href="#L740">740</a> <em class="jxr_javadoccomment">   * may be just aggregated into the parent task and not stored directly.</em>
+<a class="jxr_linenumber" name="L741" href="#L741">741</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L742" href="#L742">742</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Note that start and stop time must both be acquired from the same clock</em>
+<a class="jxr_linenumber" name="L743" href="#L743">743</a> <em class="jxr_javadoccomment">   * instance.</em>
+<a class="jxr_linenumber" name="L744" href="#L744">744</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L745" href="#L745">745</a> <em class="jxr_javadoccomment">   * @param startTime task start time</em>
+<a class="jxr_linenumber" name="L746" href="#L746">746</a> <em class="jxr_javadoccomment">   * @param stopTime task stop time</em>
+<a class="jxr_linenumber" name="L747" href="#L747">747</a> <em class="jxr_javadoccomment">   * @param type task type</em>
+<a class="jxr_linenumber" name="L748" href="#L748">748</a> <em class="jxr_javadoccomment">   * @param object object associated with that task. Can be String object that</em>
+<a class="jxr_linenumber" name="L749" href="#L749">749</a> <em class="jxr_javadoccomment">   *               describes it.</em>
+<a class="jxr_linenumber" name="L750" href="#L750">750</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L751" href="#L751">751</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> logSimpleTask(<strong class="jxr_keyword">long</strong> startTime, <strong class="jxr_keyword">long</strong> stopTime, <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L752" href="#L752">752</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L753" href="#L753">753</a>       logTask(startTime, stopTime - startTime, type, object);
+<a class="jxr_linenumber" name="L754" href="#L754">754</a>     }
+<a class="jxr_linenumber" name="L755" href="#L755">755</a>   }
+<a class="jxr_linenumber" name="L756" href="#L756">756</a> 
+<a class="jxr_linenumber" name="L757" href="#L757">757</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L758" href="#L758">758</a> <em class="jxr_javadoccomment">   * Used externally to submit simple task (one that does not have any</em>
+<a class="jxr_linenumber" name="L759" href="#L759">759</a> <em class="jxr_javadoccomment">   * subtasks). Depending on the minDuration attribute of the task type, task</em>
+<a class="jxr_linenumber" name="L760" href="#L760">760</a> <em class="jxr_javadoccomment">   * may be just aggregated into the parent task and not stored directly.</em>
+<a class="jxr_linenumber" name="L761" href="#L761">761</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L762" href="#L762">762</a> <em class="jxr_javadoccomment">   * @param startTime task start time (obtained through {@link</em>
+<a class="jxr_linenumber" name="L763" href="#L763">763</a> <em class="jxr_javadoccomment">   *        Profiler#nanoTimeMaybe()})</em>
+<a class="jxr_linenumber" name="L764" href="#L764">764</a> <em class="jxr_javadoccomment">   * @param duration the duration of the task</em>
+<a class="jxr_linenumber" name="L765" href="#L765">765</a> <em class="jxr_javadoccomment">   * @param type task type</em>
+<a class="jxr_linenumber" name="L766" href="#L766">766</a> <em class="jxr_javadoccomment">   * @param object object associated with that task. Can be String object that</em>
+<a class="jxr_linenumber" name="L767" href="#L767">767</a> <em class="jxr_javadoccomment">   *               describes it.</em>
+<a class="jxr_linenumber" name="L768" href="#L768">768</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L769" href="#L769">769</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> logSimpleTaskDuration(<strong class="jxr_keyword">long</strong> startTime, <strong class="jxr_keyword">long</strong> duration, <a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type,
+<a class="jxr_linenumber" name="L770" href="#L770">770</a>                                     <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L771" href="#L771">771</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L772" href="#L772">772</a>       logTask(startTime, duration, type, object);
+<a class="jxr_linenumber" name="L773" href="#L773">773</a>     }
+<a class="jxr_linenumber" name="L774" href="#L774">774</a>   }
+<a class="jxr_linenumber" name="L775" href="#L775">775</a> 
+<a class="jxr_linenumber" name="L776" href="#L776">776</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L777" href="#L777">777</a> <em class="jxr_javadoccomment">   * Used to log "events" - tasks with zero duration.</em>
+<a class="jxr_linenumber" name="L778" href="#L778">778</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L779" href="#L779">779</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> logEvent(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L780" href="#L780">780</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L781" href="#L781">781</a>       logTask(clock.nanoTime(), 0, type, object);
+<a class="jxr_linenumber" name="L782" href="#L782">782</a>     }
+<a class="jxr_linenumber" name="L783" href="#L783">783</a>   }
+<a class="jxr_linenumber" name="L784" href="#L784">784</a> 
+<a class="jxr_linenumber" name="L785" href="#L785">785</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L786" href="#L786">786</a> <em class="jxr_javadoccomment">   * Records the beginning of the task specified by the parameters. This method</em>
+<a class="jxr_linenumber" name="L787" href="#L787">787</a> <em class="jxr_javadoccomment">   * should always be followed by completeTask() invocation to mark the end of</em>
+<a class="jxr_linenumber" name="L788" href="#L788">788</a> <em class="jxr_javadoccomment">   * task execution (usually ensured by try {} finally {} block). Failure to do</em>
+<a class="jxr_linenumber" name="L789" href="#L789">789</a> <em class="jxr_javadoccomment">   * so will result in task stack corruption.</em>
+<a class="jxr_linenumber" name="L790" href="#L790">790</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L791" href="#L791">791</a> <em class="jxr_javadoccomment">   * Use of this method allows to support nested task monitoring. For tasks that</em>
+<a class="jxr_linenumber" name="L792" href="#L792">792</a> <em class="jxr_javadoccomment">   * are known to not have any subtasks, logSimpleTask() should be used instead.</em>
+<a class="jxr_linenumber" name="L793" href="#L793">793</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L794" href="#L794">794</a> <em class="jxr_javadoccomment">   * @param type predefined task type - see ProfilerTask for available types.</em>
+<a class="jxr_linenumber" name="L795" href="#L795">795</a> <em class="jxr_javadoccomment">   * @param object object associated with that task. Can be String object that</em>
+<a class="jxr_linenumber" name="L796" href="#L796">796</a> <em class="jxr_javadoccomment">   *               describes it.</em>
+<a class="jxr_linenumber" name="L797" href="#L797">797</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L798" href="#L798">798</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> startTask(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type, <a href="../../../../../../java/lang/Object.html">Object</a> object) {
+<a class="jxr_linenumber" name="L799" href="#L799">799</a>     <em class="jxr_comment">// ProfilerInfo.allTasksById is supposed to be an id -&gt; Task map, but it is in fact a List,</em>
+<a class="jxr_linenumber" name="L800" href="#L800">800</a>     <em class="jxr_comment">// which means that we cannot drop tasks to which we had already assigned ids. Therefore,</em>
+<a class="jxr_linenumber" name="L801" href="#L801">801</a>     <em class="jxr_comment">// non-leaf tasks must not have a minimum duration. However, we don't quite consistently</em>
+<a class="jxr_linenumber" name="L802" href="#L802">802</a>     <em class="jxr_comment">// enforce this, and Blaze only works because we happen not to add child tasks to those parent</em>
+<a class="jxr_linenumber" name="L803" href="#L803">803</a>     <em class="jxr_comment">// tasks that have a minimum duration.</em>
+<a class="jxr_linenumber" name="L804" href="#L804">804</a>     Preconditions.checkNotNull(object);
+<a class="jxr_linenumber" name="L805" href="#L805">805</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L806" href="#L806">806</a>       taskStack.push(type, object);
+<a class="jxr_linenumber" name="L807" href="#L807">807</a>     }
+<a class="jxr_linenumber" name="L808" href="#L808">808</a>   }
+<a class="jxr_linenumber" name="L809" href="#L809">809</a> 
+<a class="jxr_linenumber" name="L810" href="#L810">810</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L811" href="#L811">811</a> <em class="jxr_javadoccomment">   * Records the end of the task and moves tasks from the thread-local stack to</em>
+<a class="jxr_linenumber" name="L812" href="#L812">812</a> <em class="jxr_javadoccomment">   * the main queue. Will validate that given task type matches task at the top</em>
+<a class="jxr_linenumber" name="L813" href="#L813">813</a> <em class="jxr_javadoccomment">   * of the stack.</em>
+<a class="jxr_linenumber" name="L814" href="#L814">814</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L815" href="#L815">815</a> <em class="jxr_javadoccomment">   * @param type task type.</em>
+<a class="jxr_linenumber" name="L816" href="#L816">816</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L817" href="#L817">817</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> completeTask(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilerTask.html">ProfilerTask</a> type) {
+<a class="jxr_linenumber" name="L818" href="#L818">818</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(type)) {
+<a class="jxr_linenumber" name="L819" href="#L819">819</a>       <strong class="jxr_keyword">long</strong> endTime = clock.nanoTime();
+<a class="jxr_linenumber" name="L820" href="#L820">820</a>       <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">TaskData</a> data = taskStack.pop();
+<a class="jxr_linenumber" name="L821" href="#L821">821</a>       <em class="jxr_comment">// Do not use Preconditions class below due to the very expensive</em>
+<a class="jxr_linenumber" name="L822" href="#L822">822</a>       <em class="jxr_comment">// toString() calls used in the message.</em>
+<a class="jxr_linenumber" name="L823" href="#L823">823</a>       <strong class="jxr_keyword">if</strong> (data.type != type) {
+<a class="jxr_linenumber" name="L824" href="#L824">824</a>         <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalStateException(<span class="jxr_string">"Inconsistent Profiler.completeTask() call for the "</span>
+<a class="jxr_linenumber" name="L825" href="#L825">825</a>             + type + <span class="jxr_string">" task.\n "</span> + taskStack);
+<a class="jxr_linenumber" name="L826" href="#L826">826</a>       }
+<a class="jxr_linenumber" name="L827" href="#L827">827</a>       data.duration = endTime - data.startTime;
+<a class="jxr_linenumber" name="L828" href="#L828">828</a>       <strong class="jxr_keyword">if</strong> (data.parentId &gt; 0) {
+<a class="jxr_linenumber" name="L829" href="#L829">829</a>         taskStack.peek().aggregateChild(data.type, data.duration);
+<a class="jxr_linenumber" name="L830" href="#L830">830</a>       }
+<a class="jxr_linenumber" name="L831" href="#L831">831</a>       <strong class="jxr_keyword">boolean</strong> shouldRecordTask = wasTaskSlowEnoughToRecord(type, data.duration);
+<a class="jxr_linenumber" name="L832" href="#L832">832</a>       <strong class="jxr_keyword">if</strong> (out != <strong class="jxr_keyword">null</strong> &amp;&amp; (shouldRecordTask || data.counts != <strong class="jxr_keyword">null</strong>)) {
+<a class="jxr_linenumber" name="L833" href="#L833">833</a>         taskQueue.add(data);
+<a class="jxr_linenumber" name="L834" href="#L834">834</a>       }
+<a class="jxr_linenumber" name="L835" href="#L835">835</a> 
+<a class="jxr_linenumber" name="L836" href="#L836">836</a>       <strong class="jxr_keyword">if</strong> (shouldRecordTask) {
+<a class="jxr_linenumber" name="L837" href="#L837">837</a>         <a href="../../../../../../com/google/devtools/build/lib/profiler/Profiler.html">SlowestTaskAggregator</a> aggregator = slowestTasks[type.ordinal()];
+<a class="jxr_linenumber" name="L838" href="#L838">838</a> 
+<a class="jxr_linenumber" name="L839" href="#L839">839</a>         <strong class="jxr_keyword">if</strong> (aggregator != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L840" href="#L840">840</a>           aggregator.add(data);
+<a class="jxr_linenumber" name="L841" href="#L841">841</a>         }
+<a class="jxr_linenumber" name="L842" href="#L842">842</a>       }
+<a class="jxr_linenumber" name="L843" href="#L843">843</a>     }
+<a class="jxr_linenumber" name="L844" href="#L844">844</a>   }
+<a class="jxr_linenumber" name="L845" href="#L845">845</a> 
+<a class="jxr_linenumber" name="L846" href="#L846">846</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L847" href="#L847">847</a> <em class="jxr_javadoccomment">   * Convenience method to log phase marker tasks.</em>
+<a class="jxr_linenumber" name="L848" href="#L848">848</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L849" href="#L849">849</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> markPhase(<a href="../../../../../../com/google/devtools/build/lib/profiler/ProfilePhase.html">ProfilePhase</a> phase) {
+<a class="jxr_linenumber" name="L850" href="#L850">850</a>     MemoryProfiler.instance().markPhase(phase);
+<a class="jxr_linenumber" name="L851" href="#L851">851</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(ProfilerTask.PHASE)) {
+<a class="jxr_linenumber" name="L852" href="#L852">852</a>       Preconditions.checkState(taskStack.isEmpty(), <span class="jxr_string">"Phase tasks must not be nested"</span>);
+<a class="jxr_linenumber" name="L853" href="#L853">853</a>       logEvent(ProfilerTask.PHASE, phase.description);
+<a class="jxr_linenumber" name="L854" href="#L854">854</a>     }
+<a class="jxr_linenumber" name="L855" href="#L855">855</a>   }
+<a class="jxr_linenumber" name="L856" href="#L856">856</a> 
+<a class="jxr_linenumber" name="L857" href="#L857">857</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L858" href="#L858">858</a> <em class="jxr_javadoccomment">   * Convenience method to log spawn tasks.</em>
+<a class="jxr_linenumber" name="L859" href="#L859">859</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L860" href="#L860">860</a> <em class="jxr_javadoccomment">   * TODO(bazel-team): Right now method expects single string of the spawn action</em>
+<a class="jxr_linenumber" name="L861" href="#L861">861</a> <em class="jxr_javadoccomment">   * as task description (usually either argv[0] or a name of the main executable</em>
+<a class="jxr_linenumber" name="L862" href="#L862">862</a> <em class="jxr_javadoccomment">   * in case of complex shell commands). Maybe it should accept Command object</em>
+<a class="jxr_linenumber" name="L863" href="#L863">863</a> <em class="jxr_javadoccomment">   * and create more user friendly description.</em>
+<a class="jxr_linenumber" name="L864" href="#L864">864</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L865" href="#L865">865</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> logSpawn(<strong class="jxr_keyword">long</strong> startTime, String arg0) {
+<a class="jxr_linenumber" name="L866" href="#L866">866</a>     <strong class="jxr_keyword">if</strong> (isActive() &amp;&amp; isProfiling(ProfilerTask.SPAWN)) {
+<a class="jxr_linenumber" name="L867" href="#L867">867</a>       logTask(startTime, clock.nanoTime() - startTime, ProfilerTask.SPAWN, arg0);
+<a class="jxr_linenumber" name="L868" href="#L868">868</a>     }
+<a class="jxr_linenumber" name="L869" href="#L869">869</a>   }
+<a class="jxr_linenumber" name="L870" href="#L870">870</a> 
+<a class="jxr_linenumber" name="L871" href="#L871">871</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

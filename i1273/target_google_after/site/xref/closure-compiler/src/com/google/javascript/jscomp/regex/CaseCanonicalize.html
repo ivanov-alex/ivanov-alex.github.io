@@ -1,0 +1,644 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>CaseCanonicalize xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../apidocs/com/google/javascript/jscomp/regex/CaseCanonicalize.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2011 The Closure Compiler Authors.</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">package</strong> com.google.javascript.jscomp.regex;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.ImmutableList;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <em class="jxr_javadoccomment"> * Implements the ECMAScript 5</em>
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <em class="jxr_javadoccomment"> * &lt;a href="<a href="http://es5.github.com/" target="alexandria_uri">http://es5.github.com/</a>#Canonicalize"&gt;Canonicalize&lt;/a&gt; operation</em>
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <em class="jxr_javadoccomment"> * used to specify how case-insensitive regular expressions match.</em>
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <em class="jxr_javadoccomment"> * From section &lt;a href="<a href="http://es5.github.com/" target="alexandria_uri">http://es5.github.com/</a>#x15.10.2.9"&gt;15.10.2.9&lt;/a&gt;,</em>
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <em class="jxr_javadoccomment"> * &lt;blockquote&gt;</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <em class="jxr_javadoccomment"> * The abstract operation Canonicalize takes a character parameter ch and</em>
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <em class="jxr_javadoccomment"> * performs the following steps:</em>
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <em class="jxr_javadoccomment"> * &lt;ul&gt;</em>
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;If IgnoreCase is false, return ch.</em>
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;Let u be ch converted to upper case as if by calling the standard</em>
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <em class="jxr_javadoccomment"> *   built-in method {@code String.prototype.toUpperCase} on the one-character</em>
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment"> *   String ch.</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;If u does not consist of a single character, return ch.</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;Let cu be u's character.</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;If ch's code unit value is greater than or equal to decimal 128 and</em>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_javadoccomment"> *   cu's code unit value is less than decimal 128, then return ch.</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <em class="jxr_javadoccomment"> *   &lt;li&gt;Return cu.</em>
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <em class="jxr_javadoccomment"> * &lt;/ul&gt;</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <em class="jxr_javadoccomment"> * @author Mike Samuel &lt;mikesamuel@gmail.com&gt;</em>
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">CaseCanonicalize</a> {
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>    <strong class="jxr_keyword">private</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">CaseCanonicalize</a>() {
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>      <em class="jxr_comment">// Uninstantiable.</em>
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>    }
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>    <em class="jxr_comment">// Below are tables that implement the Canonicalize operation.</em>
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>    <em class="jxr_comment">// We cannot use java.lang.Character.toUpperCase since that is based on</em>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>    <em class="jxr_comment">// a more modern version of Unicode than that required by the ECMAScript spec.</em>
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>    <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>  <em class="jxr_javadoccomment">   * Set of code units that are case-insensitively equivalent to some other</em>
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  <em class="jxr_javadoccomment">   * code unit according to the EcmaScript</em>
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <em class="jxr_javadoccomment">   * &lt;a href="<a href="http://es5.github.com/" target="alexandria_uri">http://es5.github.com/</a>#Canonicalize"&gt;Canonicalize&lt;/a&gt; operation</em>
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  <em class="jxr_javadoccomment">   * described in section 15.10.2.8.</em>
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <em class="jxr_javadoccomment">   * The case sensitive characters are the ones that canonicalize to a character</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <em class="jxr_javadoccomment">   * other than themselves or have a character that canonicalizes to them.</em>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <em class="jxr_javadoccomment">   * Canonicalize is based on the definition of</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <em class="jxr_javadoccomment">   * {@code String.prototype.toUpperCase} which is itself based on Unicode 3.0.0</em>
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <em class="jxr_javadoccomment">   * as specified at</em>
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <em class="jxr_javadoccomment">   * &lt;a href="ftp://ftp.unicode.org/Public/3.0-Update/UnicodeData-3.0.0.txt"&gt;</em>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  <em class="jxr_javadoccomment">   * UnicodeData-3.0.0</em>
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  <em class="jxr_javadoccomment">   * &lt;/a&gt;</em>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  <em class="jxr_javadoccomment">   * and &lt;a href="ftp://ftp.unicode.org/Public/3.0-Update/SpecialCasing-2.txt"&gt;</em>
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <em class="jxr_javadoccomment">   * SpecialCasings-2.txt</em>
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  <em class="jxr_javadoccomment">   * &lt;/a&gt;.</em>
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  <em class="jxr_javadoccomment">   * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">   * This table was generated by running the below on Chrome:</em>
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">   * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment">   * &lt;pre&gt;</em>
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_javadoccomment">   * for (var cc = 0; cc &lt; 0x10000; ++cc) {</em>
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_javadoccomment">   *   var ch = String.fromCharCode(cc);</em>
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment">   *   var u = ch.toUpperCase();</em>
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  <em class="jxr_javadoccomment">   *   if (ch != u &amp;&amp; u.length === 1) {</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <em class="jxr_javadoccomment">   *     var cu = u.charCodeAt(0);</em>
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  <em class="jxr_javadoccomment">   *     if (cc &lt;= 128 || u.charCodeAt(0) &gt; 128) {</em>
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <em class="jxr_javadoccomment">   *       print('0x' + cc.toString(16) + ', 0x' + cu.toString(16) + ',');</em>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <em class="jxr_javadoccomment">   *     }</em>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <em class="jxr_javadoccomment">   *   }</em>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <em class="jxr_javadoccomment">   * }</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  <em class="jxr_javadoccomment">   * &lt;/pre&gt;</em>
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> CASE_SENSITIVE = CharRanges.withRanges(
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>        0x41, 0x5b,
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>        0x61, 0x7b,
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>        0xb5, 0xb6,
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>        0xc0, 0xd7,
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>        0xd8, 0xdf,
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>        0xe0, 0xf7,
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>        0xf8, 0x130,
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>        0x132, 0x138,
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>        0x139, 0x149,
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>        0x14a, 0x17f,
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>        0x180, 0x18d,
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>       0x18e, 0x19b,
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>       0x19c, 0x1aa,
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>       0x1ac, 0x1ba,
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>       0x1bc, 0x1be,
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>       0x1bf, 0x1c0,
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>       0x1c4, 0x1f0,
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>       0x1f1, 0x221,
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>       0x222, 0x234,
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>       0x23a, 0x23f,
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>       0x241, 0x250,
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>       0x253, 0x255,
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>       0x256, 0x258,
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>       0x259, 0x25a,
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>       0x25b, 0x25c,
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>       0x260, 0x261,
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>       0x263, 0x264,
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>       0x268, 0x26a,
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>       0x26b, 0x26c,
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>       0x26f, 0x270,
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>       0x272, 0x273,
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>       0x275, 0x276,
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>       0x27d, 0x27e,
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>       0x280, 0x281,
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>       0x283, 0x284,
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>       0x288, 0x28d,
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>       0x292, 0x293,
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>       0x345, 0x346,
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>       0x37b, 0x37e,
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>       0x386, 0x387,
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>       0x388, 0x38b,
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>       0x38c, 0x38d,
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>       0x38e, 0x390,
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>       0x391, 0x3a2,
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>       0x3a3, 0x3b0,
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>       0x3b1, 0x3cf,
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>       0x3d0, 0x3d2,
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>       0x3d5, 0x3d7,
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>       0x3d8, 0x3f3,
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>       0x3f5, 0x3f6,
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>       0x3f7, 0x3fc,
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>       0x3fd, 0x482,
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>       0x48a, 0x514,
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>       0x531, 0x557,
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>       0x561, 0x587,
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>       0x10a0, 0x10c6,
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>       0x1d7d, 0x1d7e,
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>       0x1e00, 0x1e96,
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>       0x1e9b, 0x1e9c,
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>       0x1ea0, 0x1efa,
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>       0x1f00, 0x1f16,
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>       0x1f18, 0x1f1e,
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>       0x1f20, 0x1f46,
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>       0x1f48, 0x1f4e,
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>       0x1f51, 0x1f52,
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>       0x1f53, 0x1f54,
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>       0x1f55, 0x1f56,
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>       0x1f57, 0x1f58,
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>       0x1f59, 0x1f5a,
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>       0x1f5b, 0x1f5c,
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>       0x1f5d, 0x1f5e,
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>       0x1f5f, 0x1f7e,
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>       0x1fb0, 0x1fb2,
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>       0x1fb8, 0x1fbc,
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>       0x1fbe, 0x1fbf,
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>       0x1fc8, 0x1fcc,
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>       0x1fd0, 0x1fd2,
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>       0x1fd8, 0x1fdc,
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>       0x1fe0, 0x1fe2,
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>       0x1fe5, 0x1fe6,
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>       0x1fe8, 0x1fed,
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>       0x1ff8, 0x1ffc,
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>       0x2132, 0x2133,
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>       0x214e, 0x214f,
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>       0x2160, 0x2180,
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>       0x2183, 0x2185,
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>       0x24b6, 0x24ea,
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>       0x2c00, 0x2c2f,
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>       0x2c30, 0x2c5f,
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>       0x2c60, 0x2c6d,
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>       0x2c75, 0x2c77,
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>       0x2c80, 0x2ce4,
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>       0x2d00, 0x2d26,
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>       0xff21, 0xff3b,
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>       0xff41, 0xff5b
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>       );
+<a class="jxr_linenumber" name="L185" href="#L185">185</a> 
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> 
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> <em class="jxr_javadoccomment">   * Returns the case canonical version of the given string.</em>
+<a class="jxr_linenumber" name="L189" href="#L189">189</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> String caseCanonicalize(String s) {
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>     <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0, n = s.length(); i &lt; n; ++i) {
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>       <strong class="jxr_keyword">char</strong> ch = s.charAt(i);
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>       <strong class="jxr_keyword">char</strong> cu = caseCanonicalize(ch);
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>       <strong class="jxr_keyword">if</strong> (cu != ch) {
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>         StringBuilder sb = <strong class="jxr_keyword">new</strong> StringBuilder(s);
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>         sb.setCharAt(i, cu);
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>         <strong class="jxr_keyword">while</strong> (++i &lt; n) {
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>           sb.setCharAt(i, caseCanonicalize(s.charAt(i)));
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>         }
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>         <strong class="jxr_keyword">return</strong> sb.toString();
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>       }
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     }
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>     <strong class="jxr_keyword">return</strong> s;
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>   }
+<a class="jxr_linenumber" name="L205" href="#L205">205</a> 
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L207" href="#L207">207</a> <em class="jxr_javadoccomment">   * Returns the case canonical version of the given code-unit.  ECMAScript 5</em>
+<a class="jxr_linenumber" name="L208" href="#L208">208</a> <em class="jxr_javadoccomment">   * explicitly says that code-units are to be treated as their code-point</em>
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> <em class="jxr_javadoccomment">   * equivalent, even surrogates.</em>
+<a class="jxr_linenumber" name="L210" href="#L210">210</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">char</strong> caseCanonicalize(<strong class="jxr_keyword">char</strong> ch) {
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>     <strong class="jxr_keyword">if</strong> (ch &lt; 0x80) {  <em class="jxr_comment">// Normal case.</em>
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>       <strong class="jxr_keyword">return</strong> ('A' &lt;= ch &amp;&amp; ch &lt;= 'Z') ? (<strong class="jxr_keyword">char</strong>) (ch | 32) : ch;
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>     }
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>     <em class="jxr_comment">// Non-ASCII case.</em>
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>     <strong class="jxr_keyword">if</strong> (CASE_SENSITIVE.contains(ch)) {
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>       <strong class="jxr_keyword">for</strong> (DeltaSet ds : CANON_DELTA_SETS) {
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>         <strong class="jxr_keyword">if</strong> (ds.codeUnits.contains(ch)) {
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>           <strong class="jxr_keyword">return</strong> (<strong class="jxr_keyword">char</strong>) (ch - ds.delta);
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>         }
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>       }
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>     }
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>     <strong class="jxr_keyword">return</strong> ch;
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>   }
+<a class="jxr_linenumber" name="L225" href="#L225">225</a> 
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L227" href="#L227">227</a> <em class="jxr_javadoccomment">   * Given a character range that may include case sensitive code-units,</em>
+<a class="jxr_linenumber" name="L228" href="#L228">228</a> <em class="jxr_javadoccomment">   * such as {@code [0-9B-M]}, returns the character range that includes all</em>
+<a class="jxr_linenumber" name="L229" href="#L229">229</a> <em class="jxr_javadoccomment">   * the code-units in the input and those that are case-insensitively</em>
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">   * equivalent to a code-unit in the input.</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> expandToAllMatched(<a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> ranges) {
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>     <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> caseSensitive = ranges.intersection(CASE_SENSITIVE);
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>     <strong class="jxr_keyword">if</strong> (caseSensitive.isEmpty()) { <strong class="jxr_keyword">return</strong> ranges; }
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>     <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> expanded = CharRanges.EMPTY;
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>     <strong class="jxr_keyword">for</strong> (DeltaSet ds : DELTA_SETS) {
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>       expanded = expanded.union(
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>           caseSensitive.intersection(ds.codeUnits).shift(-ds.delta));
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>     }
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>     <strong class="jxr_keyword">return</strong> ranges.union(expanded);
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>   }
+<a class="jxr_linenumber" name="L242" href="#L242">242</a> 
+<a class="jxr_linenumber" name="L243" href="#L243">243</a> 
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> UCASE_ASCII_LETTERS
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>       = CharRanges.inclusive('A', 'Z');
+<a class="jxr_linenumber" name="L246" href="#L246">246</a> 
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L248" href="#L248">248</a> <em class="jxr_javadoccomment">   * Given a character range that may include case sensitive code-units,</em>
+<a class="jxr_linenumber" name="L249" href="#L249">249</a> <em class="jxr_javadoccomment">   * such as {@code [0-9B-M]}, returns the character range that includes</em>
+<a class="jxr_linenumber" name="L250" href="#L250">250</a> <em class="jxr_javadoccomment">   * the minimal set of code units such that for every code unit in the</em>
+<a class="jxr_linenumber" name="L251" href="#L251">251</a> <em class="jxr_javadoccomment">   * input there is a case-sensitively equivalent canonical code unit in the</em>
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> <em class="jxr_javadoccomment">   * output.</em>
+<a class="jxr_linenumber" name="L253" href="#L253">253</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> reduceToMinimum(<a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> ranges) {
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>     <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> caseSensitive = ranges.intersection(CASE_SENSITIVE);
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>     <strong class="jxr_keyword">if</strong> (caseSensitive.isEmpty()) { <strong class="jxr_keyword">return</strong> ranges; }
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>     <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> expanded = CharRanges.EMPTY;
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>     <strong class="jxr_keyword">for</strong> (DeltaSet ds : CANON_DELTA_SETS) {
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>       expanded = expanded.union(
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>           caseSensitive.intersection(ds.codeUnits).shift(-ds.delta));
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>     }
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>     <em class="jxr_comment">// Letters a-z gzip better than uppercase A-Z since JavaScript keywords</em>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a>     <em class="jxr_comment">// are lower-case, so, even though the definition of Canonicalize is</em>
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>     <em class="jxr_comment">// based on String.prototype.toUpperCase, we use lowercase ASCII characters</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>     <em class="jxr_comment">// in the minimal form.</em>
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>     expanded = expanded.difference(UCASE_ASCII_LETTERS).union(
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         expanded.intersection(UCASE_ASCII_LETTERS).shift(32));
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>     <strong class="jxr_keyword">return</strong> ranges.difference(caseSensitive).union(expanded);
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>   }
+<a class="jxr_linenumber" name="L270" href="#L270">270</a> 
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L272" href="#L272">272</a> <em class="jxr_javadoccomment">   * Sets of code units broken down by delta that are case-insensitively</em>
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> <em class="jxr_javadoccomment">   * equivalent to another code unit that differs from the first by that delta.</em>
+<a class="jxr_linenumber" name="L274" href="#L274">274</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> ImmutableList&lt;DeltaSet&gt; DELTA_SETS = ImmutableList.of(
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10795, CharRanges.withMembers(0x23a)),
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10792, CharRanges.withMembers(0x23e)),
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10743, CharRanges.withMembers(0x26b)),
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10727, CharRanges.withMembers(0x27d)),
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-7264, CharRanges.withRanges(0x10a0, 0x10c6)),
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-7205, CharRanges.withMembers(0x399)),
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-3814, CharRanges.withMembers(0x1d7d)),
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-743, CharRanges.withMembers(0xb5)),
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-219, CharRanges.withMembers(0x1b7)),
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-218, CharRanges.withMembers(0x1a6, 0x1a9, 0x1ae)),
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-217, CharRanges.withRanges(0x1b1, 0x1b3)),
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-214, CharRanges.withMembers(0x19f)),
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-213, CharRanges.withMembers(0x19d)),
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-211, CharRanges.withMembers(0x196, 0x19c)),
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-210, CharRanges.withMembers(0x181)),
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-209, CharRanges.withMembers(0x197)),
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-207, CharRanges.withMembers(0x194)),
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-206, CharRanges.withMembers(0x186)),
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-205, CharRanges.withRanges(0x189, 0x18b, 0x193, 0x194)),
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-203, CharRanges.withMembers(0x190)),
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-202, CharRanges.withMembers(0x18f)),
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-195, CharRanges.withMembers(0x180)),
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-163, CharRanges.withMembers(0x19a)),
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-130, CharRanges.withRanges(0x19e, 0x19f, 0x37b, 0x37e)),
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-128, CharRanges.withRanges(0x1f78, 0x1f7a)),
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-126, CharRanges.withRanges(0x1f7c, 0x1f7e)),
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-121, CharRanges.withMembers(0xff)),
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-112, CharRanges.withRanges(0x1f7a, 0x1f7c)),
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-100, CharRanges.withRanges(0x1f76, 0x1f78)),
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-97, CharRanges.withMembers(0x195)),
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-96, CharRanges.withMembers(0x395)),
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-86, CharRanges.withRanges(0x39a, 0x39b, 0x1f72, 0x1f76)),
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-84, CharRanges.withMembers(0x345)),
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-80, CharRanges.withRanges(0x3a1, 0x3a2, 0x400, 0x410)),
+<a class="jxr_linenumber" name="L310" href="#L310">310</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-79, CharRanges.withMembers(0x18e)),
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-74, CharRanges.withRanges(0x1f70, 0x1f72)),
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-71, CharRanges.withMembers(0x245)),
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-69, CharRanges.withMembers(0x244)),
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-64, CharRanges.withMembers(0x38c)),
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-63, CharRanges.withRanges(0x38e, 0x390)),
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-62, CharRanges.withMembers(0x392)),
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-59, CharRanges.withMembers(0x1e60)),
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-57, CharRanges.withMembers(0x398)),
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-56, CharRanges.withMembers(0x1bf)),
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-54, CharRanges.withMembers(0x3a0)),
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-48, CharRanges.withRanges(0x531, 0x557, 0x2c00, 0x2c2f)),
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-47, CharRanges.withMembers(0x3a6)),
+<a class="jxr_linenumber" name="L323" href="#L323">323</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-38, CharRanges.withMembers(0x386)),
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-37, CharRanges.withRanges(0x388, 0x38b)),
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-32, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>           0x41, 0x5b, 0xc0, 0xd7, 0xd8, 0xdf, 0x391, 0x3a2, 0x3a3, 0x3ac,
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>           0x410, 0x430, 0xff21, 0xff3b)),
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-31, CharRanges.withMembers(0x3a3)),
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-28, CharRanges.withMembers(0x2132)),
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-26, CharRanges.withRanges(0x24b6, 0x24d0)),
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-16, CharRanges.withRanges(0x2160, 0x2170)),
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-15, CharRanges.withMembers(0x4c0)),
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-8, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>           0x1f00, 0x1f08, 0x1f10, 0x1f16, 0x1f20, 0x1f28, 0x1f30, 0x1f38,
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>           0x1f40, 0x1f46, 0x1f51, 0x1f52, 0x1f53, 0x1f54, 0x1f55, 0x1f56,
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>           0x1f57, 0x1f58, 0x1f60, 0x1f68, 0x1fb0, 0x1fb2, 0x1fd0, 0x1fd2,
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>           0x1fe0, 0x1fe2)),
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-7, CharRanges.withMembers(0x3f2, 0x1fe5)),
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-2, CharRanges.withMembers(0x1c4, 0x1c7, 0x1ca, 0x1f1)),
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-1, CharRanges.withMembers(
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>           0x100, 0x102, 0x104, 0x106, 0x108, 0x10a, 0x10c, 0x10e, 0x110, 0x112,
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>           0x114, 0x116, 0x118, 0x11a, 0x11c, 0x11e, 0x120, 0x122, 0x124, 0x126,
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>           0x128, 0x12a, 0x12c, 0x12e, 0x132, 0x134, 0x136, 0x139, 0x13b, 0x13d,
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>           0x13f, 0x141, 0x143, 0x145, 0x147, 0x14a, 0x14c, 0x14e, 0x150, 0x152,
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>           0x154, 0x156, 0x158, 0x15a, 0x15c, 0x15e, 0x160, 0x162, 0x164, 0x166,
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>           0x168, 0x16a, 0x16c, 0x16e, 0x170, 0x172, 0x174, 0x176, 0x179, 0x17b,
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>           0x17d, 0x182, 0x184, 0x187, 0x18b, 0x191, 0x198, 0x1a0, 0x1a2, 0x1a4,
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>           0x1a7, 0x1ac, 0x1af, 0x1b3, 0x1b5, 0x1b8, 0x1bc, 0x1c4, 0x1c7, 0x1ca,
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>           0x1cd, 0x1cf, 0x1d1, 0x1d3, 0x1d5, 0x1d7, 0x1d9, 0x1db, 0x1de, 0x1e0,
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>           0x1e2, 0x1e4, 0x1e6, 0x1e8, 0x1ea, 0x1ec, 0x1ee, 0x1f1, 0x1f4, 0x1f8,
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>           0x1fa, 0x1fc, 0x1fe, 0x200, 0x202, 0x204, 0x206, 0x208, 0x20a, 0x20c,
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>           0x20e, 0x210, 0x212, 0x214, 0x216, 0x218, 0x21a, 0x21c, 0x21e, 0x222,
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>           0x224, 0x226, 0x228, 0x22a, 0x22c, 0x22e, 0x230, 0x232, 0x23b, 0x241,
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>           0x246, 0x248, 0x24a, 0x24c, 0x24e, 0x3d8, 0x3da, 0x3dc, 0x3de, 0x3e0,
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>           0x3e2, 0x3e4, 0x3e6, 0x3e8, 0x3ea, 0x3ec, 0x3ee, 0x3f7, 0x3fa, 0x460,
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>           0x462, 0x464, 0x466, 0x468, 0x46a, 0x46c, 0x46e, 0x470, 0x472, 0x474,
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>           0x476, 0x478, 0x47a, 0x47c, 0x47e, 0x480, 0x48a, 0x48c, 0x48e, 0x490,
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>           0x492, 0x494, 0x496, 0x498, 0x49a, 0x49c, 0x49e, 0x4a0, 0x4a2, 0x4a4,
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>           0x4a6, 0x4a8, 0x4aa, 0x4ac, 0x4ae, 0x4b0, 0x4b2, 0x4b4, 0x4b6, 0x4b8,
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>           0x4ba, 0x4bc, 0x4be, 0x4c1, 0x4c3, 0x4c5, 0x4c7, 0x4c9, 0x4cb, 0x4cd,
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>           0x4d0, 0x4d2, 0x4d4, 0x4d6, 0x4d8, 0x4da, 0x4dc, 0x4de, 0x4e0, 0x4e2,
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>           0x4e4, 0x4e6, 0x4e8, 0x4ea, 0x4ec, 0x4ee, 0x4f0, 0x4f2, 0x4f4, 0x4f6,
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>           0x4f8, 0x4fa, 0x4fc, 0x4fe, 0x500, 0x502, 0x504, 0x506, 0x508, 0x50a,
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>           0x50c, 0x50e, 0x510, 0x512, 0x1e00, 0x1e02, 0x1e04, 0x1e06, 0x1e08,
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>           0x1e0a, 0x1e0c, 0x1e0e, 0x1e10, 0x1e12, 0x1e14, 0x1e16, 0x1e18,
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>           0x1e1a, 0x1e1c, 0x1e1e, 0x1e20, 0x1e22, 0x1e24, 0x1e26, 0x1e28,
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>           0x1e2a, 0x1e2c, 0x1e2e, 0x1e30, 0x1e32, 0x1e34, 0x1e36, 0x1e38,
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>           0x1e3a, 0x1e3c, 0x1e3e, 0x1e40, 0x1e42, 0x1e44, 0x1e46, 0x1e48,
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>           0x1e4a, 0x1e4c, 0x1e4e, 0x1e50, 0x1e52, 0x1e54, 0x1e56, 0x1e58,
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>           0x1e5a, 0x1e5c, 0x1e5e, 0x1e60, 0x1e62, 0x1e64, 0x1e66, 0x1e68,
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>           0x1e6a, 0x1e6c, 0x1e6e, 0x1e70, 0x1e72, 0x1e74, 0x1e76, 0x1e78,
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>           0x1e7a, 0x1e7c, 0x1e7e, 0x1e80, 0x1e82, 0x1e84, 0x1e86, 0x1e88,
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>           0x1e8a, 0x1e8c, 0x1e8e, 0x1e90, 0x1e92, 0x1e94, 0x1ea0, 0x1ea2,
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>           0x1ea4, 0x1ea6, 0x1ea8, 0x1eaa, 0x1eac, 0x1eae, 0x1eb0, 0x1eb2,
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>           0x1eb4, 0x1eb6, 0x1eb8, 0x1eba, 0x1ebc, 0x1ebe, 0x1ec0, 0x1ec2,
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>           0x1ec4, 0x1ec6, 0x1ec8, 0x1eca, 0x1ecc, 0x1ece, 0x1ed0, 0x1ed2,
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>           0x1ed4, 0x1ed6, 0x1ed8, 0x1eda, 0x1edc, 0x1ede, 0x1ee0, 0x1ee2,
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>           0x1ee4, 0x1ee6, 0x1ee8, 0x1eea, 0x1eec, 0x1eee, 0x1ef0, 0x1ef2,
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>           0x1ef4, 0x1ef6, 0x1ef8, 0x2183, 0x2c60, 0x2c67, 0x2c69, 0x2c6b,
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>           0x2c75, 0x2c80, 0x2c82, 0x2c84, 0x2c86, 0x2c88, 0x2c8a, 0x2c8c,
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>           0x2c8e, 0x2c90, 0x2c92, 0x2c94, 0x2c96, 0x2c98, 0x2c9a, 0x2c9c,
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>           0x2c9e, 0x2ca0, 0x2ca2, 0x2ca4, 0x2ca6, 0x2ca8, 0x2caa, 0x2cac,
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>           0x2cae, 0x2cb0, 0x2cb2, 0x2cb4, 0x2cb6, 0x2cb8, 0x2cba, 0x2cbc,
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>           0x2cbe, 0x2cc0, 0x2cc2, 0x2cc4, 0x2cc6, 0x2cc8, 0x2cca, 0x2ccc,
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>           0x2cce, 0x2cd0, 0x2cd2, 0x2cd4, 0x2cd6, 0x2cd8, 0x2cda, 0x2cdc,
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>           0x2cde, 0x2ce0, 0x2ce2)),
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(1, CharRanges.withMembers(
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>           0x101, 0x103, 0x105, 0x107, 0x109, 0x10b, 0x10d, 0x10f, 0x111, 0x113,
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>           0x115, 0x117, 0x119, 0x11b, 0x11d, 0x11f, 0x121, 0x123, 0x125, 0x127,
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>           0x129, 0x12b, 0x12d, 0x12f, 0x133, 0x135, 0x137, 0x13a, 0x13c, 0x13e,
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>           0x140, 0x142, 0x144, 0x146, 0x148, 0x14b, 0x14d, 0x14f, 0x151, 0x153,
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>           0x155, 0x157, 0x159, 0x15b, 0x15d, 0x15f, 0x161, 0x163, 0x165, 0x167,
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>           0x169, 0x16b, 0x16d, 0x16f, 0x171, 0x173, 0x175, 0x177, 0x17a, 0x17c,
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>           0x17e, 0x183, 0x185, 0x188, 0x18c, 0x192, 0x199, 0x1a1, 0x1a3, 0x1a5,
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>           0x1a8, 0x1ad, 0x1b0, 0x1b4, 0x1b6, 0x1b9, 0x1bd, 0x1c5, 0x1c8, 0x1cb,
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>           0x1ce, 0x1d0, 0x1d2, 0x1d4, 0x1d6, 0x1d8, 0x1da, 0x1dc, 0x1df, 0x1e1,
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>           0x1e3, 0x1e5, 0x1e7, 0x1e9, 0x1eb, 0x1ed, 0x1ef, 0x1f2, 0x1f5, 0x1f9,
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>           0x1fb, 0x1fd, 0x1ff, 0x201, 0x203, 0x205, 0x207, 0x209, 0x20b, 0x20d,
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>           0x20f, 0x211, 0x213, 0x215, 0x217, 0x219, 0x21b, 0x21d, 0x21f, 0x223,
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>           0x225, 0x227, 0x229, 0x22b, 0x22d, 0x22f, 0x231, 0x233, 0x23c, 0x242,
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>           0x247, 0x249, 0x24b, 0x24d, 0x24f, 0x3d9, 0x3db, 0x3dd, 0x3df, 0x3e1,
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>           0x3e3, 0x3e5, 0x3e7, 0x3e9, 0x3eb, 0x3ed, 0x3ef, 0x3f8, 0x3fb, 0x461,
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>           0x463, 0x465, 0x467, 0x469, 0x46b, 0x46d, 0x46f, 0x471, 0x473, 0x475,
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>           0x477, 0x479, 0x47b, 0x47d, 0x47f, 0x481, 0x48b, 0x48d, 0x48f, 0x491,
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>           0x493, 0x495, 0x497, 0x499, 0x49b, 0x49d, 0x49f, 0x4a1, 0x4a3, 0x4a5,
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>           0x4a7, 0x4a9, 0x4ab, 0x4ad, 0x4af, 0x4b1, 0x4b3, 0x4b5, 0x4b7, 0x4b9,
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>           0x4bb, 0x4bd, 0x4bf, 0x4c2, 0x4c4, 0x4c6, 0x4c8, 0x4ca, 0x4cc, 0x4ce,
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>           0x4d1, 0x4d3, 0x4d5, 0x4d7, 0x4d9, 0x4db, 0x4dd, 0x4df, 0x4e1, 0x4e3,
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>           0x4e5, 0x4e7, 0x4e9, 0x4eb, 0x4ed, 0x4ef, 0x4f1, 0x4f3, 0x4f5, 0x4f7,
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>           0x4f9, 0x4fb, 0x4fd, 0x4ff, 0x501, 0x503, 0x505, 0x507, 0x509, 0x50b,
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>           0x50d, 0x50f, 0x511, 0x513, 0x1e01, 0x1e03, 0x1e05, 0x1e07, 0x1e09,
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>           0x1e0b, 0x1e0d, 0x1e0f, 0x1e11, 0x1e13, 0x1e15, 0x1e17, 0x1e19,
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>           0x1e1b, 0x1e1d, 0x1e1f, 0x1e21, 0x1e23, 0x1e25, 0x1e27, 0x1e29,
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>           0x1e2b, 0x1e2d, 0x1e2f, 0x1e31, 0x1e33, 0x1e35, 0x1e37, 0x1e39,
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>           0x1e3b, 0x1e3d, 0x1e3f, 0x1e41, 0x1e43, 0x1e45, 0x1e47, 0x1e49,
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>           0x1e4b, 0x1e4d, 0x1e4f, 0x1e51, 0x1e53, 0x1e55, 0x1e57, 0x1e59,
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>           0x1e5b, 0x1e5d, 0x1e5f, 0x1e61, 0x1e63, 0x1e65, 0x1e67, 0x1e69,
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>           0x1e6b, 0x1e6d, 0x1e6f, 0x1e71, 0x1e73, 0x1e75, 0x1e77, 0x1e79,
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>           0x1e7b, 0x1e7d, 0x1e7f, 0x1e81, 0x1e83, 0x1e85, 0x1e87, 0x1e89,
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>           0x1e8b, 0x1e8d, 0x1e8f, 0x1e91, 0x1e93, 0x1e95, 0x1ea1, 0x1ea3,
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>           0x1ea5, 0x1ea7, 0x1ea9, 0x1eab, 0x1ead, 0x1eaf, 0x1eb1, 0x1eb3,
+<a class="jxr_linenumber" name="L422" href="#L422">422</a>           0x1eb5, 0x1eb7, 0x1eb9, 0x1ebb, 0x1ebd, 0x1ebf, 0x1ec1, 0x1ec3,
+<a class="jxr_linenumber" name="L423" href="#L423">423</a>           0x1ec5, 0x1ec7, 0x1ec9, 0x1ecb, 0x1ecd, 0x1ecf, 0x1ed1, 0x1ed3,
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>           0x1ed5, 0x1ed7, 0x1ed9, 0x1edb, 0x1edd, 0x1edf, 0x1ee1, 0x1ee3,
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>           0x1ee5, 0x1ee7, 0x1ee9, 0x1eeb, 0x1eed, 0x1eef, 0x1ef1, 0x1ef3,
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>           0x1ef5, 0x1ef7, 0x1ef9, 0x2184, 0x2c61, 0x2c68, 0x2c6a, 0x2c6c,
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>           0x2c76, 0x2c81, 0x2c83, 0x2c85, 0x2c87, 0x2c89, 0x2c8b, 0x2c8d,
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>           0x2c8f, 0x2c91, 0x2c93, 0x2c95, 0x2c97, 0x2c99, 0x2c9b, 0x2c9d,
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>           0x2c9f, 0x2ca1, 0x2ca3, 0x2ca5, 0x2ca7, 0x2ca9, 0x2cab, 0x2cad,
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>           0x2caf, 0x2cb1, 0x2cb3, 0x2cb5, 0x2cb7, 0x2cb9, 0x2cbb, 0x2cbd,
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>           0x2cbf, 0x2cc1, 0x2cc3, 0x2cc5, 0x2cc7, 0x2cc9, 0x2ccb, 0x2ccd,
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>           0x2ccf, 0x2cd1, 0x2cd3, 0x2cd5, 0x2cd7, 0x2cd9, 0x2cdb, 0x2cdd,
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>           0x2cdf, 0x2ce1, 0x2ce3)),
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(2, CharRanges.withMembers(0x1c6, 0x1c9, 0x1cc, 0x1f3)),
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(7, CharRanges.withMembers(0x3f9, 0x1fec)),
+<a class="jxr_linenumber" name="L436" href="#L436">436</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(8, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>           0x1f08, 0x1f10, 0x1f18, 0x1f1e, 0x1f28, 0x1f30, 0x1f38, 0x1f40,
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>           0x1f48, 0x1f4e, 0x1f59, 0x1f5a, 0x1f5b, 0x1f5c, 0x1f5d, 0x1f5e,
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>           0x1f5f, 0x1f60, 0x1f68, 0x1f70, 0x1fb8, 0x1fba, 0x1fd8, 0x1fda,
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>           0x1fe8, 0x1fea)),
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(15, CharRanges.withMembers(0x4cf)),
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(16, CharRanges.withRanges(0x2170, 0x2180)),
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(26, CharRanges.withRanges(0x24d0, 0x24ea)),
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(28, CharRanges.withMembers(0x214e)),
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(31, CharRanges.withMembers(0x3c2)),
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(32, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>           0x61, 0x7b, 0xe0, 0xf7, 0xf8, 0xff, 0x3b1, 0x3c2, 0x3c3, 0x3cc,
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>           0x430, 0x450, 0xff41, 0xff5b)),
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(37, CharRanges.withRanges(0x3ad, 0x3b0)),
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(38, CharRanges.withMembers(0x3ac)),
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(47, CharRanges.withMembers(0x3d5)),
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(48, CharRanges.withRanges(0x561, 0x587, 0x2c30, 0x2c5f)),
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(54, CharRanges.withMembers(0x3d6)),
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(56, CharRanges.withMembers(0x1f7)),
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(57, CharRanges.withMembers(0x3d1)),
+<a class="jxr_linenumber" name="L456" href="#L456">456</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(59, CharRanges.withMembers(0x1e9b)),
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(62, CharRanges.withMembers(0x3d0)),
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(63, CharRanges.withRanges(0x3cd, 0x3cf)),
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(64, CharRanges.withMembers(0x3cc)),
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(69, CharRanges.withMembers(0x289)),
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(71, CharRanges.withMembers(0x28c)),
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(74, CharRanges.withRanges(0x1fba, 0x1fbc)),
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(79, CharRanges.withMembers(0x1dd)),
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(80, CharRanges.withRanges(0x3f1, 0x3f2, 0x450, 0x460)),
+<a class="jxr_linenumber" name="L465" href="#L465">465</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(84, CharRanges.withMembers(0x399)),
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(86, CharRanges.withRanges(0x3f0, 0x3f1, 0x1fc8, 0x1fcc)),
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(96, CharRanges.withMembers(0x3f5)),
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(97, CharRanges.withMembers(0x1f6)),
+<a class="jxr_linenumber" name="L469" href="#L469">469</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(100, CharRanges.withRanges(0x1fda, 0x1fdc)),
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(112, CharRanges.withRanges(0x1fea, 0x1fec)),
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(121, CharRanges.withMembers(0x178)),
+<a class="jxr_linenumber" name="L472" href="#L472">472</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(126, CharRanges.withRanges(0x1ffa, 0x1ffc)),
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(128, CharRanges.withRanges(0x1ff8, 0x1ffa)),
+<a class="jxr_linenumber" name="L474" href="#L474">474</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(130, CharRanges.withRanges(0x220, 0x221, 0x3fd, 0x400)),
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(163, CharRanges.withMembers(0x23d)),
+<a class="jxr_linenumber" name="L476" href="#L476">476</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(195, CharRanges.withMembers(0x243)),
+<a class="jxr_linenumber" name="L477" href="#L477">477</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(202, CharRanges.withMembers(0x259)),
+<a class="jxr_linenumber" name="L478" href="#L478">478</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(203, CharRanges.withMembers(0x25b)),
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(205, CharRanges.withRanges(0x256, 0x258, 0x260, 0x261)),
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(206, CharRanges.withMembers(0x254)),
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(207, CharRanges.withMembers(0x263)),
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(209, CharRanges.withMembers(0x268)),
+<a class="jxr_linenumber" name="L483" href="#L483">483</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(210, CharRanges.withMembers(0x253)),
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(211, CharRanges.withMembers(0x269, 0x26f)),
+<a class="jxr_linenumber" name="L485" href="#L485">485</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(213, CharRanges.withMembers(0x272)),
+<a class="jxr_linenumber" name="L486" href="#L486">486</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(214, CharRanges.withMembers(0x275)),
+<a class="jxr_linenumber" name="L487" href="#L487">487</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(217, CharRanges.withRanges(0x28a, 0x28c)),
+<a class="jxr_linenumber" name="L488" href="#L488">488</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(218, CharRanges.withMembers(0x280, 0x283, 0x288)),
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(219, CharRanges.withMembers(0x292)),
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(743, CharRanges.withMembers(0x39c)),
+<a class="jxr_linenumber" name="L491" href="#L491">491</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(3814, CharRanges.withMembers(0x2c63)),
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(7205, CharRanges.withMembers(0x1fbe)),
+<a class="jxr_linenumber" name="L493" href="#L493">493</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(7264, CharRanges.withRanges(0x2d00, 0x2d26)),
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10727, CharRanges.withMembers(0x2c64)),
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10743, CharRanges.withMembers(0x2c62)),
+<a class="jxr_linenumber" name="L496" href="#L496">496</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10792, CharRanges.withMembers(0x2c66)),
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10795, CharRanges.withMembers(0x2c65))
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>       );
+<a class="jxr_linenumber" name="L499" href="#L499">499</a> 
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> ImmutableList&lt;DeltaSet&gt; CANON_DELTA_SETS
+<a class="jxr_linenumber" name="L501" href="#L501">501</a>       = ImmutableList.of(
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10743, CharRanges.withMembers(0x26b)),
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-10727, CharRanges.withMembers(0x27d)),
+<a class="jxr_linenumber" name="L504" href="#L504">504</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-3814, CharRanges.withMembers(0x1d7d)),
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-743, CharRanges.withMembers(0xb5)),
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-195, CharRanges.withMembers(0x180)),
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-163, CharRanges.withMembers(0x19a)),
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-130, CharRanges.withRanges(0x19e, 0x19f, 0x37b, 0x37e)),
+<a class="jxr_linenumber" name="L509" href="#L509">509</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-128, CharRanges.withRanges(0x1f78, 0x1f7a)),
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-126, CharRanges.withRanges(0x1f7c, 0x1f7e)),
+<a class="jxr_linenumber" name="L511" href="#L511">511</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-121, CharRanges.withMembers(0xff)),
+<a class="jxr_linenumber" name="L512" href="#L512">512</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-112, CharRanges.withRanges(0x1f7a, 0x1f7c)),
+<a class="jxr_linenumber" name="L513" href="#L513">513</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-100, CharRanges.withRanges(0x1f76, 0x1f78)),
+<a class="jxr_linenumber" name="L514" href="#L514">514</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-97, CharRanges.withMembers(0x195)),
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-86, CharRanges.withRanges(0x1f72, 0x1f76)),
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-84, CharRanges.withMembers(0x345)),
+<a class="jxr_linenumber" name="L517" href="#L517">517</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-74, CharRanges.withRanges(0x1f70, 0x1f72)),
+<a class="jxr_linenumber" name="L518" href="#L518">518</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-56, CharRanges.withMembers(0x1bf)),
+<a class="jxr_linenumber" name="L519" href="#L519">519</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-8, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L520" href="#L520">520</a>           0x1f00, 0x1f08, 0x1f10, 0x1f16, 0x1f20, 0x1f28, 0x1f30, 0x1f38,
+<a class="jxr_linenumber" name="L521" href="#L521">521</a>           0x1f40, 0x1f46, 0x1f51, 0x1f52, 0x1f53, 0x1f54, 0x1f55, 0x1f56,
+<a class="jxr_linenumber" name="L522" href="#L522">522</a>           0x1f57, 0x1f58, 0x1f60, 0x1f68, 0x1fb0, 0x1fb2, 0x1fd0, 0x1fd2,
+<a class="jxr_linenumber" name="L523" href="#L523">523</a>           0x1fe0, 0x1fe2)),
+<a class="jxr_linenumber" name="L524" href="#L524">524</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(-7, CharRanges.withMembers(0x3f2, 0x1fe5)),
+<a class="jxr_linenumber" name="L525" href="#L525">525</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(1, CharRanges.withMembers(
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>           0x101, 0x103, 0x105, 0x107, 0x109, 0x10b, 0x10d, 0x10f, 0x111, 0x113,
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>           0x115, 0x117, 0x119, 0x11b, 0x11d, 0x11f, 0x121, 0x123, 0x125, 0x127,
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>           0x129, 0x12b, 0x12d, 0x12f, 0x133, 0x135, 0x137, 0x13a, 0x13c, 0x13e,
+<a class="jxr_linenumber" name="L529" href="#L529">529</a>           0x140, 0x142, 0x144, 0x146, 0x148, 0x14b, 0x14d, 0x14f, 0x151, 0x153,
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>           0x155, 0x157, 0x159, 0x15b, 0x15d, 0x15f, 0x161, 0x163, 0x165, 0x167,
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>           0x169, 0x16b, 0x16d, 0x16f, 0x171, 0x173, 0x175, 0x177, 0x17a, 0x17c,
+<a class="jxr_linenumber" name="L532" href="#L532">532</a>           0x17e, 0x183, 0x185, 0x188, 0x18c, 0x192, 0x199, 0x1a1, 0x1a3, 0x1a5,
+<a class="jxr_linenumber" name="L533" href="#L533">533</a>           0x1a8, 0x1ad, 0x1b0, 0x1b4, 0x1b6, 0x1b9, 0x1bd, 0x1c5, 0x1c8, 0x1cb,
+<a class="jxr_linenumber" name="L534" href="#L534">534</a>           0x1ce, 0x1d0, 0x1d2, 0x1d4, 0x1d6, 0x1d8, 0x1da, 0x1dc, 0x1df, 0x1e1,
+<a class="jxr_linenumber" name="L535" href="#L535">535</a>           0x1e3, 0x1e5, 0x1e7, 0x1e9, 0x1eb, 0x1ed, 0x1ef, 0x1f2, 0x1f5, 0x1f9,
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>           0x1fb, 0x1fd, 0x1ff, 0x201, 0x203, 0x205, 0x207, 0x209, 0x20b, 0x20d,
+<a class="jxr_linenumber" name="L537" href="#L537">537</a>           0x20f, 0x211, 0x213, 0x215, 0x217, 0x219, 0x21b, 0x21d, 0x21f, 0x223,
+<a class="jxr_linenumber" name="L538" href="#L538">538</a>           0x225, 0x227, 0x229, 0x22b, 0x22d, 0x22f, 0x231, 0x233, 0x23c, 0x242,
+<a class="jxr_linenumber" name="L539" href="#L539">539</a>           0x247, 0x249, 0x24b, 0x24d, 0x24f, 0x3d9, 0x3db, 0x3dd, 0x3df, 0x3e1,
+<a class="jxr_linenumber" name="L540" href="#L540">540</a>           0x3e3, 0x3e5, 0x3e7, 0x3e9, 0x3eb, 0x3ed, 0x3ef, 0x3f8, 0x3fb, 0x461,
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>           0x463, 0x465, 0x467, 0x469, 0x46b, 0x46d, 0x46f, 0x471, 0x473, 0x475,
+<a class="jxr_linenumber" name="L542" href="#L542">542</a>           0x477, 0x479, 0x47b, 0x47d, 0x47f, 0x481, 0x48b, 0x48d, 0x48f, 0x491,
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>           0x493, 0x495, 0x497, 0x499, 0x49b, 0x49d, 0x49f, 0x4a1, 0x4a3, 0x4a5,
+<a class="jxr_linenumber" name="L544" href="#L544">544</a>           0x4a7, 0x4a9, 0x4ab, 0x4ad, 0x4af, 0x4b1, 0x4b3, 0x4b5, 0x4b7, 0x4b9,
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>           0x4bb, 0x4bd, 0x4bf, 0x4c2, 0x4c4, 0x4c6, 0x4c8, 0x4ca, 0x4cc, 0x4ce,
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>           0x4d1, 0x4d3, 0x4d5, 0x4d7, 0x4d9, 0x4db, 0x4dd, 0x4df, 0x4e1, 0x4e3,
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>           0x4e5, 0x4e7, 0x4e9, 0x4eb, 0x4ed, 0x4ef, 0x4f1, 0x4f3, 0x4f5, 0x4f7,
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>           0x4f9, 0x4fb, 0x4fd, 0x4ff, 0x501, 0x503, 0x505, 0x507, 0x509, 0x50b,
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>           0x50d, 0x50f, 0x511, 0x513, 0x1e01, 0x1e03, 0x1e05, 0x1e07, 0x1e09,
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>           0x1e0b, 0x1e0d, 0x1e0f, 0x1e11, 0x1e13, 0x1e15, 0x1e17, 0x1e19,
+<a class="jxr_linenumber" name="L551" href="#L551">551</a>           0x1e1b, 0x1e1d, 0x1e1f, 0x1e21, 0x1e23, 0x1e25, 0x1e27, 0x1e29,
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>           0x1e2b, 0x1e2d, 0x1e2f, 0x1e31, 0x1e33, 0x1e35, 0x1e37, 0x1e39,
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>           0x1e3b, 0x1e3d, 0x1e3f, 0x1e41, 0x1e43, 0x1e45, 0x1e47, 0x1e49,
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>           0x1e4b, 0x1e4d, 0x1e4f, 0x1e51, 0x1e53, 0x1e55, 0x1e57, 0x1e59,
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>           0x1e5b, 0x1e5d, 0x1e5f, 0x1e61, 0x1e63, 0x1e65, 0x1e67, 0x1e69,
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>           0x1e6b, 0x1e6d, 0x1e6f, 0x1e71, 0x1e73, 0x1e75, 0x1e77, 0x1e79,
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>           0x1e7b, 0x1e7d, 0x1e7f, 0x1e81, 0x1e83, 0x1e85, 0x1e87, 0x1e89,
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>           0x1e8b, 0x1e8d, 0x1e8f, 0x1e91, 0x1e93, 0x1e95, 0x1ea1, 0x1ea3,
+<a class="jxr_linenumber" name="L559" href="#L559">559</a>           0x1ea5, 0x1ea7, 0x1ea9, 0x1eab, 0x1ead, 0x1eaf, 0x1eb1, 0x1eb3,
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>           0x1eb5, 0x1eb7, 0x1eb9, 0x1ebb, 0x1ebd, 0x1ebf, 0x1ec1, 0x1ec3,
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>           0x1ec5, 0x1ec7, 0x1ec9, 0x1ecb, 0x1ecd, 0x1ecf, 0x1ed1, 0x1ed3,
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>           0x1ed5, 0x1ed7, 0x1ed9, 0x1edb, 0x1edd, 0x1edf, 0x1ee1, 0x1ee3,
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>           0x1ee5, 0x1ee7, 0x1ee9, 0x1eeb, 0x1eed, 0x1eef, 0x1ef1, 0x1ef3,
+<a class="jxr_linenumber" name="L564" href="#L564">564</a>           0x1ef5, 0x1ef7, 0x1ef9, 0x2184, 0x2c61, 0x2c68, 0x2c6a, 0x2c6c,
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>           0x2c76, 0x2c81, 0x2c83, 0x2c85, 0x2c87, 0x2c89, 0x2c8b, 0x2c8d,
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>           0x2c8f, 0x2c91, 0x2c93, 0x2c95, 0x2c97, 0x2c99, 0x2c9b, 0x2c9d,
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>           0x2c9f, 0x2ca1, 0x2ca3, 0x2ca5, 0x2ca7, 0x2ca9, 0x2cab, 0x2cad,
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>           0x2caf, 0x2cb1, 0x2cb3, 0x2cb5, 0x2cb7, 0x2cb9, 0x2cbb, 0x2cbd,
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>           0x2cbf, 0x2cc1, 0x2cc3, 0x2cc5, 0x2cc7, 0x2cc9, 0x2ccb, 0x2ccd,
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>           0x2ccf, 0x2cd1, 0x2cd3, 0x2cd5, 0x2cd7, 0x2cd9, 0x2cdb, 0x2cdd,
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>           0x2cdf, 0x2ce1, 0x2ce3)),
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(2, CharRanges.withMembers(0x1c6, 0x1c9, 0x1cc, 0x1f3)),
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(15, CharRanges.withMembers(0x4cf)),
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(16, CharRanges.withRanges(0x2170, 0x2180)),
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(26, CharRanges.withRanges(0x24d0, 0x24ea)),
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(28, CharRanges.withMembers(0x214e)),
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(31, CharRanges.withMembers(0x3c2)),
+<a class="jxr_linenumber" name="L578" href="#L578">578</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(32, CharRanges.withRanges(
+<a class="jxr_linenumber" name="L579" href="#L579">579</a>           0x61, 0x7b, 0xe0, 0xf7, 0xf8, 0xff, 0x3b1, 0x3c2, 0x3c3, 0x3cc, 0x430,
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>           0x450, 0xff41, 0xff5b)),
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(37, CharRanges.withRanges(0x3ad, 0x3b0)),
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(38, CharRanges.withMembers(0x3ac)),
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(47, CharRanges.withMembers(0x3d5)),
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(48, CharRanges.withRanges(0x561, 0x587, 0x2c30, 0x2c5f)),
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(54, CharRanges.withMembers(0x3d6)),
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(57, CharRanges.withMembers(0x3d1)),
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(59, CharRanges.withMembers(0x1e9b)),
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(62, CharRanges.withMembers(0x3d0)),
+<a class="jxr_linenumber" name="L589" href="#L589">589</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(63, CharRanges.withRanges(0x3cd, 0x3cf)),
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(64, CharRanges.withMembers(0x3cc)),
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(69, CharRanges.withMembers(0x289)),
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(71, CharRanges.withMembers(0x28c)),
+<a class="jxr_linenumber" name="L593" href="#L593">593</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(79, CharRanges.withMembers(0x1dd)),
+<a class="jxr_linenumber" name="L594" href="#L594">594</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(80, CharRanges.withRanges(0x3f1, 0x3f2, 0x450, 0x460)),
+<a class="jxr_linenumber" name="L595" href="#L595">595</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(86, CharRanges.withMembers(0x3f0)),
+<a class="jxr_linenumber" name="L596" href="#L596">596</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(96, CharRanges.withMembers(0x3f5)),
+<a class="jxr_linenumber" name="L597" href="#L597">597</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(202, CharRanges.withMembers(0x259)),
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(203, CharRanges.withMembers(0x25b)),
+<a class="jxr_linenumber" name="L599" href="#L599">599</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(205, CharRanges.withRanges(0x256, 0x258, 0x260, 0x261)),
+<a class="jxr_linenumber" name="L600" href="#L600">600</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(206, CharRanges.withMembers(0x254)),
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(207, CharRanges.withMembers(0x263)),
+<a class="jxr_linenumber" name="L602" href="#L602">602</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(209, CharRanges.withMembers(0x268)),
+<a class="jxr_linenumber" name="L603" href="#L603">603</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(210, CharRanges.withMembers(0x253)),
+<a class="jxr_linenumber" name="L604" href="#L604">604</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(211, CharRanges.withMembers(0x269, 0x26f)),
+<a class="jxr_linenumber" name="L605" href="#L605">605</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(213, CharRanges.withMembers(0x272)),
+<a class="jxr_linenumber" name="L606" href="#L606">606</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(214, CharRanges.withMembers(0x275)),
+<a class="jxr_linenumber" name="L607" href="#L607">607</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(217, CharRanges.withRanges(0x28a, 0x28c)),
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(218, CharRanges.withMembers(0x280, 0x283, 0x288)),
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(219, CharRanges.withMembers(0x292)),
+<a class="jxr_linenumber" name="L610" href="#L610">610</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(7205, CharRanges.withMembers(0x1fbe)),
+<a class="jxr_linenumber" name="L611" href="#L611">611</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(7264, CharRanges.withRanges(0x2d00, 0x2d26)),
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10792, CharRanges.withMembers(0x2c66)),
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>       <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(10795, CharRanges.withMembers(0x2c65))
+<a class="jxr_linenumber" name="L614" href="#L614">614</a>       );
+<a class="jxr_linenumber" name="L615" href="#L615">615</a> 
+<a class="jxr_linenumber" name="L616" href="#L616">616</a> 
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L618" href="#L618">618</a> <em class="jxr_javadoccomment">   * A group of code units such that for all cu in codeUnits, cu is equivalent,</em>
+<a class="jxr_linenumber" name="L619" href="#L619">619</a> <em class="jxr_javadoccomment">   * case-insensitively, to cu + delta.</em>
+<a class="jxr_linenumber" name="L620" href="#L620">620</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L621" href="#L621">621</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a> {
+<a class="jxr_linenumber" name="L622" href="#L622">622</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> delta;
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>     <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> codeUnits;
+<a class="jxr_linenumber" name="L624" href="#L624">624</a> 
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>     <a href="../../../../../com/google/javascript/jscomp/regex/CaseCanonicalize.html">DeltaSet</a>(<strong class="jxr_keyword">int</strong> delta, <a href="../../../../../com/google/javascript/jscomp/regex/CharRanges.html">CharRanges</a> codeUnits) {
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>       <strong class="jxr_keyword">this</strong>.delta = delta;
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>       <strong class="jxr_keyword">this</strong>.codeUnits = codeUnits;
+<a class="jxr_linenumber" name="L628" href="#L628">628</a>     }
+<a class="jxr_linenumber" name="L629" href="#L629">629</a>   }
+<a class="jxr_linenumber" name="L630" href="#L630">630</a> 
+<a class="jxr_linenumber" name="L631" href="#L631">631</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

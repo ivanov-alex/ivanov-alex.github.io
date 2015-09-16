@@ -1,0 +1,607 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>BuildTool xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../apidocs/com/google/devtools/build/lib/buildtool/BuildTool.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">// Copyright 2014 Google Inc. All rights reserved.</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment">// Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment">// you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment">// You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment">//    http://www.apache.org/licenses/LICENSE-2.0</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment">// Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment">// distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment">// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment">// See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment">// limitations under the License.</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">package</strong> com.google.devtools.build.lib.buildtool;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> com.google.common.annotations.VisibleForTesting;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Joiner;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Preconditions;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Stopwatch;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Throwables;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Verify;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.ImmutableMap;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.actions.BuildFailedException;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.actions.ExecutorInitException;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.actions.TestExecException;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.AnalysisPhaseCompleteEvent;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.BuildInfoEvent;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.BuildView;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.BuildView.AnalysisResult;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.ConfigurationsCreatedEvent;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.ConfiguredAttributeMapper;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.ConfiguredTarget;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.LicensesProvider;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.LicensesProvider.TargetLicense;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.MakeEnvironmentEvent;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.RuleConfiguredTarget;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.ViewCreationFailedException;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.BuildConfiguration;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.BuildConfigurationCollection;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.BuildOptions;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.DefaultsPackage;
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.config.InvalidConfigurationException;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.constraints.ConstraintSemantics;
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.constraints.EnvironmentCollection;
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.analysis.constraints.SupportedEnvironmentsProvider;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.buildtool.BuildRequest.BuildRequestOptions;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.buildtool.buildevent.BuildCompleteEvent;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.buildtool.buildevent.BuildInterruptedEvent;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.buildtool.buildevent.BuildStartingEvent;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.buildtool.buildevent.TestFilteringCompleteEvent;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.cmdline.PackageIdentifier;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.cmdline.TargetParsingException;
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.collect.nestedset.NestedSet;
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.events.Event;
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.events.OutputFilter;
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.events.Reporter;
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.InputFile;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.License;
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.License.DistributionType;
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.NoSuchPackageException;
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.NoSuchTargetException;
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Rule;
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Target;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.TargetUtils;
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.packages.Type;
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.pkgcache.LoadingFailedException;
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.pkgcache.LoadingPhaseRunner.Callback;
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.pkgcache.LoadingPhaseRunner.LoadingResult;
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.pkgcache.PackageManager;
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.profiler.ProfilePhase;
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.profiler.Profiler;
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.runtime.BlazeRuntime;
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.runtime.CommandEnvironment;
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.syntax.Label;
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.util.AbruptExitException;
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.util.ExitCode;
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.vfs.Path;
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <strong class="jxr_keyword">import</strong> com.google.devtools.build.lib.vfs.PathFragment;
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  <strong class="jxr_keyword">import</strong> java.util.Collection;
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>  <strong class="jxr_keyword">import</strong> java.util.Set;
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>  <strong class="jxr_keyword">import</strong> java.util.concurrent.TimeUnit;
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  <strong class="jxr_keyword">import</strong> java.util.logging.Logger;
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>  <strong class="jxr_keyword">import</strong> java.util.regex.Pattern;
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>  
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>  <em class="jxr_javadoccomment"> * Provides the bulk of the implementation of the 'blaze build' command.</em>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;The various concrete build command classes handle the command options and request</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_javadoccomment"> * setup, then delegate the handling of the request (the building of targets) to this class.</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;The main entry point is {@link #buildTargets}.</em>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;This class is always instantiated and managed as a singleton, being constructed and held by</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  <em class="jxr_javadoccomment"> * {@link BlazeRuntime}. This is so multiple kinds of build commands can share this single</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  <em class="jxr_javadoccomment"> * instance.</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;Most of analysis is handled in {@link BuildView}, and execution in {@link ExecutionTool}.</em>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildTool.html">BuildTool</a> {
+<a class="jxr_linenumber" name="L102" href="#L102">102</a> 
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Logger LOG = Logger.getLogger(BuildTool.<strong class="jxr_keyword">class</strong>.getName());
+<a class="jxr_linenumber" name="L104" href="#L104">104</a> 
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/runtime/CommandEnvironment.html">CommandEnvironment</a> env;
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/runtime/BlazeRuntime.html">BlazeRuntime</a> runtime;
+<a class="jxr_linenumber" name="L107" href="#L107">107</a> 
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> <em class="jxr_javadoccomment">   * Constructs a BuildTool.</em>
+<a class="jxr_linenumber" name="L110" href="#L110">110</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L111" href="#L111">111</a> <em class="jxr_javadoccomment">   * @param env a reference to the command environment of the currently executing command</em>
+<a class="jxr_linenumber" name="L112" href="#L112">112</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildTool.html">BuildTool</a>(<a href="../../../../../../com/google/devtools/build/lib/runtime/CommandEnvironment.html">CommandEnvironment</a> env) {
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>     <strong class="jxr_keyword">this</strong>.env = env;
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>     <strong class="jxr_keyword">this</strong>.runtime = env.getRuntime();
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>   }
+<a class="jxr_linenumber" name="L117" href="#L117">117</a> 
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> <em class="jxr_javadoccomment">   * The crux of the build system. Builds the targets specified in the request using the specified</em>
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> <em class="jxr_javadoccomment">   * Executor.</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Performs loading, analysis and execution for the specified set of targets, honoring the</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a> <em class="jxr_javadoccomment">   * configuration options in the BuildRequest. Returns normally iff successful, throws an exception</em>
+<a class="jxr_linenumber" name="L124" href="#L124">124</a> <em class="jxr_javadoccomment">   * otherwise.</em>
+<a class="jxr_linenumber" name="L125" href="#L125">125</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L126" href="#L126">126</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Callers must ensure that {@link #stopRequest} is called after this method, even if it</em>
+<a class="jxr_linenumber" name="L127" href="#L127">127</a> <em class="jxr_javadoccomment">   * throws.</em>
+<a class="jxr_linenumber" name="L128" href="#L128">128</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L129" href="#L129">129</a> <em class="jxr_javadoccomment">   * &lt;p&gt;The caller is responsible for setting up and syncing the package cache.</em>
+<a class="jxr_linenumber" name="L130" href="#L130">130</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L131" href="#L131">131</a> <em class="jxr_javadoccomment">   * &lt;p&gt;During this function's execution, the actualTargets and successfulTargets</em>
+<a class="jxr_linenumber" name="L132" href="#L132">132</a> <em class="jxr_javadoccomment">   * fields of the request object are set.</em>
+<a class="jxr_linenumber" name="L133" href="#L133">133</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L134" href="#L134">134</a> <em class="jxr_javadoccomment">   * @param request the build request that this build tool is servicing, which specifies various</em>
+<a class="jxr_linenumber" name="L135" href="#L135">135</a> <em class="jxr_javadoccomment">   *        options; during this method's execution, the actualTargets and successfulTargets fields</em>
+<a class="jxr_linenumber" name="L136" href="#L136">136</a> <em class="jxr_javadoccomment">   *        of the request object are populated</em>
+<a class="jxr_linenumber" name="L137" href="#L137">137</a> <em class="jxr_javadoccomment">   * @param result the build result that is the mutable result of this build</em>
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> <em class="jxr_javadoccomment">   * @param validator target validator</em>
+<a class="jxr_linenumber" name="L139" href="#L139">139</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> buildTargets(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request, <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildResult.html">BuildResult</a> result, <a href="../../../../../../com/google/devtools/build/lib/buildtool/TargetValidator.html">TargetValidator</a> validator)
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>       <strong class="jxr_keyword">throws</strong> BuildFailedException, LocalEnvironmentException,
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>              InterruptedException, ViewCreationFailedException,
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>              TargetParsingException, LoadingFailedException, ExecutorInitException,
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>              AbruptExitException, InvalidConfigurationException, <a href="../../../../../../com/google/devtools/build/lib/actions/TestExecException.html">TestExecException</a> {
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>     validateOptions(request);
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>     <a href="../../../../../../com/google/devtools/build/lib/analysis/config/BuildOptions.html">BuildOptions</a> buildOptions = runtime.createBuildOptions(request);
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     <em class="jxr_comment">// Sync the package manager before sending the BuildStartingEvent in runLoadingPhase()</em>
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>     runtime.setupPackageCache(request.getPackageCacheOptions(),
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>         DefaultsPackage.getDefaultsPackageContent(buildOptions));
+<a class="jxr_linenumber" name="L150" href="#L150">150</a> 
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>     <a href="../../../../../../com/google/devtools/build/lib/buildtool/ExecutionTool.html">ExecutionTool</a> executionTool = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>     <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">LoadingResult</a> loadingResult = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>     <a href="../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfigurationCollection.html">BuildConfigurationCollection</a> configurations = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>       env.getEventBus().post(<strong class="jxr_keyword">new</strong> BuildStartingEvent(runtime.getOutputFileSystem(), request));
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>       LOG.info(<span class="jxr_string">"Build identifier: "</span> + request.getId());
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>       executionTool = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/ExecutionTool.html">ExecutionTool</a>(env, request);
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>       <strong class="jxr_keyword">if</strong> (needsExecutionPhase(request.getBuildOptions())) {
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>         <em class="jxr_comment">// Initialize the execution tool early if we need it. This hides the latency of setting up</em>
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         <em class="jxr_comment">// the execution backends.</em>
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>         executionTool.init();
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>       }
+<a class="jxr_linenumber" name="L163" href="#L163">163</a> 
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>       <em class="jxr_comment">// Loading phase.</em>
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>       loadingResult = runLoadingPhase(request, validator);
+<a class="jxr_linenumber" name="L166" href="#L166">166</a> 
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>       <em class="jxr_comment">// Create the build configurations.</em>
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>       <strong class="jxr_keyword">if</strong> (!request.getMultiCpus().isEmpty()) {
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>         getReporter().handle(Event.warn(
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>             <span class="jxr_string">"The --experimental_multi_cpu option is _very_ experimental and only intended for "</span>
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>             + <span class="jxr_string">"internal testing at this time. If you do not work on the build tool, then you "</span>
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>             + <span class="jxr_string">"should stop now!"</span>));
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>         <strong class="jxr_keyword">if</strong> (!<span class="jxr_string">"build"</span>.equals(request.getCommandName()) &amp;&amp; !<span class="jxr_string">"test"</span>.equals(request.getCommandName())) {
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>           <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/config/InvalidConfigurationException.html">InvalidConfigurationException</a>(
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>               <span class="jxr_string">"The experimental setting to select multiple CPUs is only supported for 'build' and "</span>
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>               + <span class="jxr_string">"'test' right now!"</span>);
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         }
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>       }
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>       configurations = runtime.getSkyframeExecutor().createConfigurations(
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>             runtime.getConfigurationFactory(), buildOptions, runtime.getDirectories(),
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>             request.getMultiCpus(), request.getViewOptions().keepGoing);
+<a class="jxr_linenumber" name="L182" href="#L182">182</a> 
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>       env.getEventBus().post(<strong class="jxr_keyword">new</strong> ConfigurationsCreatedEvent(configurations));
+<a class="jxr_linenumber" name="L184" href="#L184">184</a>       runtime.throwPendingException();
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>       <strong class="jxr_keyword">if</strong> (configurations.getTargetConfigurations().size() == 1) {
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>         <em class="jxr_comment">// TODO(bazel-team): This is not optimal - we retain backwards compatibility in the case</em>
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>         <em class="jxr_comment">// where there's only a single configuration, but we don't send an event in the multi-config</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a>         <em class="jxr_comment">// case. Can we do better? [multi-config]</em>
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>         env.getEventBus().post(<strong class="jxr_keyword">new</strong> MakeEnvironmentEvent(
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>             configurations.getTargetConfigurations().get(0).getMakeEnvironment()));
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>       }
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>       LOG.info(<span class="jxr_string">"Configurations created"</span>);
+<a class="jxr_linenumber" name="L193" href="#L193">193</a> 
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>       <em class="jxr_comment">// Analysis phase.</em>
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/BuildView.html">AnalysisResult</a> analysisResult = runAnalysisPhase(request, loadingResult, configurations);
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>       result.setActualTargets(analysisResult.getTargetsToBuild());
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>       result.setTestTargets(analysisResult.getTargetsToTest());
+<a class="jxr_linenumber" name="L198" href="#L198">198</a> 
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>       checkTargetEnvironmentRestrictions(analysisResult.getTargetsToBuild(),
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>           runtime.getPackageManager());
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>       reportTargets(analysisResult);
+<a class="jxr_linenumber" name="L202" href="#L202">202</a> 
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>       <em class="jxr_comment">// Execution phase.</em>
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>       <strong class="jxr_keyword">if</strong> (needsExecutionPhase(request.getBuildOptions())) {
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>         runtime.getSkyframeExecutor().injectTopLevelContext(request.getTopLevelArtifactContext());
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>         executionTool.executeBuild(request.getId(), analysisResult, result,
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>             configurations, transformPackageRoots(loadingResult.getPackageRoots()));
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>       }
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> 
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>       String delayedErrorMsg = analysisResult.getError();
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>       <strong class="jxr_keyword">if</strong> (delayedErrorMsg != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L212" href="#L212">212</a>         <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/actions/BuildFailedException.html">BuildFailedException</a>(delayedErrorMsg);
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>       }
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>     } <strong class="jxr_keyword">catch</strong> (RuntimeException e) {
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>       <em class="jxr_comment">// Print an error message for unchecked runtime exceptions. This does not concern Error</em>
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>       <em class="jxr_comment">// subclasses such as OutOfMemoryError.</em>
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>       request.getOutErr().printErrLn(<span class="jxr_string">"Unhandled exception thrown during build; message: "</span> +
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>           e.getMessage());
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>       <strong class="jxr_keyword">throw</strong> e;
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     } <strong class="jxr_keyword">finally</strong> {
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>       <em class="jxr_comment">// Delete dirty nodes to ensure that they do not accumulate indefinitely.</em>
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>       <strong class="jxr_keyword">long</strong> versionWindow = request.getViewOptions().versionWindowForDirtyNodeGc;
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>       <strong class="jxr_keyword">if</strong> (versionWindow != -1) {
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>         runtime.getSkyframeExecutor().deleteOldNodes(versionWindow);
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>       }
+<a class="jxr_linenumber" name="L226" href="#L226">226</a> 
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>       <strong class="jxr_keyword">if</strong> (executionTool != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>         executionTool.shutdown();
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>       }
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>       <em class="jxr_comment">// The workspace status actions will not run with certain flags, or if an error</em>
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>       <em class="jxr_comment">// occurs early in the build. Tell a lie so that the event is not missing.</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a>       <em class="jxr_comment">// If multiple build_info events are sent, only the first is kept, so this does not harm</em>
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>       <em class="jxr_comment">// successful runs (which use the workspace status action).</em>
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>       env.getEventBus().post(<strong class="jxr_keyword">new</strong> BuildInfoEvent(
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>           runtime.getworkspaceStatusActionFactory().createDummyWorkspaceStatus()));
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>     }
+<a class="jxr_linenumber" name="L237" href="#L237">237</a> 
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>     <strong class="jxr_keyword">if</strong> (loadingResult != <strong class="jxr_keyword">null</strong> &amp;&amp; loadingResult.hasTargetPatternError()) {
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>       <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/actions/BuildFailedException.html">BuildFailedException</a>(<span class="jxr_string">"execution phase successful, but there were errors "</span> +
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>                                      <span class="jxr_string">"parsing the target pattern"</span>);
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>     }
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>   }
+<a class="jxr_linenumber" name="L243" href="#L243">243</a> 
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L245" href="#L245">245</a> <em class="jxr_javadoccomment">   * Checks that if this is an environment-restricted build, all top-level targets support</em>
+<a class="jxr_linenumber" name="L246" href="#L246">246</a> <em class="jxr_javadoccomment">   * the expected environments.</em>
+<a class="jxr_linenumber" name="L247" href="#L247">247</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L248" href="#L248">248</a> <em class="jxr_javadoccomment">   * @param topLevelTargets the build's top-level targets</em>
+<a class="jxr_linenumber" name="L249" href="#L249">249</a> <em class="jxr_javadoccomment">   * @throws ViewCreationFailedException if constraint enforcement is on, the build declares</em>
+<a class="jxr_linenumber" name="L250" href="#L250">250</a> <em class="jxr_javadoccomment">   *     environment-restricted top level configurations, and any top-level target doesn't</em>
+<a class="jxr_linenumber" name="L251" href="#L251">251</a> <em class="jxr_javadoccomment">   *     support the expected environments</em>
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> checkTargetEnvironmentRestrictions(Iterable&lt;ConfiguredTarget&gt; topLevelTargets,
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>       <a href="../../../../../../com/google/devtools/build/lib/pkgcache/PackageManager.html">PackageManager</a> packageManager) <strong class="jxr_keyword">throws</strong> ViewCreationFailedException {
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>     <strong class="jxr_keyword">for</strong> (ConfiguredTarget topLevelTarget : topLevelTargets) {
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> config = topLevelTarget.getConfiguration();
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>       <strong class="jxr_keyword">if</strong> (config == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>         <em class="jxr_comment">// TODO(bazel-team): support file targets (they should apply package-default constraints).</em>
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>         <strong class="jxr_keyword">continue</strong>;
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!config.enforceConstraints() || config.getTargetEnvironments().isEmpty()) {
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>         <strong class="jxr_keyword">continue</strong>;
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>       }
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> 
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>       <em class="jxr_comment">// Parse and collect this configuration's environments.</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>       EnvironmentCollection.Builder builder = <strong class="jxr_keyword">new</strong> EnvironmentCollection.Builder();
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>       <strong class="jxr_keyword">for</strong> (Label envLabel : config.getTargetEnvironments()) {
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>           <a href="../../../../../../com/google/devtools/build/lib/packages/Target.html">Target</a> env = packageManager.getLoadedTarget(envLabel);
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>           builder.put(ConstraintSemantics.getEnvironmentGroup(env), envLabel);
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>         } <strong class="jxr_keyword">catch</strong> (NoSuchPackageException | NoSuchTargetException
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>             | ConstraintSemantics.EnvironmentLookupException e) {
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>           <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/ViewCreationFailedException.html">ViewCreationFailedException</a>(<span class="jxr_string">"invalid target environment"</span>, e);
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>         }
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>       }
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/constraints/EnvironmentCollection.html">EnvironmentCollection</a> expectedEnvironments = builder.build();
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> 
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>       <em class="jxr_comment">// Now check the target against those environments.</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/constraints/SupportedEnvironmentsProvider.html">SupportedEnvironmentsProvider</a> provider =
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>           Verify.verifyNotNull(topLevelTarget.getProvider(SupportedEnvironmentsProvider.<strong class="jxr_keyword">class</strong>));
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>         Collection&lt;Label&gt; missingEnvironments = ConstraintSemantics.getUnsupportedEnvironments(
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>             provider.getEnvironments(), expectedEnvironments);
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>         <strong class="jxr_keyword">if</strong> (!missingEnvironments.isEmpty()) {
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>           <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/ViewCreationFailedException.html">ViewCreationFailedException</a>(
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>               String.format(<span class="jxr_string">"This is a restricted-environment build. %s does not support"</span>
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>                   + <span class="jxr_string">" required environment%s %s"</span>,
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>                   topLevelTarget.getLabel(),
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>                   missingEnvironments.size() == 1 ? <span class="jxr_string">""</span> : <span class="jxr_string">"s"</span>,
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>                   Joiner.on(<span class="jxr_string">", "</span>).join(missingEnvironments)));
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>         }
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>     }
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>   }
+<a class="jxr_linenumber" name="L292" href="#L292">292</a> 
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>   <strong class="jxr_keyword">private</strong> ImmutableMap&lt;PathFragment, Path&gt; transformPackageRoots(
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>       ImmutableMap&lt;PackageIdentifier, Path&gt; packageRoots) {
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>     ImmutableMap.Builder&lt;PathFragment, Path&gt; builder = ImmutableMap.builder();
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>     <strong class="jxr_keyword">for</strong> (Map.Entry&lt;PackageIdentifier, Path&gt; entry : packageRoots.entrySet()) {
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>       builder.put(entry.getKey().getPathFragment(), entry.getValue());
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>     }
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>     <strong class="jxr_keyword">return</strong> builder.build();
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>   }
+<a class="jxr_linenumber" name="L301" href="#L301">301</a> 
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> reportExceptionError(Exception e) {
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>     <strong class="jxr_keyword">if</strong> (e.getMessage() != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>       getReporter().handle(Event.error(e.getMessage()));
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>     }
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>   }
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L308" href="#L308">308</a> <em class="jxr_javadoccomment">   * The crux of the build system. Builds the targets specified in the request using the specified</em>
+<a class="jxr_linenumber" name="L309" href="#L309">309</a> <em class="jxr_javadoccomment">   * Executor.</em>
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L311" href="#L311">311</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Performs loading, analysis and execution for the specified set of targets, honoring the</em>
+<a class="jxr_linenumber" name="L312" href="#L312">312</a> <em class="jxr_javadoccomment">   * configuration options in the BuildRequest. Returns normally iff successful, throws an exception</em>
+<a class="jxr_linenumber" name="L313" href="#L313">313</a> <em class="jxr_javadoccomment">   * otherwise.</em>
+<a class="jxr_linenumber" name="L314" href="#L314">314</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L315" href="#L315">315</a> <em class="jxr_javadoccomment">   * &lt;p&gt;The caller is responsible for setting up and syncing the package cache.</em>
+<a class="jxr_linenumber" name="L316" href="#L316">316</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L317" href="#L317">317</a> <em class="jxr_javadoccomment">   * &lt;p&gt;During this function's execution, the actualTargets and successfulTargets</em>
+<a class="jxr_linenumber" name="L318" href="#L318">318</a> <em class="jxr_javadoccomment">   * fields of the request object are set.</em>
+<a class="jxr_linenumber" name="L319" href="#L319">319</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L320" href="#L320">320</a> <em class="jxr_javadoccomment">   * @param request the build request that this build tool is servicing, which specifies various</em>
+<a class="jxr_linenumber" name="L321" href="#L321">321</a> <em class="jxr_javadoccomment">   *        options; during this method's execution, the actualTargets and successfulTargets fields</em>
+<a class="jxr_linenumber" name="L322" href="#L322">322</a> <em class="jxr_javadoccomment">   *        of the request object are populated</em>
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_javadoccomment">   * @param validator target validator</em>
+<a class="jxr_linenumber" name="L324" href="#L324">324</a> <em class="jxr_javadoccomment">   * @return the result as a {@link BuildResult} object</em>
+<a class="jxr_linenumber" name="L325" href="#L325">325</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildResult.html">BuildResult</a> processRequest(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request, <a href="../../../../../../com/google/devtools/build/lib/buildtool/TargetValidator.html">TargetValidator</a> validator) {
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>     <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildResult.html">BuildResult</a> result = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildResult.html">BuildResult</a>(request.getStartTime());
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>     env.getEventBus().register(result);
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>     Throwable catastrophe = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>     <a href="../../../../../../com/google/devtools/build/lib/util/ExitCode.html">ExitCode</a> exitCode = ExitCode.BLAZE_INTERNAL_ERROR;
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>       buildTargets(request, result, validator);
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>       exitCode = ExitCode.SUCCESS;
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>     } <strong class="jxr_keyword">catch</strong> (BuildFailedException e) {
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>       <strong class="jxr_keyword">if</strong> (e.isErrorAlreadyShown()) {
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>         <em class="jxr_comment">// The actual error has already been reported by the Builder.</em>
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>       } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>         reportExceptionError(e);
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>       }
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>       <strong class="jxr_keyword">if</strong> (e.isCatastrophic()) {
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>         result.setCatastrophe();
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>       }
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>       exitCode = ExitCode.BUILD_FAILURE;
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>     } <strong class="jxr_keyword">catch</strong> (InterruptedException e) {
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>       exitCode = ExitCode.INTERRUPTED;
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>       env.getReporter().handle(Event.error(<span class="jxr_string">"build interrupted"</span>));
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>       env.getEventBus().post(<strong class="jxr_keyword">new</strong> BuildInterruptedEvent());
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>     } <strong class="jxr_keyword">catch</strong> (TargetParsingException | LoadingFailedException | ViewCreationFailedException e) {
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>       exitCode = ExitCode.PARSING_FAILURE;
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>       reportExceptionError(e);
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>     } <strong class="jxr_keyword">catch</strong> (TestExecException e) {
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>       <em class="jxr_comment">// ExitCode.SUCCESS means that build was successful. Real return code of program</em>
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>       <em class="jxr_comment">// is going to be calculated in TestCommand.doTest().</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>       exitCode = ExitCode.SUCCESS;
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>       reportExceptionError(e);
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>     } <strong class="jxr_keyword">catch</strong> (InvalidConfigurationException e) {
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>       exitCode = ExitCode.COMMAND_LINE_ERROR;
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>       reportExceptionError(e);
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>     } <strong class="jxr_keyword">catch</strong> (AbruptExitException e) {
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>       exitCode = e.getExitCode();
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>       reportExceptionError(e);
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>       result.setCatastrophe();
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>     } <strong class="jxr_keyword">catch</strong> (Throwable throwable) {
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>       catastrophe = throwable;
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>       Throwables.propagate(throwable);
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>     } <strong class="jxr_keyword">finally</strong> {
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>       stopRequest(request, result, catastrophe, exitCode);
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>     }
+<a class="jxr_linenumber" name="L369" href="#L369">369</a> 
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>     <strong class="jxr_keyword">return</strong> result;
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>   }
+<a class="jxr_linenumber" name="L372" href="#L372">372</a> 
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>   @VisibleForTesting
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>   <strong class="jxr_keyword">protected</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">LoadingResult</a> runLoadingPhase(<strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request,
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>                                                 <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/buildtool/TargetValidator.html">TargetValidator</a> validator)
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>           <strong class="jxr_keyword">throws</strong> LoadingFailedException, TargetParsingException, InterruptedException,
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>           <a href="../../../../../../com/google/devtools/build/lib/util/AbruptExitException.html">AbruptExitException</a> {
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>     Profiler.instance().markPhase(ProfilePhase.LOAD);
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>     runtime.throwPendingException();
+<a class="jxr_linenumber" name="L380" href="#L380">380</a> 
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>     initializeOutputFilter(request);
+<a class="jxr_linenumber" name="L382" href="#L382">382</a> 
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>     <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">boolean</strong> keepGoing = request.getViewOptions().keepGoing;
+<a class="jxr_linenumber" name="L384" href="#L384">384</a> 
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>     <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">Callback</a> callback = <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">Callback</a>() {
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>       @Override
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>       <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> notifyTargets(Collection&lt;Target&gt; targets) <strong class="jxr_keyword">throws</strong> LoadingFailedException {
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>         <strong class="jxr_keyword">if</strong> (validator != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>           validator.validateTargets(targets, keepGoing);
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>         }
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>       }
+<a class="jxr_linenumber" name="L392" href="#L392">392</a> 
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>       @Override
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>       <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> notifyVisitedPackages(Set&lt;PackageIdentifier&gt; visitedPackages) {
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>         runtime.getSkyframeExecutor().updateLoadedPackageSet(visitedPackages);
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>       }
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>     };
+<a class="jxr_linenumber" name="L398" href="#L398">398</a> 
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>     <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">LoadingResult</a> result = runtime.getLoadingPhaseRunner().execute(getReporter(),
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>         env.getEventBus(), request.getTargets(), request.getLoadingOptions(),
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>         runtime.createBuildOptions(request).getAllLabels(), keepGoing,
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>         request.shouldRunTests(), callback);
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>     runtime.throwPendingException();
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>     <strong class="jxr_keyword">return</strong> result;
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>   }
+<a class="jxr_linenumber" name="L406" href="#L406">406</a> 
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L408" href="#L408">408</a> <em class="jxr_javadoccomment">   * Initializes the output filter to the value given with {@code --output_filter}.</em>
+<a class="jxr_linenumber" name="L409" href="#L409">409</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> initializeOutputFilter(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request) {
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>     <a href="../../../../../../java/util/regex/Pattern.html">Pattern</a> outputFilter = request.getBuildOptions().outputFilter;
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>     <strong class="jxr_keyword">if</strong> (outputFilter != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>       getReporter().setOutputFilter(OutputFilter.RegexOutputFilter.forPattern(outputFilter));
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>     }
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>   }
+<a class="jxr_linenumber" name="L416" href="#L416">416</a> 
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L418" href="#L418">418</a> <em class="jxr_javadoccomment">   * Performs the initial phases 0-2 of the build: Setup, Loading and Analysis.</em>
+<a class="jxr_linenumber" name="L419" href="#L419">419</a> <em class="jxr_javadoccomment">   * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="L420" href="#L420">420</a> <em class="jxr_javadoccomment">   * Postcondition: On success, populates the BuildRequest's set of targets to</em>
+<a class="jxr_linenumber" name="L421" href="#L421">421</a> <em class="jxr_javadoccomment">   * build.</em>
+<a class="jxr_linenumber" name="L422" href="#L422">422</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L423" href="#L423">423</a> <em class="jxr_javadoccomment">   * @return null if loading / analysis phases were successful; a useful error</em>
+<a class="jxr_linenumber" name="L424" href="#L424">424</a> <em class="jxr_javadoccomment">   *         message if loading or analysis phase errors were encountered and</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a> <em class="jxr_javadoccomment">   *         request.keepGoing.</em>
+<a class="jxr_linenumber" name="L426" href="#L426">426</a> <em class="jxr_javadoccomment">   * @throws InterruptedException if the current thread was interrupted.</em>
+<a class="jxr_linenumber" name="L427" href="#L427">427</a> <em class="jxr_javadoccomment">   * @throws ViewCreationFailedException if analysis failed for any reason.</em>
+<a class="jxr_linenumber" name="L428" href="#L428">428</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/BuildView.html">AnalysisResult</a> runAnalysisPhase(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request, <a href="../../../../../../com/google/devtools/build/lib/pkgcache/LoadingPhaseRunner.html">LoadingResult</a> loadingResult,
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfigurationCollection.html">BuildConfigurationCollection</a> configurations)
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>       <strong class="jxr_keyword">throws</strong> InterruptedException, <a href="../../../../../../com/google/devtools/build/lib/analysis/ViewCreationFailedException.html">ViewCreationFailedException</a> {
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>     <a href="../../../../../../com/google/common/base/Stopwatch.html">Stopwatch</a> timer = Stopwatch.createStarted();
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>     <strong class="jxr_keyword">if</strong> (!request.getBuildOptions().performAnalysisPhase) {
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>       getReporter().handle(Event.progress(<span class="jxr_string">"Loading complete."</span>));
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>       LOG.info(<span class="jxr_string">"No analysis requested, so finished"</span>);
+<a class="jxr_linenumber" name="L436" href="#L436">436</a>       <strong class="jxr_keyword">return</strong> AnalysisResult.EMPTY;
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>     }
+<a class="jxr_linenumber" name="L438" href="#L438">438</a> 
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>     getReporter().handle(Event.progress(<span class="jxr_string">"Loading complete.  Analyzing..."</span>));
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>     Profiler.instance().markPhase(ProfilePhase.ANALYZE);
+<a class="jxr_linenumber" name="L441" href="#L441">441</a> 
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>     <a href="../../../../../../com/google/devtools/build/lib/analysis/BuildView.html">AnalysisResult</a> analysisResult =
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>         runtime.getView()
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>             .update(
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>                 loadingResult,
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>                 configurations,
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>                 request.getAspects(),
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>                 request.getViewOptions(),
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>                 request.getTopLevelArtifactContext(),
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>                 env.getReporter(),
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>                 env.getEventBus());
+<a class="jxr_linenumber" name="L452" href="#L452">452</a> 
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>     <em class="jxr_comment">// TODO(bazel-team): Merge these into one event.</em>
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>     env.getEventBus().post(<strong class="jxr_keyword">new</strong> AnalysisPhaseCompleteEvent(analysisResult.getTargetsToBuild(),
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>         runtime.getView().getTargetsVisited(), timer.stop().elapsed(TimeUnit.MILLISECONDS)));
+<a class="jxr_linenumber" name="L456" href="#L456">456</a>     env.getEventBus().post(<strong class="jxr_keyword">new</strong> TestFilteringCompleteEvent(analysisResult.getTargetsToBuild(),
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>         analysisResult.getTargetsToTest()));
+<a class="jxr_linenumber" name="L458" href="#L458">458</a> 
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>     <em class="jxr_comment">// Check licenses.</em>
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>     <em class="jxr_comment">// We check licenses if the first target configuration has license checking enabled. Right now,</em>
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>     <em class="jxr_comment">// it is not possible to have multiple target configurations with different settings for this</em>
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>     <em class="jxr_comment">// flag, which allows us to take this short cut.</em>
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>     <strong class="jxr_keyword">boolean</strong> checkLicenses = configurations.getTargetConfigurations().get(0).checkLicenses();
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>     <strong class="jxr_keyword">if</strong> (checkLicenses) {
+<a class="jxr_linenumber" name="L465" href="#L465">465</a>       Profiler.instance().markPhase(ProfilePhase.LICENSE);
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>       validateLicensingForTargets(analysisResult.getTargetsToBuild(),
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>           request.getViewOptions().keepGoing);
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>     }
+<a class="jxr_linenumber" name="L469" href="#L469">469</a> 
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>     <strong class="jxr_keyword">return</strong> analysisResult;
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>   }
+<a class="jxr_linenumber" name="L472" href="#L472">472</a> 
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">boolean</strong> needsExecutionPhase(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequestOptions</a> options) {
+<a class="jxr_linenumber" name="L474" href="#L474">474</a>     <strong class="jxr_keyword">return</strong> options.performAnalysisPhase &amp;&amp; options.performExecutionPhase;
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>   }
+<a class="jxr_linenumber" name="L476" href="#L476">476</a> 
+<a class="jxr_linenumber" name="L477" href="#L477">477</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L478" href="#L478">478</a> <em class="jxr_javadoccomment">   * Stops processing the specified request.</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L480" href="#L480">480</a> <em class="jxr_javadoccomment">   * &lt;p&gt;This logs the build result, cleans up and stops the clock.</em>
+<a class="jxr_linenumber" name="L481" href="#L481">481</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L482" href="#L482">482</a> <em class="jxr_javadoccomment">   * @param request the build request that this build tool is servicing</em>
+<a class="jxr_linenumber" name="L483" href="#L483">483</a> <em class="jxr_javadoccomment">   * @param crash Any unexpected RuntimeException or Error. May be null</em>
+<a class="jxr_linenumber" name="L484" href="#L484">484</a> <em class="jxr_javadoccomment">   * @param exitCondition A suggested exit condition from either the build logic or</em>
+<a class="jxr_linenumber" name="L485" href="#L485">485</a> <em class="jxr_javadoccomment">   *        a thrown exception somewhere along the way.</em>
+<a class="jxr_linenumber" name="L486" href="#L486">486</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L487" href="#L487">487</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> stopRequest(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request, <a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildResult.html">BuildResult</a> result, Throwable crash,
+<a class="jxr_linenumber" name="L488" href="#L488">488</a>       <a href="../../../../../../com/google/devtools/build/lib/util/ExitCode.html">ExitCode</a> exitCondition) {
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>     Preconditions.checkState((crash == <strong class="jxr_keyword">null</strong>) || (exitCondition != ExitCode.SUCCESS));
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>     result.setUnhandledThrowable(crash);
+<a class="jxr_linenumber" name="L491" href="#L491">491</a>     result.setExitCondition(exitCondition);
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>     <em class="jxr_comment">// The stop time has to be captured before we send the BuildCompleteEvent.</em>
+<a class="jxr_linenumber" name="L493" href="#L493">493</a>     result.setStopTime(runtime.getClock().currentTimeMillis());
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>     env.getEventBus().post(<strong class="jxr_keyword">new</strong> BuildCompleteEvent(request, result));
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>   }
+<a class="jxr_linenumber" name="L496" href="#L496">496</a> 
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> reportTargets(<a href="../../../../../../com/google/devtools/build/lib/analysis/BuildView.html">AnalysisResult</a> analysisResult) {
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>     Collection&lt;ConfiguredTarget&gt; targetsToBuild = analysisResult.getTargetsToBuild();
+<a class="jxr_linenumber" name="L499" href="#L499">499</a>     Collection&lt;ConfiguredTarget&gt; targetsToTest = analysisResult.getTargetsToTest();
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>     <strong class="jxr_keyword">if</strong> (targetsToTest != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L501" href="#L501">501</a>       <strong class="jxr_keyword">int</strong> testCount = targetsToTest.size();
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>       <strong class="jxr_keyword">int</strong> targetCount = targetsToBuild.size() - testCount;
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>       <strong class="jxr_keyword">if</strong> (targetCount == 0) {
+<a class="jxr_linenumber" name="L504" href="#L504">504</a>         getReporter().handle(Event.info(<span class="jxr_string">"Found "</span>
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>             + testCount + (testCount == 1 ? <span class="jxr_string">" test target..."</span> : <span class="jxr_string">" test targets..."</span>)));
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>       } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>         getReporter().handle(Event.info(<span class="jxr_string">"Found "</span>
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>             + targetCount + (targetCount == 1 ? <span class="jxr_string">" target and "</span> : <span class="jxr_string">" targets and "</span>)
+<a class="jxr_linenumber" name="L509" href="#L509">509</a>             + testCount + (testCount == 1 ? <span class="jxr_string">" test target..."</span> : <span class="jxr_string">" test targets..."</span>)));
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>       }
+<a class="jxr_linenumber" name="L511" href="#L511">511</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L512" href="#L512">512</a>       <strong class="jxr_keyword">int</strong> targetCount = targetsToBuild.size();
+<a class="jxr_linenumber" name="L513" href="#L513">513</a>       getReporter().handle(Event.info(<span class="jxr_string">"Found "</span>
+<a class="jxr_linenumber" name="L514" href="#L514">514</a>           + targetCount + (targetCount == 1 ? <span class="jxr_string">" target..."</span> : <span class="jxr_string">" targets..."</span>)));
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>     }
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>   }
+<a class="jxr_linenumber" name="L517" href="#L517">517</a> 
+<a class="jxr_linenumber" name="L518" href="#L518">518</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L519" href="#L519">519</a> <em class="jxr_javadoccomment">   * Validates the options for this BuildRequest.</em>
+<a class="jxr_linenumber" name="L520" href="#L520">520</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L521" href="#L521">521</a> <em class="jxr_javadoccomment">   * &lt;p&gt;Issues warnings for the use of deprecated options, and warnings or errors for any option</em>
+<a class="jxr_linenumber" name="L522" href="#L522">522</a> <em class="jxr_javadoccomment">   * settings that conflict.</em>
+<a class="jxr_linenumber" name="L523" href="#L523">523</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L524" href="#L524">524</a>   @VisibleForTesting
+<a class="jxr_linenumber" name="L525" href="#L525">525</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> validateOptions(<a href="../../../../../../com/google/devtools/build/lib/buildtool/BuildRequest.html">BuildRequest</a> request) <strong class="jxr_keyword">throws</strong> InvalidConfigurationException {
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>     <strong class="jxr_keyword">for</strong> (String issue : request.validateOptions()) {
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>       getReporter().handle(Event.warn(issue));
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>     }
+<a class="jxr_linenumber" name="L529" href="#L529">529</a>   }
+<a class="jxr_linenumber" name="L530" href="#L530">530</a> 
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L532" href="#L532">532</a> <em class="jxr_javadoccomment">   * Takes a set of configured targets, and checks if the distribution methods</em>
+<a class="jxr_linenumber" name="L533" href="#L533">533</a> <em class="jxr_javadoccomment">   * declared for the targets are compatible with the constraints imposed by</em>
+<a class="jxr_linenumber" name="L534" href="#L534">534</a> <em class="jxr_javadoccomment">   * their prerequisites' licenses.</em>
+<a class="jxr_linenumber" name="L535" href="#L535">535</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L536" href="#L536">536</a> <em class="jxr_javadoccomment">   * @param configuredTargets the targets to check</em>
+<a class="jxr_linenumber" name="L537" href="#L537">537</a> <em class="jxr_javadoccomment">   * @param keepGoing if false, and a licensing error is encountered, both</em>
+<a class="jxr_linenumber" name="L538" href="#L538">538</a> <em class="jxr_javadoccomment">   *        generates an error message on the reporter, &lt;em&gt;and&lt;/em&gt; throws an</em>
+<a class="jxr_linenumber" name="L539" href="#L539">539</a> <em class="jxr_javadoccomment">   *        exception. If true, then just generates a message on the reporter.</em>
+<a class="jxr_linenumber" name="L540" href="#L540">540</a> <em class="jxr_javadoccomment">   * @throws ViewCreationFailedException if the license checking failed (and not</em>
+<a class="jxr_linenumber" name="L541" href="#L541">541</a> <em class="jxr_javadoccomment">   *         --keep_going)</em>
+<a class="jxr_linenumber" name="L542" href="#L542">542</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> validateLicensingForTargets(Iterable&lt;ConfiguredTarget&gt; configuredTargets,
+<a class="jxr_linenumber" name="L544" href="#L544">544</a>       <strong class="jxr_keyword">boolean</strong> keepGoing) <strong class="jxr_keyword">throws</strong> ViewCreationFailedException {
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>     <strong class="jxr_keyword">for</strong> (ConfiguredTarget configuredTarget : configuredTargets) {
+<a class="jxr_linenumber" name="L546" href="#L546">546</a>       <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/google/devtools/build/lib/packages/Target.html">Target</a> target = configuredTarget.getTarget();
+<a class="jxr_linenumber" name="L547" href="#L547">547</a> 
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>       <strong class="jxr_keyword">if</strong> (TargetUtils.isTestRule(target)) {
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>         <strong class="jxr_keyword">continue</strong>;  <em class="jxr_comment">// Tests are exempt from license checking</em>
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>       }
+<a class="jxr_linenumber" name="L551" href="#L551">551</a> 
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>       <strong class="jxr_keyword">final</strong> Set&lt;DistributionType&gt; distribs = target.getDistributions();
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/config/BuildConfiguration.html">BuildConfiguration</a> config = configuredTarget.getConfiguration();
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>       <strong class="jxr_keyword">boolean</strong> staticallyLinked = (config != <strong class="jxr_keyword">null</strong>) &amp;&amp; config.performsStaticLink();
+<a class="jxr_linenumber" name="L555" href="#L555">555</a>       staticallyLinked |= (config != <strong class="jxr_keyword">null</strong>) &amp;&amp; (target instanceof Rule)
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>           &amp;&amp; ((Rule) target).getRuleClassObject().hasAttr(<span class="jxr_string">"linkopts"</span>, Type.STRING_LIST)
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>           &amp;&amp; ConfiguredAttributeMapper.of((RuleConfiguredTarget) configuredTarget)
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>               .get(<span class="jxr_string">"linkopts"</span>, Type.STRING_LIST).contains(<span class="jxr_string">"-static"</span>);
+<a class="jxr_linenumber" name="L559" href="#L559">559</a> 
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>       <a href="../../../../../../com/google/devtools/build/lib/analysis/LicensesProvider.html">LicensesProvider</a> provider = configuredTarget.getProvider(LicensesProvider.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>       <strong class="jxr_keyword">if</strong> (provider != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>         NestedSet&lt;TargetLicense&gt; licenses = provider.getTransitiveLicenses();
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>         <strong class="jxr_keyword">for</strong> (TargetLicense targetLicense : licenses) {
+<a class="jxr_linenumber" name="L564" href="#L564">564</a>           <strong class="jxr_keyword">if</strong> (!targetLicense.getLicense().checkCompatibility(
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>               distribs, target, targetLicense.getLabel(), getReporter(), staticallyLinked)) {
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>             <strong class="jxr_keyword">if</strong> (!keepGoing) {
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>               <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/ViewCreationFailedException.html">ViewCreationFailedException</a>(<span class="jxr_string">"Build aborted due to licensing error"</span>);
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>             }
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>           }
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>         }
+<a class="jxr_linenumber" name="L571" href="#L571">571</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (configuredTarget.getTarget() instanceof InputFile) {
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>         <em class="jxr_comment">// Input file targets do not provide licenses because they do not</em>
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>         <em class="jxr_comment">// depend on the rule where their license is taken from. This is usually</em>
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>         <em class="jxr_comment">// not a problem, because the transitive collection of licenses always</em>
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>         <em class="jxr_comment">// hits the rule they come from, except when the input file is a</em>
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>         <em class="jxr_comment">// top-level target. Thus, we need to handle that case specially here.</em>
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>         <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L578" href="#L578">578</a>         <em class="jxr_comment">// See FileTarget#getLicense for more information about the handling of</em>
+<a class="jxr_linenumber" name="L579" href="#L579">579</a>         <em class="jxr_comment">// license issues with File targets.</em>
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>         <a href="../../../../../../com/google/devtools/build/lib/packages/License.html">License</a> license = configuredTarget.getTarget().getLicense();
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>         <strong class="jxr_keyword">if</strong> (!license.checkCompatibility(distribs, target, configuredTarget.getLabel(),
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>             getReporter(), staticallyLinked)) {
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>           <strong class="jxr_keyword">if</strong> (!keepGoing) {
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../../../com/google/devtools/build/lib/analysis/ViewCreationFailedException.html">ViewCreationFailedException</a>(<span class="jxr_string">"Build aborted due to licensing error"</span>);
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>           }
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>        }
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>       }
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>     }
+<a class="jxr_linenumber" name="L589" href="#L589">589</a>   }
+<a class="jxr_linenumber" name="L590" href="#L590">590</a> 
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../../com/google/devtools/build/lib/events/Reporter.html">Reporter</a> getReporter() {
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>     <strong class="jxr_keyword">return</strong> env.getReporter();
+<a class="jxr_linenumber" name="L593" href="#L593">593</a>   }
+<a class="jxr_linenumber" name="L594" href="#L594">594</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

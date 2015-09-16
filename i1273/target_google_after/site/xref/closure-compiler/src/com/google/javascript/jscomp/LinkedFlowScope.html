@@ -1,0 +1,524 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>LinkedFlowScope xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/com/google/javascript/jscomp/LinkedFlowScope.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright 2008 The Closure Compiler Authors.</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">package</strong> com.google.javascript.jscomp;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.base.Preconditions;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.ImmutableMap;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.jscomp.type.FlowScope;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.Node;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.JSType;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.SimpleSlot;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.StaticTypedScope;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> com.google.javascript.rhino.jstype.StaticTypedSlot;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> java.util.HashMap;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> java.util.HashSet;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> java.util.Iterator;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> java.util.Map;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> java.util.Set;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <em class="jxr_javadoccomment"> * A flow scope that tries to store as little symbol information as possible,</em>
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <em class="jxr_javadoccomment"> * instead delegating to its parents. Optimized for low memory use.</em>
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <em class="jxr_javadoccomment"> *</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <em class="jxr_javadoccomment"> * @author nicksantos@google.com (Nick Santos)</em>
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> <strong class="jxr_keyword">implements</strong> <a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> {
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>    <em class="jxr_comment">// The closest flow scope cache.</em>
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> cache;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>    <em class="jxr_comment">// The parent flow scope.</em>
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> parent;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>    <em class="jxr_comment">// The distance between this flow scope and the closest flat flow scope.</em>
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">int</strong> depth;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>    <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> MAX_DEPTH = 250;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>    <em class="jxr_comment">// A FlatFlowScopeCache equivalent to this scope.</em>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>    <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> flattened;
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>    <em class="jxr_comment">// Flow scopes assume that all their ancestors are immutable.</em>
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    <em class="jxr_comment">// So once a child scope is created, this flow scope may not be modified.</em>
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> frozen = false;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>  
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>    <em class="jxr_comment">// The last slot defined in this flow instruction, and the head of the</em>
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>    <em class="jxr_comment">// linked list of slots.</em>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>    <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a> lastSlot;
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>  
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>    <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> cache,
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>        <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> directParent) {
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>      <strong class="jxr_keyword">this</strong>.cache = cache;
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      <strong class="jxr_keyword">if</strong> (directParent == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>        <strong class="jxr_keyword">this</strong>.lastSlot = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>        <strong class="jxr_keyword">this</strong>.depth = 0;
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>        <strong class="jxr_keyword">this</strong>.parent = cache.linkedEquivalent;
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>        <strong class="jxr_keyword">this</strong>.lastSlot = directParent.lastSlot;
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>        <strong class="jxr_keyword">this</strong>.depth = directParent.depth + 1;
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>        <strong class="jxr_keyword">this</strong>.parent = directParent;
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      }
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>    }
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>  
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>    <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> cache) {
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>      <strong class="jxr_keyword">this</strong>(cache, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>    }
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>  
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>    <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> directParent) {
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>      <strong class="jxr_keyword">this</strong>(directParent.cache, directParent);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>    }
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>    <em class="jxr_javadoccomment">/** Gets the function scope for this flow scope. */</em>
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>    <strong class="jxr_keyword">private</strong> <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> getFunctionScope() {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      <strong class="jxr_keyword">return</strong> cache.functionScope;
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>    }
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>  
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>    <em class="jxr_javadoccomment">/** Whether this flows from a bottom scope. */</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> flowsFromBottom() {
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      <strong class="jxr_keyword">return</strong> getFunctionScope().isBottom();
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>    }
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>    <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>  <em class="jxr_javadoccomment">   * Creates an entry lattice for the flow.</em>
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>  <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> createEntryLattice(<a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> scope) {
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(scope));
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>   }
+<a class="jxr_linenumber" name="L101" href="#L101">101</a> 
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>   @Override
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> inferSlotType(String symbol, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> type) {
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>     Preconditions.checkState(!frozen);
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>     lastSlot = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a>(symbol, type, lastSlot);
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>     depth++;
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>     cache.dirtySymbols.add(symbol);
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>   }
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> 
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>   @Override
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> inferQualifiedSlot(<a href="../../../../com/google/common/collect/LinkedListMultimap.html">Node</a> node, String symbol, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> bottomType,
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>       <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> inferredType, <strong class="jxr_keyword">boolean</strong> declared) {
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>     <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> functionScope = getFunctionScope();
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>     <strong class="jxr_keyword">if</strong> (functionScope.isLocal()) {
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>       <a href="../../../../com/google/javascript/jscomp/TypedVar.html">TypedVar</a> v  = functionScope.getVar(symbol);
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>       <strong class="jxr_keyword">if</strong> (v == <strong class="jxr_keyword">null</strong> &amp;&amp; !functionScope.isBottom()) {
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>         v = functionScope.declare(symbol, node, bottomType, <strong class="jxr_keyword">null</strong>, !declared);
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>       }
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> 
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>       <strong class="jxr_keyword">if</strong> (v != <strong class="jxr_keyword">null</strong> &amp;&amp; !v.isTypeInferred()) {
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>         <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> declaredType = v.getType();
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>         <em class="jxr_comment">// Use the inferred type over the declared type only if the</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>         <em class="jxr_comment">// inferred type is a strict subtype of the declared type.</em>
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>         <strong class="jxr_keyword">if</strong> (declaredType != <strong class="jxr_keyword">null</strong> &amp;&amp; inferredType.isSubtype(declaredType)
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>             &amp;&amp; !declaredType.isSubtype(inferredType)
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>             &amp;&amp; !inferredType.isEquivalentTo(declaredType)) {
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>           inferSlotType(symbol, inferredType);
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>         }
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>       } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>         inferSlotType(symbol, inferredType);
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>       }
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     }
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>   }
+<a class="jxr_linenumber" name="L134" href="#L134">134</a> 
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>   @Override
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> getTypeOfThis() {
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     <strong class="jxr_keyword">return</strong> cache.functionScope.getTypeOfThis();
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>   }
+<a class="jxr_linenumber" name="L139" href="#L139">139</a> 
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>   @Override
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../com/google/common/collect/LinkedListMultimap.html">Node</a> getRootNode() {
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>     <strong class="jxr_keyword">return</strong> getFunctionScope().getRootNode();
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>   }
+<a class="jxr_linenumber" name="L144" href="#L144">144</a> 
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>   @Override
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>   <strong class="jxr_keyword">public</strong> StaticTypedScope&lt;JSType&gt; getParentScope() {
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     <strong class="jxr_keyword">return</strong> getFunctionScope().getParentScope();
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>   }
+<a class="jxr_linenumber" name="L149" href="#L149">149</a> 
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L151" href="#L151">151</a> <em class="jxr_javadoccomment">   * Get the slot for the given symbol.</em>
+<a class="jxr_linenumber" name="L152" href="#L152">152</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>   @Override
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>   <strong class="jxr_keyword">public</strong> StaticTypedSlot&lt;JSType&gt; getSlot(String name) {
+<a class="jxr_linenumber" name="L155" href="#L155">155</a>     <strong class="jxr_keyword">if</strong> (cache.dirtySymbols.contains(name)) {
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>       <strong class="jxr_keyword">for</strong> (LinkedFlowSlot slot = lastSlot;
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>            slot != <strong class="jxr_keyword">null</strong>; slot = slot.parent) {
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>         <strong class="jxr_keyword">if</strong> (slot.getName().equals(name)) {
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>           <strong class="jxr_keyword">return</strong> slot;
+<a class="jxr_linenumber" name="L160" href="#L160">160</a>         }
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>       }
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>     }
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>     <strong class="jxr_keyword">return</strong> cache.getSlot(name);
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>   }
+<a class="jxr_linenumber" name="L165" href="#L165">165</a> 
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>   @Override
+<a class="jxr_linenumber" name="L167" href="#L167">167</a>   <strong class="jxr_keyword">public</strong> StaticTypedSlot&lt;JSType&gt; getOwnSlot(String name) {
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> UnsupportedOperationException();
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>   }
+<a class="jxr_linenumber" name="L170" href="#L170">170</a> 
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>   @Override
+<a class="jxr_linenumber" name="L172" href="#L172">172</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> createChildFlowScope() {
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>     frozen = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L174" href="#L174">174</a> 
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>     <strong class="jxr_keyword">if</strong> (depth &gt; MAX_DEPTH) {
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>       <strong class="jxr_keyword">if</strong> (flattened == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         flattened = <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(<strong class="jxr_keyword">this</strong>);
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>       }
+<a class="jxr_linenumber" name="L179" href="#L179">179</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(flattened);
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>     }
+<a class="jxr_linenumber" name="L181" href="#L181">181</a> 
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<strong class="jxr_keyword">this</strong>);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>   }
+<a class="jxr_linenumber" name="L184" href="#L184">184</a> 
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L186" href="#L186">186</a> <em class="jxr_javadoccomment">   * Iterate through all the linked flow scopes before this one.</em>
+<a class="jxr_linenumber" name="L187" href="#L187">187</a> <em class="jxr_javadoccomment">   * If there's one and only one slot defined between this scope</em>
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> <em class="jxr_javadoccomment">   * and the blind scope, return it.</em>
+<a class="jxr_linenumber" name="L189" href="#L189">189</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L190" href="#L190">190</a>   @Override
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>   <strong class="jxr_keyword">public</strong> StaticTypedSlot&lt;JSType&gt; findUniqueRefinedSlot(<a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> blindScope) {
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>     StaticTypedSlot&lt;JSType&gt; result = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L193" href="#L193">193</a> 
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>     <strong class="jxr_keyword">for</strong> (LinkedFlowScope currentScope = <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>          currentScope != blindScope;
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>          currentScope = currentScope.parent) {
+<a class="jxr_linenumber" name="L197" href="#L197">197</a>       <strong class="jxr_keyword">for</strong> (LinkedFlowSlot currentSlot = currentScope.lastSlot;
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>            currentSlot != <strong class="jxr_keyword">null</strong> &amp;&amp;
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>            (currentScope.parent == <strong class="jxr_keyword">null</strong> ||
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>             currentScope.parent.lastSlot != currentSlot);
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>            currentSlot = currentSlot.parent) {
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>         <strong class="jxr_keyword">if</strong> (result == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>           result = currentSlot;
+<a class="jxr_linenumber" name="L204" href="#L204">204</a>         } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!currentSlot.getName().equals(result.getName())) {
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>           <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>         }
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>       }
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>     }
+<a class="jxr_linenumber" name="L209" href="#L209">209</a> 
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>     <strong class="jxr_keyword">return</strong> result;
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>   }
+<a class="jxr_linenumber" name="L212" href="#L212">212</a> 
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L214" href="#L214">214</a> <em class="jxr_javadoccomment">   * Look through the given scope, and try to find slots where it doesn't</em>
+<a class="jxr_linenumber" name="L215" href="#L215">215</a> <em class="jxr_javadoccomment">   * have enough type information. Then fill in that type information</em>
+<a class="jxr_linenumber" name="L216" href="#L216">216</a> <em class="jxr_javadoccomment">   * with stuff that we've inferred in the local flow.</em>
+<a class="jxr_linenumber" name="L217" href="#L217">217</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>   @Override
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> completeScope(StaticTypedScope&lt;JSType&gt; staticScope) {
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>     <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> scope = (TypedScope) staticScope;
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>     <strong class="jxr_keyword">for</strong> (Iterator&lt;TypedVar&gt; it = scope.getVars(); it.hasNext();) {
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>       <a href="../../../../com/google/javascript/jscomp/TypedVar.html">TypedVar</a> <strong class="jxr_keyword">var</strong> = it.next();
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>       <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">var</strong>.isTypeInferred()) {
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>         <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> type = <strong class="jxr_keyword">var</strong>.getType();
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>         <strong class="jxr_keyword">if</strong> (type == <strong class="jxr_keyword">null</strong> || type.isUnknownType()) {
+<a class="jxr_linenumber" name="L226" href="#L226">226</a>           <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> flowType = getSlot(<strong class="jxr_keyword">var</strong>.getName()).getType();
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>           <strong class="jxr_keyword">var</strong>.setType(flowType);
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>         }
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>       }
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>     }
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>   }
+<a class="jxr_linenumber" name="L232" href="#L232">232</a> 
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L234" href="#L234">234</a> <em class="jxr_javadoccomment">   * Remove flow scopes that add nothing to the flow.</em>
+<a class="jxr_linenumber" name="L235" href="#L235">235</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>   <em class="jxr_comment">// NOTE(nicksantos): This function breaks findUniqueRefinedSlot, because</em>
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>   <em class="jxr_comment">// findUniqueRefinedSlot assumes that this scope is a direct descendant</em>
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>   <em class="jxr_comment">// of blindScope. This is not necessarily true if this scope has been</em>
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>   <em class="jxr_comment">// optimize()d and blindScope has not. This should be fixed. For now,</em>
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>   <em class="jxr_comment">// we only use optimize() where we know that we won't have to do</em>
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>   <em class="jxr_comment">// a findUniqueRefinedSlot on it.</em>
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>   @Override
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>   <strong class="jxr_keyword">public</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> optimize() {
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>     <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> current;
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>     <strong class="jxr_keyword">for</strong> (current = <strong class="jxr_keyword">this</strong>;
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>          current.parent != <strong class="jxr_keyword">null</strong> &amp;&amp;
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>              current.lastSlot == current.parent.lastSlot;
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>          current = current.parent) {}
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>     <strong class="jxr_keyword">return</strong> current;
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>   }
+<a class="jxr_linenumber" name="L251" href="#L251">251</a> 
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>   <em class="jxr_javadoccomment">/** Join the two FlowScopes. */</em>
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>   <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlowScopeJoinOp</a> <strong class="jxr_keyword">extends</strong> JoinOp.BinaryJoinOp&lt;FlowScope&gt; {
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>     @SuppressWarnings(<span class="jxr_string">"unchecked"</span>)
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>     @Override
+<a class="jxr_linenumber" name="L256" href="#L256">256</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> apply(<a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> a, <a href="../../../../com/google/javascript/jscomp/type/FlowScope.html">FlowScope</a> b) {
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>       <em class="jxr_comment">// To join the two scopes, we have to</em>
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>       <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> linkedA = (LinkedFlowScope) a;
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>       <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> linkedB = (LinkedFlowScope) b;
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>       linkedA.frozen = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>       linkedB.frozen = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>       <strong class="jxr_keyword">if</strong> (linkedA.optimize() == linkedB.optimize()) {
+<a class="jxr_linenumber" name="L263" href="#L263">263</a>         <strong class="jxr_keyword">return</strong> linkedA.createChildFlowScope();
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>       }
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a>(<strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(linkedA, linkedB));
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>     }
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>   }
+<a class="jxr_linenumber" name="L268" href="#L268">268</a> 
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>   @Override
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> equals(<a href="../../../../java/lang/Object.html">Object</a> other) {
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>     <strong class="jxr_keyword">if</strong> (other instanceof LinkedFlowScope) {
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>       <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> that = (LinkedFlowScope) other;
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>       <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.optimize() == that.optimize()) {
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>       }
+<a class="jxr_linenumber" name="L276" href="#L276">276</a> 
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>       <em class="jxr_comment">// If two flow scopes are in the same function, then they could have</em>
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>       <em class="jxr_comment">// two possible function scopes: the real one and the BOTTOM scope.</em>
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>       <em class="jxr_comment">// If they have different function scopes, we *should* iterate through all</em>
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>       <em class="jxr_comment">// the variables in each scope and compare. However, 99.9% of the time,</em>
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>       <em class="jxr_comment">// they're not equal. And the other .1% of the time, we can pretend</em>
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>       <em class="jxr_comment">// they're equal--this just means that data flow analysis will have</em>
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>       <em class="jxr_comment">// to propagate the entry lattice a little bit further than it</em>
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>       <em class="jxr_comment">// really needs to. Everything will still come out ok.</em>
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>       <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">this</strong>.getFunctionScope() != that.getFunctionScope()) {
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>         <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>       }
+<a class="jxr_linenumber" name="L288" href="#L288">288</a> 
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>       <strong class="jxr_keyword">if</strong> (cache == that.cache) {
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>         <em class="jxr_comment">// If the two flow scopes have the same cache, then we can check</em>
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>         <em class="jxr_comment">// equality a lot faster: by just looking at the "dirty" elements</em>
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>         <em class="jxr_comment">// in the cache, and comparing them in both scopes.</em>
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>         <strong class="jxr_keyword">for</strong> (String name : cache.dirtySymbols) {
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>           <strong class="jxr_keyword">if</strong> (diffSlots(getSlot(name), that.getSlot(name))) {
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>             <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>           }
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>         }
+<a class="jxr_linenumber" name="L298" href="#L298">298</a> 
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>       }
+<a class="jxr_linenumber" name="L301" href="#L301">301</a> 
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>       Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; myFlowSlots = allFlowSlots();
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>       Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; otherFlowSlots = that.allFlowSlots();
+<a class="jxr_linenumber" name="L304" href="#L304">304</a> 
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>       <strong class="jxr_keyword">for</strong> (StaticTypedSlot&lt;JSType&gt; slot : myFlowSlots.values()) {
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>         <strong class="jxr_keyword">if</strong> (diffSlots(slot, otherFlowSlots.get(slot.getName()))) {
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>           <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>         }
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>         otherFlowSlots.remove(slot.getName());
+<a class="jxr_linenumber" name="L310" href="#L310">310</a>       }
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>       <strong class="jxr_keyword">for</strong> (StaticTypedSlot&lt;JSType&gt; slot : otherFlowSlots.values()) {
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>         <strong class="jxr_keyword">if</strong> (diffSlots(slot, myFlowSlots.get(slot.getName()))) {
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>           <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>         }
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>       }
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>     }
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>     <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>   }
+<a class="jxr_linenumber" name="L320" href="#L320">320</a> 
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L322" href="#L322">322</a> <em class="jxr_javadoccomment">   * Determines whether two slots are meaningfully different for the</em>
+<a class="jxr_linenumber" name="L323" href="#L323">323</a> <em class="jxr_javadoccomment">   * purposes of data flow analysis.</em>
+<a class="jxr_linenumber" name="L324" href="#L324">324</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">boolean</strong> diffSlots(StaticTypedSlot&lt;JSType&gt; slotA,
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>                                    StaticTypedSlot&lt;JSType&gt; slotB) {
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>     <strong class="jxr_keyword">boolean</strong> aIsNull = slotA == <strong class="jxr_keyword">null</strong> || slotA.getType() == <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>     <strong class="jxr_keyword">boolean</strong> bIsNull = slotB == <strong class="jxr_keyword">null</strong> || slotB.getType() == <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>     <strong class="jxr_keyword">if</strong> (aIsNull &amp;&amp; bIsNull) {
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>       <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (aIsNull ^ bIsNull) {
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>       <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>     }
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> 
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>     <em class="jxr_comment">// Both slots and types must be non-null.</em>
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>     <strong class="jxr_keyword">return</strong> slotA.getType().differsFrom(slotB.getType());
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>   }
+<a class="jxr_linenumber" name="L338" href="#L338">338</a> 
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L340" href="#L340">340</a> <em class="jxr_javadoccomment">   * Gets all the symbols that have been defined before this point</em>
+<a class="jxr_linenumber" name="L341" href="#L341">341</a> <em class="jxr_javadoccomment">   * in the current flow. Does not return slots that have not changed during</em>
+<a class="jxr_linenumber" name="L342" href="#L342">342</a> <em class="jxr_javadoccomment">   * the flow.</em>
+<a class="jxr_linenumber" name="L343" href="#L343">343</a> <em class="jxr_javadoccomment">   *</em>
+<a class="jxr_linenumber" name="L344" href="#L344">344</a> <em class="jxr_javadoccomment">   * For example, consider the code:</em>
+<a class="jxr_linenumber" name="L345" href="#L345">345</a> <em class="jxr_javadoccomment">   * &lt;code&gt;</em>
+<a class="jxr_linenumber" name="L346" href="#L346">346</a> <em class="jxr_javadoccomment">   * var x = 3;</em>
+<a class="jxr_linenumber" name="L347" href="#L347">347</a> <em class="jxr_javadoccomment">   * function f() {</em>
+<a class="jxr_linenumber" name="L348" href="#L348">348</a> <em class="jxr_javadoccomment">   *   var y = 5;</em>
+<a class="jxr_linenumber" name="L349" href="#L349">349</a> <em class="jxr_javadoccomment">   *   y = 6; // FLOW POINT</em>
+<a class="jxr_linenumber" name="L350" href="#L350">350</a> <em class="jxr_javadoccomment">   *   var z = y;</em>
+<a class="jxr_linenumber" name="L351" href="#L351">351</a> <em class="jxr_javadoccomment">   *   return z;</em>
+<a class="jxr_linenumber" name="L352" href="#L352">352</a> <em class="jxr_javadoccomment">   * }</em>
+<a class="jxr_linenumber" name="L353" href="#L353">353</a> <em class="jxr_javadoccomment">   * &lt;/code&gt;</em>
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> <em class="jxr_javadoccomment">   * A FlowScope at FLOW POINT will return a slot for y, but not</em>
+<a class="jxr_linenumber" name="L355" href="#L355">355</a> <em class="jxr_javadoccomment">   * a slot for x or z.</em>
+<a class="jxr_linenumber" name="L356" href="#L356">356</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>   <strong class="jxr_keyword">private</strong> Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; allFlowSlots() {
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>     Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; slots = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>     <strong class="jxr_keyword">for</strong> (LinkedFlowSlot slot = lastSlot;
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>          slot != <strong class="jxr_keyword">null</strong>; slot = slot.parent) {
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>       <strong class="jxr_keyword">if</strong> (!slots.containsKey(slot.getName())) {
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>         slots.put(slot.getName(), slot);
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>       }
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>     }
+<a class="jxr_linenumber" name="L365" href="#L365">365</a> 
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>     <strong class="jxr_keyword">for</strong> (Map.Entry&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; symbolEntry : cache.symbols.entrySet()) {
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>       <strong class="jxr_keyword">if</strong> (!slots.containsKey(symbolEntry.getKey())) {
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>         slots.put(symbolEntry.getKey(), symbolEntry.getValue());
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>       }
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>     }
+<a class="jxr_linenumber" name="L371" href="#L371">371</a> 
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>     <strong class="jxr_keyword">return</strong> slots;
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>   }
+<a class="jxr_linenumber" name="L374" href="#L374">374</a> 
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>   @Override
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong> hashCode() {
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> UnsupportedOperationException();
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>   }
+<a class="jxr_linenumber" name="L379" href="#L379">379</a> 
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L381" href="#L381">381</a> <em class="jxr_javadoccomment">   * A static slot that can be used in a linked list.</em>
+<a class="jxr_linenumber" name="L382" href="#L382">382</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../com/google/javascript/rhino/jstype/SimpleSlot.html">SimpleSlot</a> {
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>     <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a> parent;
+<a class="jxr_linenumber" name="L385" href="#L385">385</a> 
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>     <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a>(String name, <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> type, <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowSlot</a> parent) {
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>       <strong class="jxr_keyword">super</strong>(name, type, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>       <strong class="jxr_keyword">this</strong>.parent = parent;
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>     }
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>   }
+<a class="jxr_linenumber" name="L391" href="#L391">391</a> 
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L393" href="#L393">393</a> <em class="jxr_javadoccomment">   * A map that tries to cache as much symbol table information</em>
+<a class="jxr_linenumber" name="L394" href="#L394">394</a> <em class="jxr_javadoccomment">   * as possible in a map. Optimized for fast lookup.</em>
+<a class="jxr_linenumber" name="L395" href="#L395">395</a> <em class="jxr_javadoccomment">   */</em>
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> {
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>     <em class="jxr_comment">// The TypedScope for the entire function or for the global scope.</em>
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> functionScope;
+<a class="jxr_linenumber" name="L399" href="#L399">399</a> 
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>     <em class="jxr_comment">// The linked flow scope that this cache represents.</em>
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> linkedEquivalent;
+<a class="jxr_linenumber" name="L402" href="#L402">402</a> 
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>     <em class="jxr_comment">// All the symbols defined before this point in the local flow.</em>
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>     <em class="jxr_comment">// May not include lazily declared qualified names.</em>
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>     <strong class="jxr_keyword">private</strong> Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; symbols = <strong class="jxr_keyword">new</strong> HashMap&lt;&gt;();
+<a class="jxr_linenumber" name="L406" href="#L406">406</a> 
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>     <em class="jxr_comment">// Used to help make lookup faster for LinkedFlowScopes by recording</em>
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>     <em class="jxr_comment">// symbols that may be redefined "soon", for an arbitrary definition</em>
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>     <em class="jxr_comment">// of "soon". ;)</em>
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>     <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>     <em class="jxr_comment">// More rigorously, if a symbol is redefined in a LinkedFlowScope,</em>
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>     <em class="jxr_comment">// and this is the closest FlatFlowScopeCache, then that symbol is marked</em>
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>     <em class="jxr_comment">// "dirty". In this way, we don't waste time looking in the LinkedFlowScope</em>
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>     <em class="jxr_comment">// list for symbols that aren't defined anywhere nearby.</em>
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>     <strong class="jxr_keyword">final</strong> Set&lt;String&gt; dirtySymbols = <strong class="jxr_keyword">new</strong> HashSet&lt;&gt;();
+<a class="jxr_linenumber" name="L416" href="#L416">416</a> 
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>     <em class="jxr_comment">// The cache at the bottom of the lattice.</em>
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>     <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(<a href="../../../../com/google/javascript/jscomp/TypedScope.html">TypedScope</a> functionScope) {
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>       <strong class="jxr_keyword">this</strong>.functionScope = functionScope;
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>       symbols = ImmutableMap.of();
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>       linkedEquivalent = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L422" href="#L422">422</a>     }
+<a class="jxr_linenumber" name="L423" href="#L423">423</a> 
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>     <em class="jxr_comment">// A cache in the middle of a long scope chain.</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>     <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(<a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> directParent) {
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>       <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a> cache = directParent.cache;
+<a class="jxr_linenumber" name="L427" href="#L427">427</a> 
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>       functionScope = cache.functionScope;
+<a class="jxr_linenumber" name="L429" href="#L429">429</a>       symbols = directParent.allFlowSlots();
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>       linkedEquivalent = directParent;
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>     }
+<a class="jxr_linenumber" name="L432" href="#L432">432</a> 
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>     <em class="jxr_comment">// A cache at the join of two scope chains.</em>
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>     <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">FlatFlowScopeCache</a>(<a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> joinedScopeA,
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>         <a href="../../../../com/google/javascript/jscomp/LinkedFlowScope.html">LinkedFlowScope</a> joinedScopeB) {
+<a class="jxr_linenumber" name="L436" href="#L436">436</a>       linkedEquivalent = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L437" href="#L437">437</a> 
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>       <em class="jxr_comment">// Always prefer the "real" function scope to the faked-out</em>
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>       <em class="jxr_comment">// bottom scope.</em>
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>       functionScope = joinedScopeA.flowsFromBottom() ?
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>           joinedScopeB.getFunctionScope() : joinedScopeA.getFunctionScope();
+<a class="jxr_linenumber" name="L442" href="#L442">442</a> 
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>       Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; slotsA = joinedScopeA.allFlowSlots();
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>       Map&lt;String, StaticTypedSlot&lt;JSType&gt;&gt; slotsB = joinedScopeB.allFlowSlots();
+<a class="jxr_linenumber" name="L445" href="#L445">445</a> 
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>       symbols = slotsA;
+<a class="jxr_linenumber" name="L447" href="#L447">447</a> 
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>       <em class="jxr_comment">// There are 5 different join cases:</em>
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>       <em class="jxr_comment">// 1) The type is declared in joinedScopeA, not in joinedScopeB,</em>
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>       <em class="jxr_comment">//    and not in functionScope. Just use the one in A.</em>
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>       <em class="jxr_comment">// 2) The type is declared in joinedScopeB, not in joinedScopeA,</em>
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>       <em class="jxr_comment">//    and not in functionScope. Just use the one in B.</em>
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>       <em class="jxr_comment">// 3) The type is declared in functionScope and joinedScopeA, but</em>
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>       <em class="jxr_comment">//    not in joinedScopeB. Join the two types.</em>
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>       <em class="jxr_comment">// 4) The type is declared in functionScope and joinedScopeB, but</em>
+<a class="jxr_linenumber" name="L456" href="#L456">456</a>       <em class="jxr_comment">//    not in joinedScopeA. Join the two types.</em>
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>       <em class="jxr_comment">// 5) The type is declared in joinedScopeA and joinedScopeB. Join</em>
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>       <em class="jxr_comment">//    the two types.</em>
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>       Set&lt;String&gt; symbolNames = <strong class="jxr_keyword">new</strong> HashSet&lt;&gt;(symbols.keySet());
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>       symbolNames.addAll(slotsB.keySet());
+<a class="jxr_linenumber" name="L461" href="#L461">461</a> 
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>       <strong class="jxr_keyword">for</strong> (String name : symbolNames) {
+<a class="jxr_linenumber" name="L463" href="#L463">463</a>         StaticTypedSlot&lt;JSType&gt; slotA = slotsA.get(name);
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>         StaticTypedSlot&lt;JSType&gt; slotB = slotsB.get(name);
+<a class="jxr_linenumber" name="L465" href="#L465">465</a> 
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>         <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> joinedType = <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L467" href="#L467">467</a>         <strong class="jxr_keyword">if</strong> (slotB == <strong class="jxr_keyword">null</strong> || slotB.getType() == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>           StaticTypedSlot&lt;JSType&gt; fnSlot
+<a class="jxr_linenumber" name="L469" href="#L469">469</a>               = joinedScopeB.getFunctionScope().getSlot(name);
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>           <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> fnSlotType = fnSlot == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : fnSlot.getType();
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>           <strong class="jxr_keyword">if</strong> (fnSlotType == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L472" href="#L472">472</a>             <em class="jxr_comment">// Case #1 -- already inserted.</em>
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>           } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L474" href="#L474">474</a>             <em class="jxr_comment">// Case #3</em>
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>             joinedType = slotA.getType().getLeastSupertype(fnSlotType);
+<a class="jxr_linenumber" name="L476" href="#L476">476</a>           }
+<a class="jxr_linenumber" name="L477" href="#L477">477</a>         } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (slotA == <strong class="jxr_keyword">null</strong> || slotA.getType() == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L478" href="#L478">478</a>           StaticTypedSlot&lt;JSType&gt; fnSlot
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>               = joinedScopeA.getFunctionScope().getSlot(name);
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>           <a href="../../../../com/google/javascript/rhino/jstype/JSType.html">JSType</a> fnSlotType = fnSlot == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : fnSlot.getType();
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>           <strong class="jxr_keyword">if</strong> (fnSlotType == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>             <em class="jxr_comment">// Case #2</em>
+<a class="jxr_linenumber" name="L483" href="#L483">483</a>             symbols.put(name, slotB);
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>           } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L485" href="#L485">485</a>             <em class="jxr_comment">// Case #4</em>
+<a class="jxr_linenumber" name="L486" href="#L486">486</a>             joinedType = slotB.getType().getLeastSupertype(fnSlotType);
+<a class="jxr_linenumber" name="L487" href="#L487">487</a>           }
+<a class="jxr_linenumber" name="L488" href="#L488">488</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>           <em class="jxr_comment">// Case #5</em>
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>           joinedType =
+<a class="jxr_linenumber" name="L491" href="#L491">491</a>               slotA.getType().getLeastSupertype(slotB.getType());
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>         }
+<a class="jxr_linenumber" name="L493" href="#L493">493</a> 
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>         <strong class="jxr_keyword">if</strong> (joinedType != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>           symbols.put(name, <strong class="jxr_keyword">new</strong> <a href="../../../../com/google/javascript/rhino/jstype/SimpleSlot.html">SimpleSlot</a>(name, joinedType, <strong class="jxr_keyword">true</strong>));
+<a class="jxr_linenumber" name="L496" href="#L496">496</a>         }
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>       }
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>     }
+<a class="jxr_linenumber" name="L499" href="#L499">499</a> 
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L501" href="#L501">501</a> <em class="jxr_javadoccomment">     * Get the slot for the given symbol.</em>
+<a class="jxr_linenumber" name="L502" href="#L502">502</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>     <strong class="jxr_keyword">public</strong> StaticTypedSlot&lt;JSType&gt; getSlot(String name) {
+<a class="jxr_linenumber" name="L504" href="#L504">504</a>       <strong class="jxr_keyword">if</strong> (symbols.containsKey(name)) {
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>         <strong class="jxr_keyword">return</strong> symbols.get(name);
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>       } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>         <strong class="jxr_keyword">return</strong> functionScope.getSlot(name);
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>       }
+<a class="jxr_linenumber" name="L509" href="#L509">509</a>     }
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>   }
+<a class="jxr_linenumber" name="L511" href="#L511">511</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>

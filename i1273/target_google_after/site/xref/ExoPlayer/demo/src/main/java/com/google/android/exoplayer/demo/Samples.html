@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>Samples xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../../../../apidocs/com/google/android/exoplayer/demo/Samples.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Copyright (C) 2014 The Android Open Source Project</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> *      <a href="http://www.apache.org/licenses/LICENSE-2." target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.</a>0</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">package</strong> com.google.android.exoplayer.demo;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> java.util.Locale;
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <em class="jxr_javadoccomment"> * Holds statically defined sample definitions.</em>
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <em class="jxr_comment">/* package */</em> <strong class="jxr_keyword">class</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Samples</a> {
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a> {
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String name;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String contentId;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> String uri;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> type;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(String name, String uri, <strong class="jxr_keyword">int</strong> type) {
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>        <strong class="jxr_keyword">this</strong>(name, name.toLowerCase(Locale.US).replaceAll(<span class="jxr_string">"&#92;&#92;s"</span>, <span class="jxr_string">""</span>), uri, type);
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>      }
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(String name, String contentId, String uri, <strong class="jxr_keyword">int</strong> type) {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>        <strong class="jxr_keyword">this</strong>.name = name;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>        <strong class="jxr_keyword">this</strong>.contentId = contentId;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>        <strong class="jxr_keyword">this</strong>.uri = uri;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>        <strong class="jxr_keyword">this</strong>.type = type;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>      }
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>    }
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] YOUTUBE_DASH_MP4 = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Glass"</span>,
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/bf5bb2419360daf1/source/youtube?"</span>
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>          + <span class="jxr_string">"as=fmp4_audio_clear,fmp4_sd_hd_clear&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0&amp;"</span>
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>          + <span class="jxr_string">"ipbits=0&amp;expire=19000000000&amp;signature=51AF5F39AB0CEC3E5497CD9C900EBFEAECCCB5C7."</span>
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>          + <span class="jxr_string">"8506521BFC350652163895D4C26DEE124209AA9E&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Play"</span>,
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"</span>
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>          + <span class="jxr_string">"as=fmp4_audio_clear,fmp4_sd_hd_clear&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0&amp;"</span>
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>          + <span class="jxr_string">"ipbits=0&amp;expire=19000000000&amp;signature=A2716F75795F5D2AF0E88962FFCD10DB79384F29."</span>
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>          + <span class="jxr_string">"84308FF04844498CE6FBCE4731507882B8307798&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    };
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>  
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] YOUTUBE_DASH_WEBM = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Glass"</span>,
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/bf5bb2419360daf1/source/youtube?"</span>
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>          + <span class="jxr_string">"as=fmp4_audio_clear,webm2_sd_hd_clear&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0&amp;"</span>
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>          + <span class="jxr_string">"ipbits=0&amp;expire=19000000000&amp;signature=249B04F79E984D7F86B4D8DB48AE6FAF41C17AB3."</span>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>          + <span class="jxr_string">"7B9F0EC0505E1566E59B8E488E9419F253DDF413&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Play"</span>,
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"</span>
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>          + <span class="jxr_string">"as=fmp4_audio_clear,webm2_sd_hd_clear&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0&amp;"</span>
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          + <span class="jxr_string">"ipbits=0&amp;expire=19000000000&amp;signature=B1C2A74783AC1CC4865EB312D7DD2D48230CC9FD."</span>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          + <span class="jxr_string">"BD153B9882175F1F94BFE5141A5482313EA38E8D&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>    };
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>  
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] SMOOTHSTREAMING = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Super speed"</span>,
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>          <span class="jxr_string">"http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism"</span>,
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          PlayerActivity.TYPE_SS),
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Super speed (PlayReady)"</span>,
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>          <span class="jxr_string">"http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism"</span>,
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>          PlayerActivity.TYPE_SS),
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>    };
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] WIDEVINE_GTS = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: HDCP not specified"</span>, <span class="jxr_string">"d286538032258a1c"</span>,
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/d286538032258a1c/source/youtube?"</span>
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>          + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>          + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=477CF7D478BE26C205045D507E9358F85F84C065."</span>
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>          + <span class="jxr_string">"8971631EB657BC33EC2F48A2FF4211956760C3E9&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: HDCP not required"</span>, <span class="jxr_string">"48fcc369939ac96c"</span>,
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/48fcc369939ac96c/source/youtube?"</span>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>          + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=171DAE48D00B5BE7434BC1A9F84DAE0463C7EA7A."</span>
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>          + <span class="jxr_string">"0925B4DBB5605BEE9F5D088C48F25F5108E96191&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: HDCP required"</span>, <span class="jxr_string">"e06c39f1151da3df"</span>,
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/e06c39f1151da3df/source/youtube?"</span>
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>          + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>          + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=8D3B8AF4E3F72B7F127C8D0D39B7AFCF37B30519."</span>
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>          + <span class="jxr_string">"A118BADEBF3582AD2CC257B0EE6E579C6955D8AA&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>      <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: Secure video path required"</span>, <span class="jxr_string">"0894c7c8719b28a0"</span>,
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>          <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/0894c7c8719b28a0/source/youtube?"</span>
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>          + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>          + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=A41D835C7387885A4A820628F57E481E00095931."</span>
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>         + <span class="jxr_string">"9D50DBEEB5E37344647EE11BDA129A7FCDE8B7B9&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: HDCP + secure video path required"</span>, <span class="jxr_string">"efd045b1eb61888a"</span>,
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>         <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/efd045b1eb61888a/source/youtube?"</span>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>         + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=A97C9032C9D0C74F1643DB17C178873887C229E4."</span>
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>         + <span class="jxr_string">"0A657BF6F23C8BC1538F276137383478330B76DE&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"WV: 30s license duration (fails at ~30s)"</span>, <span class="jxr_string">"f9a34cab7b05881a"</span>,
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         <span class="jxr_string">"http://www.youtube.com/api/manifest/dash/id/f9a34cab7b05881a/source/youtube?"</span>
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>         + <span class="jxr_string">"as=fmp4_audio_cenc,fmp4_sd_hd_cenc&amp;sparams=ip,ipbits,expire,source,id,as&amp;ip=0.0.0.0"</span>
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         + <span class="jxr_string">"&amp;ipbits=0&amp;expire=19000000000&amp;signature=80648A12A7D5FC1FA02B52B4250E4EB74CF0C5FD."</span>
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>         + <span class="jxr_string">"66A261130CA137AA5C541EA9CED2DBF240829EE6&amp;key=ik0"</span>, PlayerActivity.TYPE_DASH),
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>   };
+<a class="jxr_linenumber" name="L112" href="#L112">112</a> 
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] HLS = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple master playlist"</span>,
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>         <span class="jxr_string">"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/"</span>
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>         + <span class="jxr_string">"bipbop_4x3_variant.m3u8"</span>, PlayerActivity.TYPE_HLS),
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple master playlist advanced"</span>,
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>         <span class="jxr_string">"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/"</span>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>         + <span class="jxr_string">"bipbop_16x9_variant.m3u8"</span>, PlayerActivity.TYPE_HLS),
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple TS media playlist"</span>,
+<a class="jxr_linenumber" name="L121" href="#L121">121</a>         <span class="jxr_string">"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/"</span>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>         + <span class="jxr_string">"prog_index.m3u8"</span>, PlayerActivity.TYPE_HLS),
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple AAC media playlist"</span>,
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>         <span class="jxr_string">"https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear0/"</span>
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>         + <span class="jxr_string">"prog_index.m3u8"</span>, PlayerActivity.TYPE_HLS),
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple ID3 metadata"</span>, <span class="jxr_string">"http://devimages.apple.com/samplecode/adDemo/ad.m3u8"</span>,
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         PlayerActivity.TYPE_HLS),
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>   };
+<a class="jxr_linenumber" name="L129" href="#L129">129</a> 
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] MISC = <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>[] {
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Dizzy"</span>, <span class="jxr_string">"http://html5demos.com/assets/dizzy.mp4"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple AAC 10s"</span>, <span class="jxr_string">"https://devimages.apple.com.edgekey.net/"</span>
+<a class="jxr_linenumber" name="L133" href="#L133">133</a>         + <span class="jxr_string">"streaming/examples/bipbop_4x3/gear0/fileSequence0.aac"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Apple TS 10s"</span>, <span class="jxr_string">"https://devimages.apple.com.edgekey.net/streaming/examples/"</span>
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>         + <span class="jxr_string">"bipbop_4x3/gear1/fileSequence0.ts"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Android screens (Matroska)"</span>, <span class="jxr_string">"http://storage.googleapis.com/exoplayer-test-media-1/"</span>
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>         + <span class="jxr_string">"mkv/android-screens-lavf-56.36.100-aac-avc-main-1280x720.mkv"</span>,
+<a class="jxr_linenumber" name="L138" href="#L138">138</a>         PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Big Buck Bunny (MP4 Video)"</span>,
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>         <span class="jxr_string">"http://redirector.c.youtube.com/videoplayback?id=604ed5ce52eda7ee&amp;itag=22&amp;source=youtube&amp;"</span>
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>         + <span class="jxr_string">"sparams=ip,ipbits,expire,source,id&amp;ip=0.0.0.0&amp;ipbits=0&amp;expire=19000000000&amp;signature="</span>
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>         + <span class="jxr_string">"513F28C7FDCBEC60A66C86C9A393556C99DC47FB.04C88036EEE12565A1ED864A875A58F15D8B5300"</span>
+<a class="jxr_linenumber" name="L143" href="#L143">143</a>         + <span class="jxr_string">"&amp;key=ik0"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Play (MP3 Audio)"</span>,
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>         <span class="jxr_string">"http://storage.googleapis.com/exoplayer-test-media-0/play.mp3"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>     <strong class="jxr_keyword">new</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Sample</a>(<span class="jxr_string">"Google Glass (WebM Video with Vorbis Audio)"</span>,
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>         <span class="jxr_string">"http://demos.webmproject.org/exoplayer/glass_vp9_vorbis.webm"</span>, PlayerActivity.TYPE_OTHER),
+<a class="jxr_linenumber" name="L148" href="#L148">148</a>   };
+<a class="jxr_linenumber" name="L149" href="#L149">149</a> 
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>   <strong class="jxr_keyword">private</strong> <a href="../../../../../com/google/android/exoplayer/demo/Samples.html">Samples</a>() {}
+<a class="jxr_linenumber" name="L151" href="#L151">151</a> 
+<a class="jxr_linenumber" name="L152" href="#L152">152</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2015. All rights reserved.</div>
+</body>
+</html>
